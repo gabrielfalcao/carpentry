@@ -1,0 +1,15 @@
+*.py[cod]
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+*flymake*
+*#*
+.*#*
+*.#*
+.*.#*
+builds.db
+.vagrant/
+timeless.yml
+deploy/terraform.tfstate
+deploy/terraform.tfstate.backup
+deploy/terraform.tfvars

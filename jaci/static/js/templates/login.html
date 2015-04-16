@@ -1,0 +1,27 @@
+<div class="row">
+  <br />
+  <br />
+  <br />
+  <br />
+  <div class="col-lg-4 col-md-offset-4 col-xs-12">
+    <div class="alert alert-success">
+    <h1>Jaci</h1>
+      <form class="bs-example form-horizontal" ng-submit="authenticate()" >
+        <fieldset>
+          <legend>Please authenticate</legend>
+          <div class="form-group">
+            <label for="inputToken" class="col-lg-3 control-label">Authentication Token</label>
+            <div class="col-lg-9">
+              <input type="text" class="form-control" ng-model="token" placeholder="i.e: e2a0214c24f9aad3a4c56622b73c53bd60b89e9e">
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+              <button ng-click="authenticate()" class="btn btn-danger">login</button>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+</div>

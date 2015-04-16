@@ -1,0 +1,107 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#"><b>JACI</b></a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav navbar-right">
+        <li style="padding-top: 12px;">
+          <button class="btn btn-s btn-primary">New Project</button>
+        </li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Projects <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="#">HTTPretty</a></li>
+            <li><a href="#">Sure</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#">Preferences</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Gabriel Falcão <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Your failed builds</a></li>
+            <li class="divider"></li>
+            <li><a href="#">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container">
+  <div class="page-header">
+    <div class="row">
+      <div class="col-lg-12">
+        <h1 id="buttons">Latest builds</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>#</th>
+            <th>Last author</th>
+            <th>Last commit</th>
+            <th>Last branch</th>
+            <th>Build Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="success">
+            <td><strong>Sure</strong></td>
+            <th scope="row">1</th>
+            <td>Gabriel Falcao &lt;gabriel@nacaolivre.org&gt;</td>
+            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
+            <td>master</td>
+            <td>
+              <button class="btn btn-xs btn-success">
+<span class="glyphicon glyphicon-console" aria-hidden="true"></span>
+build output</button>
+            </td>
+          </tr>
+          <tr class="danger">
+            <td><strong>HTTPretty</strong></td>
+            <th scope="row">1</th>
+            <td>Gabriel Falcao &lt;gabriel@nacaolivre.org&gt;</td>
+            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
+            <td>master</td>
+            <td>
+              <button class="btn btn-xs btn-danger">
+<span class="glyphicon glyphicon-console" aria-hidden="true"></span>
+error output</button>
+              <button class="btn btn-xs btn-primary">
+                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                rebuild</button>
+                                <br />
+                <button class="btn btn-xs btn-default">
+                <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+notify Gabriel</button>
+              <button class="btn btn-xs btn-default">
+
+<span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+notify team</button>
+
+
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
