@@ -5,12 +5,18 @@ angular.module("JaciApp", [
     "cgNotify",
     "JaciApp.Common",
     "JaciApp.Index",
+    "JaciApp.NewProject",
 ]).config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("index", {
             url: "/index",
             templateUrl: "/assets/js/templates/index.html",
             controller: "IndexController"
+        })
+        .state("new-project", {
+            url: "/new-project",
+            templateUrl: "/assets/js/templates/new-project.html",
+            controller: "NewProjectController"
         })
         .state("not-found", {
             url: "/not-found",

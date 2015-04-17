@@ -13,6 +13,7 @@
     <link href="/assets/vendor/angular-hotkeys/build/hotkeys.min.css" rel="stylesheet">
     <link href="/assets/css/jaci.css" rel="stylesheet">
     <script type="text/javascript" src="/assets/vendor/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="/assets/vendor/highlightjs/highlight.pack.js"></script>
     <script type="text/javascript" src="/assets/vendor/angular/angular.min.js"></script>
     <script type="text/javascript" src="/assets/vendor/angular-ui-router/release/angular-ui-router.min.js"></script>
     <script type="text/javascript" src="/assets/vendor/angular-cookies/angular-cookies.min.js"></script>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="/assets/vendor/angular-notify/angular-notify.js"></script>
     <script type="text/javascript">
     (function(container){
+      hljs.initHighlightingOnLoad();
       container.BUILDBOT_BASE_URL = "{{ BUILDBOT_BASE_URL }}";
     })(window);
     </script>
