@@ -7,7 +7,7 @@ from sure import scenario
 from tumbler.core import Web
 from jaci.models import User, Post, UserToken, NewsletterSubscription
 from cqlengine import connection
-from cqlengine.management import sync_table, drop_table
+from cqlengine.management import sync_table, drop_table, create_keyspace
 from jaci.api.v1 import web
 
 
@@ -16,6 +16,7 @@ def prepare_db(context):
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
     context.connection = connection.setup(['127.0.0.1'], 'jaci')
+    create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
     tables = (User, Post, UserToken, NewsletterSubscription)
     for t in tables:
         try:
