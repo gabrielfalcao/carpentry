@@ -1,4 +1,4 @@
-angular.module("JaciApp.NewProject", [
+angular.module("JaciApp.NewBuilder", [
     "JaciApp.Common",
-]).controller('NewProjectController', function($rootScope, $scope, $state, $http, $cookies, hotkeys, notify){
+]).controller('NewBuilderController', function($rootScope, $scope, $state, $http, $cookies, hotkeys, notify){
 });

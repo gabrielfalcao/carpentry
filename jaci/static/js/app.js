@@ -5,7 +5,7 @@ angular.module("JaciApp", [
     "cgNotify",
     "JaciApp.Common",
     "JaciApp.Index",
-    "JaciApp.NewProject",
+    "JaciApp.NewBuilder",
 ]).config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("index", {
@@ -13,10 +13,10 @@ angular.module("JaciApp", [
             templateUrl: "/assets/js/templates/index.html",
             controller: "IndexController"
         })
-        .state("new-project", {
-            url: "/new-project",
-            templateUrl: "/assets/js/templates/new-project.html",
-            controller: "NewProjectController"
+        .state("new-builder", {
+            url: "/new-builder",
+            templateUrl: "/assets/js/templates/new-builder.html",
+            controller: "NewBuilderController"
         })
         .state("not-found", {
             url: "/not-found",
@@ -29,9 +29,10 @@ angular.module("JaciApp", [
     $rootScope.$on("$viewContentLoaded", function() {
         $templateCache.removeAll();
     });
-    notify.config({
-        "templateUrl": "/assets/vendor/angular-notify/angular-notify.html"
+    $('pre code').each(function(i, block) {
+        hljs.highlightBlock(block);
     });
+
 })
-.controller("JaciMainCtrl", function($scope, $http){
-});
+    .controller("JaciMainCtrl", function($scope, $http){
+    });
