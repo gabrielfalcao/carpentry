@@ -6,6 +6,7 @@ angular.module("JaciApp", [
     "JaciApp.Common",
     "JaciApp.Index",
     "JaciApp.NewBuilder",
+    "JaciApp.Build",
 ]).config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("index", {
@@ -17,6 +18,11 @@ angular.module("JaciApp", [
             url: "/new-builder",
             templateUrl: "/assets/js/templates/new-builder.html",
             controller: "NewBuilderController"
+        })
+        .state("build-detail", {
+            url: "/build/:owner/:project/:buildid",
+            templateUrl: "/assets/js/templates/build-detail.html",
+            controller: "BuildController"
         })
         .state("not-found", {
             url: "/not-found",
@@ -34,5 +40,16 @@ angular.module("JaciApp", [
     });
 
 })
-    .controller("JaciMainCtrl", function($scope, $http){
-    });
+.directive('navbar', function($rootScope, $state, $location) {
+    $rootScope.go = function ( path ) {
+        $location.path( path );
+    };
+    return {
+        restrict: 'E',
+        templateUrl: "/assets/js/templates/navbar.html",
+        link: function (scope, element, attrs) {
+        }
+    }
+})
+.controller("JaciMainCtrl", function($scope, $http){
+});
