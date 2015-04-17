@@ -13,3 +13,4 @@ timeless.yml
 deploy/terraform.tfstate
 deploy/terraform.tfstate.backup
 deploy/terraform.tfvars
+jaci.log
