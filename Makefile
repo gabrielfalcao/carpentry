@@ -2,11 +2,8 @@ all: test
 
 test: unit functional
 
-clean:
-	-@rm builds.db
-
-run: clean
-	DISABLE_NOTIFICATIONS='yes' BUILDBOT_BASE_URL=http://localhost:8010 tumbler run --port=5000 jaci/routes.py --templates-path=`pwd`/templates --static-path=`pwd`/jaci/static
+run:
+	gunicorn wsgi:application --bind 0.0.0.0:5000
 
 unit:
 	nosetests -v -s --rednose --with-coverage --cover-erase --cover-package=jaci tests/unit

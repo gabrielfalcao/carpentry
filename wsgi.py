@@ -18,10 +18,9 @@ logging.basicConfig(
 
 root_node = Node(__file__).dir
 
-application = Web(use_sqlalchemy=False)
-
-
-if __name__ == '__main__':
-    from gevent.wsgi import WSGIServer
-    http_server = WSGIServer(('', 8000), application)
-    http_server.serve_forever()
+application = Web(
+    template_folder=root_node.join('templates'),
+    static_folder=root_node.join('jaci/static'),
+    static_url_path='/assets',
+    use_sqlalchemy=False
+)

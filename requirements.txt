@@ -1,5 +1,6 @@
-tumbler==0.0.14
+tumbler==0.0.16
 cqlengine==0.21.0
 blist==1.3.6
 bcrypt==1.1.1
 ansiconv==1.0.0
+gunicorn==19.3.0
