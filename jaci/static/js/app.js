@@ -3,6 +3,7 @@ angular.module("JaciApp", [
     "ui.router",
     "cfp.hotkeys",
     "cgNotify",
+    'luegg.directives',
     "JaciApp.Common",
     "JaciApp.Index",
     "JaciApp.NewBuilder",

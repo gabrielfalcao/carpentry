@@ -4,3 +4,4 @@ blist==1.3.6
 bcrypt==1.1.1
 ansiconv==1.0.0
 gunicorn==19.3.0
+ansi2html==1.1.0

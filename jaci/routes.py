@@ -4,13 +4,18 @@
 #
 from __future__ import unicode_literals
 import io
+import sh
 from plant import Node
 import logging
-
+import subprocess
 from jaci.api.v1 import web
+from tumbler import json_response
 # from jaci.api.core import authenticated
 
 from flask import Response, render_template
+from ansi2html import Ansi2HTMLConverter
+
+conv = Ansi2HTMLConverter()
 
 
 @web.get('/')
@@ -41,4 +46,12 @@ def app_js():
     logging.debug("serving app.js: %skb", len(joined) / 1000.0)
     return Response(joined, status=200, headers={
         'Content-Type': 'text/javascript'
+    })
+
+
+@web.get('/build')
+def get_build_output():
+    stdout = sh.find(".")
+    return json_response({
+        'stdout': conv.convert(stdout, full=False)
     })
