@@ -3,7 +3,10 @@
   <div class="page-header">
     <div class="row">
       <div class="col-lg-12">
-        <h1 id="buttons">Latest builds</h1>
+        <h1 id="buttons">Latest builds
+                  <button ng-click="go('/full-screen')" class="btn btn-s btn-info">Full Screen</button>
+        </h1>
+
       </div>
     </div>
   </div>
@@ -13,7 +16,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Builder name</th>
             <th>#</th>
             <th>Last author</th>
             <th>Last commit</th>
@@ -23,43 +26,78 @@
         </thead>
         <tbody>
           <tr class="success">
-            <td><strong>Sure</strong></td>
+            <td><strong>client-api</strong></td>
             <th scope="row">1</th>
-            <td>Gabriel Falcao &lt;gabriel@nacaolivre.org&gt;</td>
+            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
             <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
             <td>master</td>
             <td>
-              <button class="btn btn-xs btn-success">
-<span class="glyphicon glyphicon-console" aria-hidden="true"></span>
-build output</button>
+              <button class="btn btn-xs btn-success" ng-click="go('/build/cnry/client-api/1')">
+                <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
             </td>
           </tr>
           <tr class="danger">
-            <td><strong>HTTPretty</strong></td>
+            <td><strong>device-ota [unit tests]</strong></td>
             <th scope="row">1</th>
-            <td>Gabriel Falcao &lt;gabriel@nacaolivre.org&gt;</td>
+            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
             <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
             <td>master</td>
             <td>
               <button class="btn btn-xs btn-danger">
-<span class="glyphicon glyphicon-console" aria-hidden="true"></span>
-error output</button>
+<span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
               <button class="btn btn-xs btn-primary">
-                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-                rebuild</button>
-                                <br />
+                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
                 <button class="btn btn-xs btn-default">
-                <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-notify Gabriel</button>
+                <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
               <button class="btn btn-xs btn-default">
 
-<span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
-notify team</button>
+<span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span></button>
 
 
             </td>
           </tr>
+          <tr class="success">
+            <td><strong>device-ota [functional tests]</strong></td>
+            <th scope="row">1</th>
+            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
+            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
+            <td>master</td>
+            <td>
+              <button class="btn btn-xs btn-success">
+<span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
+            </td>
+          </tr>
+          <tr class="success">
+            <td><strong>ansible</strong></td>
+            <th scope="row">1</th>
+            <td>Jennie Li &lt;jennie@canary.is&gt;</td>
+            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
+            <td>master</td>
+            <td>
+              <button class="btn btn-xs btn-success" ng-click="go('/build/cnry/ansible/1')">
+                <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
+            </td>
+          </tr>
+
         </tbody>
+                <tfoot>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>
+              <strong>Labels:</strong>
+              <br />
+              <span class="glyphicon glyphicon-console"></span> console output <br />
+              <span class="glyphicon glyphicon-refresh"></span> retry build <br />
+              <span class="glyphicon glyphicon-envelope"></span> notify commit author <br />
+              <span class="glyphicon glyphicon-bullhorn"></span> notify team <br />
+            </td>
+          </tr>
+        </tfoot>
+
       </table>
     </div>
   </div>

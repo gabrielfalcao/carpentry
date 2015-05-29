@@ -8,10 +8,11 @@ angular.module("JaciApp", [
     "JaciApp.Index",
     "JaciApp.NewBuilder",
     "JaciApp.Build",
+    "JaciApp.Preferences",
 ]).config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("index", {
-            url: "/index",
+            url: "/",
             templateUrl: "/assets/js/templates/index.html",
             controller: "IndexController"
         })
@@ -25,11 +26,16 @@ angular.module("JaciApp", [
             templateUrl: "/assets/js/templates/build-detail.html",
             controller: "BuildController"
         })
+        .state("preferences", {
+            url: "/preferences",
+            templateUrl: "/assets/js/templates/preferences.html",
+            controller: "PreferencesController"
+        })
         .state("not-found", {
             url: "/not-found",
             templateUrl: "/assets/js/templates/404.html"
         });
-    $urlRouterProvider.otherwise("index");
+    $urlRouterProvider.otherwise("/");
 
 }).run(function($rootScope, $state, $templateCache, $http, notify){
     $rootScope.$state = $state;

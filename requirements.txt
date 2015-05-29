@@ -1,4 +1,4 @@
-tumbler==0.0.16
+tumbler==0.0.17
 cqlengine==0.21.0
 blist==1.3.6
 bcrypt==1.1.1

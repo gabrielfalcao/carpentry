@@ -4,10 +4,9 @@
 #
 from __future__ import unicode_literals
 import io
-import sh
 from plant import Node
 import logging
-import subprocess
+
 from jaci.api.v1 import web
 from tumbler import json_response
 # from jaci.api.core import authenticated
@@ -20,7 +19,7 @@ conv = Ansi2HTMLConverter()
 
 @web.get('/')
 def index():
-    logging.debug("serving index")
+    logging.info("serving index")
     return render_template("index.html")
 
 
@@ -43,7 +42,7 @@ def get_all_js():
 @web.get('/app.js')
 def app_js():
     joined = get_all_js()
-    logging.debug("serving app.js: %skb", len(joined) / 1000.0)
+    logging.info("serving app.js: %skb", len(joined) / 1000.0)
     return Response(joined, status=200, headers={
         'Content-Type': 'text/javascript'
     })
@@ -51,7 +50,7 @@ def app_js():
 
 @web.get('/build')
 def get_build_output():
-    stdout = sh.find(".")
+    stdout = sh.ls("~/projects/work/ansible")
     return json_response({
         'stdout': conv.convert(stdout, full=False)
     })

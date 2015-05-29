@@ -3,13 +3,12 @@
 #
 from __future__ import unicode_literals
 import re
-import json
 import logging
+
 from tumbler import tumbler
 from flask import request, abort
 web = tumbler.module(__name__)
 
-from jaci.models import User, UserToken
 from functools import wraps
 
 
@@ -32,13 +31,11 @@ class Authenticator(object):
 
     def get_token(self):
         string = self.get_token_string()
-        found = UserToken.objects.filter(token=string).get()
-        return found
+        return string
 
     def get_user(self):
         token = self.get_token()
-        found = User.objects.filter(id=token.user_id).get()
-        return found
+        return token
 
 
 def authenticated(resource):

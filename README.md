@@ -17,3 +17,10 @@ Yet another continuous integration server
 ## ethymology
 
 jaci is the tupi guarani (native brazilian) goddess of the moon
+
+
+## icon
+
+https://thenounproject.com/term/no/27042/
+
+sleep by Gustav Salomonsson from the Noun Project

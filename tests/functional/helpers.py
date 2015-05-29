@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
+# flake8: noqa
+
 import logging
 from sure import scenario
 
 from tumbler.core import Web
-from jaci.models import User, Post, UserToken, NewsletterSubscription
+from jaci.models import Builder
 from cqlengine import connection
 from cqlengine.management import sync_table, drop_table, create_keyspace
 from jaci.api.v1 import web
@@ -17,7 +18,7 @@ def prepare_db(context):
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
     context.connection = connection.setup(['127.0.0.1'], 'jaci')
     create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
-    tables = (User, Post, UserToken, NewsletterSubscription)
+    tables = [Builder, ]
     for t in tables:
         try:
             drop_table(t)
@@ -35,7 +36,7 @@ def prepare_http_client(context):
 
 
 def clean_db(context):
-    sync_table(User)
+    sync_table(Builder)
 
 
 safe_db = scenario(prepare_db, clean_db)
