@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 import uuid
 import logging
+
 from dateutil.parser import parse as parse_datetime
 from tumbler import tumbler
 from tumbler import json_response
@@ -12,7 +13,7 @@ web = tumbler.module(__name__)
 
 # from jaci.models import Builder
 from jaci.api.core import authenticated, ensure_json_request
-from jaci.models import Builder
+from jaci.models import Builder, JaciPreference
 
 
 def autodatetime(s):
@@ -37,8 +38,27 @@ def create_builder(user):
     return json_response(builder.to_dict())
 
 
-@web.get('/api/builders/latest')
-def latest_builders():
-    builders = Builder.objects.all()
-    results = [p.to_dict() for p in builders]
+@web.post('/api/preferences')
+@authenticated
+def set_preferences(user):
+    preferences = ensure_json_request({
+        'global_id_rsa_private_key': any,
+        'global_id_rsa_public_key': any,
+        'docker_registry_url': any,
+    })
+    results = {}
+    for key, value in preferences.items():
+        if not value:
+            logging.info('skipping None key: %s', key)
+            continue
+
+        data = {
+            'id': uuid.uuid1(),
+            'key': key,
+            'value': value
+        }
+        preferences = JaciPreference.create(**data)
+        results[key] = value
+        logging.info('setting preference %s: %s', key, value)
+
     return json_response(results)
