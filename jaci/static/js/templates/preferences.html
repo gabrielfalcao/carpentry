@@ -14,16 +14,22 @@
         <form class="form-horizontal">
           <fieldset>
             <div class="form-group">
-              <label for="builder_name_input" class="col-lg-2 control-label">docker registry url</label>
+              <label for="docker_registry_url" class="col-lg-2 control-label">docker registry url</label>
               <div class="col-lg-10">
-                <input type="text" id="docker_registry_url" class="form-control" ng-model="jaci_settings.docker_registry_url" placeholder="Builder Name"  />
+                <input type="text" id="docker_registry_url" class="form-control" ng-model="jaci_settings.docker_registry_url" placeholder="https://hub.docker.com"  />
               </div>
             </div>
 
             <div class="form-group">
-              <label for="yaml_input" class="col-lg-2 control-label">default <strong>id_rsa</strong> key</label>
+              <label for="global_private_id_rsa_key" class="col-lg-2 control-label">default private <strong>id_rsa</strong> key</label>
               <div class="col-lg-10">
-                <textarea id="yaml_input" class="form-control" ng-model="builder.yaml_conf" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+                <textarea id="global_private_id_rsa_key" class="form-control" ng-model="jaci_settings.global_private_id_rsa_key" rows="10" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="global_public_id_rsa_key" class="col-lg-2 control-label">default public <strong>id_rsa</strong> key</label>
+              <div class="col-lg-10">
+                <textarea id="global_public_id_rsa_key" class="form-control" ng-model="jaci_settings.global_public_id_rsa_key" rows="10" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group">

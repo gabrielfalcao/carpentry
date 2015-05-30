@@ -4,6 +4,7 @@
 #
 from __future__ import unicode_literals
 import io
+import commands
 from plant import Node
 import logging
 
@@ -48,9 +49,9 @@ def app_js():
     })
 
 
-@web.get('/build')
-def get_build_output():
-    stdout = sh.ls("~/projects/work/ansible")
+@web.get('/build/<owner>/<project>/')
+def get_build_output(owner, project):
+    stdout = commands.getoutput('find ~/projects/work/{0} -name "*.py"'.format(project))
     return json_response({
         'stdout': conv.convert(stdout, full=False)
     })

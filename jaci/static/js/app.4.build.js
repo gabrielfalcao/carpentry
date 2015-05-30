@@ -14,7 +14,7 @@ angular.module("JaciApp.Build", [
         //           "/" + $stateParams.project +
         //           "/" + $stateParams.buildid +
         //     "/output";
-        var url = "/build"
+        var url = "/build/" + $stateParams.owner + "/" + $stateParams.project + "/";
         $http.get(url).
                 success(function(data, status, headers, config) {
                     $scope.html_output = $sce.trustAsHtml(data.stdout);
@@ -22,6 +22,9 @@ angular.module("JaciApp.Build", [
                 }).
                 error(function(data, status, headers, config) {
                     console.log("failed " + url, status);
+                    $scope.build = {"stdout": ("error:" + status)};
+                    $scope.html_output = $sce.trustAsHtml(url + " failed: " + status);
+
                 });
     }
 
