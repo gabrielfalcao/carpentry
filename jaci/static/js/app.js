@@ -49,7 +49,72 @@ angular.module("JaciApp", [
         });
     $urlRouterProvider.otherwise("/");
 
-}).run(function($rootScope, $state, $templateCache, $http, notify){
+}).run(function($rootScope, $state, $templateCache, $http, notify, hotkeys){
+})
+.directive('navbar', function($rootScope, $state, $location) {
+    return {
+        restrict: 'E',
+        templateUrl: "/assets/js/templates/navbar.html",
+        link: function (scope, element, attrs) {
+        }
+    }
+})
+    .controller("JaciMainCtrl", function($scope, $http, $location, $rootScope, hotkeys, $state, $templateCache){
+    $rootScope.go = function ( path ) {
+        $location.path( path );
+    };
+
+            hotkeys.add({
+        combo: 'N',
+        description: 'create a new builder',
+        callback: function(){
+            $rootScope.go("/new-builder");
+        }
+    });
+    hotkeys.add({
+        combo: 'F',
+        description: 'fullscreen',
+        callback: function(){
+            $rootScope.go("/fullscreen");
+        }
+    });
+    hotkeys.add({
+        combo: 'P',
+        description: 'preferences',
+        callback: function(){
+            $rootScope.go("/preferences");
+        }
+    });
+    hotkeys.add({
+        combo: 'D',
+        description: 'dashboard',
+        callback: function(){
+            $rootScope.go("/");
+        }
+    });
+
+    hotkeys.add({
+        combo: 'esc',
+        description: 'previous screen',
+        callback: function(){
+            console.log("state stack", $rootScope.stateStack);
+            if (typeof $rootScope.previousState === "string") {
+                $rootScope.go($rootScope.previousState);
+            } else {
+                $rootScope.go("/");
+            }
+        }
+    });
+    $rootScope.previousState = "/";
+    $rootScope.currentState = "/";
+    $rootScope.stateStack = [];
+    $rootScope.$on('$stateChangeSuccess', function(ev, to, toParams, from, fromParams) {
+        if ($rootScope.previousState !== from.name) {
+            $rootScope.previousState = from.name || "/";
+            $rootScope.currentState = to.name || "/";
+        }
+        $rootScope.stateStack.push($rootScope.currentState);
+    });
     $rootScope.$state = $state;
     $rootScope.$on("$viewContentLoaded", function() {
         $templateCache.removeAll();
@@ -58,17 +123,5 @@ angular.module("JaciApp", [
         hljs.highlightBlock(block);
     });
 
-})
-.directive('navbar', function($rootScope, $state, $location) {
-    $rootScope.go = function ( path ) {
-        $location.path( path );
-    };
-    return {
-        restrict: 'E',
-        templateUrl: "/assets/js/templates/navbar.html",
-        link: function (scope, element, attrs) {
-        }
-    }
-})
-.controller("JaciMainCtrl", function($scope, $http){
+
 });
