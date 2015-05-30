@@ -97,3 +97,41 @@ def test_set_preferences(context):
 
     # Then it should have one result
     results.should.have.length_of(3)
+
+
+@api
+def test_list_builders(context):
+    ('POST to /api/builders should list existing builders')
+
+    # When I prepare the headers for authentication
+    context.headers.update({
+        'Authorization': 'Bearer: testtoken'
+    })
+
+    # And I BUILDER to /api/builders
+    response = context.http.post(
+        '/api/preferences',
+        data=json.dumps({
+            'docker_registry_url': 'https://docker.cnry.io',
+            'global_id_rsa_private_key': 'the private key',
+            'global_id_rsa_public_key': 'the public key',
+        }),
+        headers=context.headers,
+    )
+
+    # Then the response should be 200
+    response.status_code.should.equal(200)
+
+    # And it should be a json
+    data = json.loads(response.data)
+    data.should.equal({
+        'docker_registry_url': 'https://docker.cnry.io',
+        'global_id_rsa_private_key': 'the private key',
+        'global_id_rsa_public_key': 'the public key',
+    })
+
+    # And it should be in the list of preferences
+    results = list(JaciPreference.all())
+
+    # Then it should have one result
+    results.should.have.length_of(3)

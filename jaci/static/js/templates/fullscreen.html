@@ -1,0 +1,25 @@
+<div class="shy-tooltip">
+  <strong class="text-success" ng-show="is_watching_builds">ON</strong>
+  <strong class="text-danger" ng-hide="is_watching_builds">OFF</strong>
+  <strong>[press ? or enter]</strong>
+</div>
+<div class="tile-canvas">
+  <div ng-if="failedMessage" class="fullscreen failed" style="overflow:auto">
+    <h1 ng-if="failedMessage">{{ failedReason }}</h1>
+    <pre ng-if="failedMessage">{{ failedMessage }}</pre>
+  </div>
+  <div class="fullscreen running" ng-hide="projects">
+    <h1 class="ng-cloak">Nothing here yet</h1>
+  </div>
+  <div class="build" ng-class="project.latest_build.css_class" ng-repeat="project in projects">
+    <h4>{{ project.name }}</h4>
+    <h6>{{ project.latest_build.short_commit_message }}</h6>
+    <h5 ng-if="project.latest_build.author_name">by {{ project.latest_build.author_name }}</h5>
+    <h6 ng-if="project.latest_build.author_email">[{{ project.latest_build.author_email }}]</h6>
+    <img class="avatar" width="75" height="75" ng-show="project.latest_build.author_gravatar_url" ng-src="{{ project.latest_build.author_gravatar_url }}?s=75" alt="{{ project.latest_build.author_name }}" />
+    <div class="links" ng-show="project.latest_build.build_url || project.latest_build.traceback_url">
+      <a ng-if="project.latest_build.build_url" href="{{ project.latest_build.build_url }}">Build URL</a>
+      <a ng-if="project.latest_build.traceback_url" href="{{ project.latest_build.traceback_url }}">Traceback URL</a>
+    </div>
+  </div>
+</div>
