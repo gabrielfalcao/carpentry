@@ -9,7 +9,8 @@ angular.module("JaciApp", [
     "JaciApp.NewBuilder",
     "JaciApp.Build",
     "JaciApp.Preferences",
-    "JaciApp.Fullscreen"
+    "JaciApp.Fullscreen",
+    "JaciApp.Splash"
 ]).config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("index", {
@@ -36,6 +37,11 @@ angular.module("JaciApp", [
             url: "/fullscreen",
             templateUrl: "/assets/js/templates/fullscreen.html",
             controller: "FullscreenController"
+        })
+        .state("splash", {
+            url: "/splash",
+            templateUrl: "/assets/js/templates/splash.html",
+            controller: "SplashController"
         })
         .state("not-found", {
             url: "/not-found",
