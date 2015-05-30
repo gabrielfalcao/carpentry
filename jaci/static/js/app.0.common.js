@@ -1,2 +1,1 @@
-angular.module("JaciApp.Common", [
-]);
+angular.module('JaciApp.Common', []);
