@@ -97,18 +97,19 @@ angular.module("JaciApp", [
         combo: 'esc',
         description: 'previous screen',
         callback: function(){
-            console.log("state stack", $rootScope.stateStack);
             if ($rootScope.stateStack.length > 0) {
-                $rootScope.go($rootScope.stateStack.pop());
-                $rootScope.go($rootScope.stateStack.pop());
-            } else {
-                $rootScope.go("/");
+                var name = $rootScope.stateStack.pop();
+                $rootScope.go(name);
+                $rootScope.stateStack.pop();
 
+            } else {
+                $rootScope.go("index");
             }
+            console.log("state stack", $rootScope.stateStack);
         }
     });
-    $rootScope.previousState = "/";
-    $rootScope.currentState = "/";
+    $rootScope.previousState;
+    $rootScope.currentState;
     $rootScope.stateStack = [];
     $rootScope.$on('$stateChangeSuccess', function(ev, to, toParams, from, fromParams) {
         if ($rootScope.previousState !== from.name) {
