@@ -98,10 +98,12 @@ angular.module("JaciApp", [
         description: 'previous screen',
         callback: function(){
             console.log("state stack", $rootScope.stateStack);
-            if (typeof $rootScope.previousState === "string") {
-                $rootScope.go($rootScope.previousState);
+            if ($rootScope.stateStack.length > 0) {
+                $rootScope.go($rootScope.stateStack.pop());
+                $rootScope.go($rootScope.stateStack.pop());
             } else {
                 $rootScope.go("/");
+
             }
         }
     });
@@ -114,6 +116,7 @@ angular.module("JaciApp", [
             $rootScope.currentState = to.name || "/";
         }
         $rootScope.stateStack.push($rootScope.currentState);
+        console.log("state stack", $rootScope.stateStack);
     });
     $rootScope.$state = $state;
     $rootScope.$on("$viewContentLoaded", function() {
