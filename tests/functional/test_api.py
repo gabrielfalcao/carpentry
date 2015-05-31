@@ -17,7 +17,7 @@ def test_create_builder(context):
         'Authorization': 'Bearer: testtoken'
     })
 
-    # And I BUILDER to /api/builders
+    # And I POST to /api/builders
     response = context.http.post(
         '/api/builder',
         data=json.dumps({
@@ -71,7 +71,7 @@ def test_set_preferences(context):
         'Authorization': 'Bearer: testtoken'
     })
 
-    # And I BUILDER to /api/builders
+    # And I POST to /api/builders
     response = context.http.post(
         '/api/preferences',
         data=json.dumps({
@@ -129,7 +129,7 @@ def test_list_builders(context):
         'Authorization': 'Bearer: testtoken'
     })
 
-    # And I BUILDER to /api/builders
+    # And I GET on /api/builders
     response = context.http.get(
         '/api/builders',
         headers=context.headers,
@@ -149,7 +149,7 @@ def test_list_builders(context):
 
 @api
 def test_edit_builder(context):
-    ('POST to /api/builder should edit a builder')
+    ('PUT to /api/builder should edit a builder')
 
     # Given a builder that there are 3 builders
     bd1 = Builder.create(
@@ -164,7 +164,7 @@ def test_edit_builder(context):
         'Authorization': 'Bearer: testtoken'
     })
 
-    # And I BUILDER to /api/builders
+    # And I PUT on /api/builders
     response = context.http.put(
         '/api/builder/{0}'.format(bd1.id),
         data=json.dumps({
@@ -205,3 +205,49 @@ def test_edit_builder(context):
     builder.should.have.property('id_rsa_private').being.equal('the private key')
     builder.should.have.property('id_rsa_public').being.equal('the public key')
     builder.should.have.property('status').being.equal('ready')
+
+
+@api
+def test_delete_builder(context):
+    ('DELETE to /api/builder should delete a builder')
+
+    # Given a builder that there are 3 builders
+    bd1 = Builder.create(
+        id=uuid.uuid1(),
+        name='Device Management [unit tests]',
+        git_url='git@github.com:gabrielfalcao/lettuce.git',
+        shell_script='make test',
+    )
+
+    # When I prepare the headers for authentication
+    context.headers.update({
+        'Authorization': 'Bearer: testtoken'
+    })
+
+    # And I DELETE to /api/builders
+    response = context.http.delete(
+        '/api/builder/{0}'.format(bd1.id),
+        headers=context.headers,
+    )
+
+    # Then the response should be 200
+    response.status_code.should.equal(200)
+
+    # And it should be a json
+    data = json.loads(response.data)
+    builder_id = data.pop('id', None)
+    data.should.equal({
+        'name': 'Device Management [unit tests]',
+        'git_url': 'git@github.com:gabrielfalcao/lettuce.git',
+        'shell_script': 'make test',
+        'id_rsa_private': None,
+        'id_rsa_public': None,
+        'status': 'ready',
+    })
+    builder_id.should_not.be.none
+
+    # And it should be in the list of builders
+    results = list(Builder.all())
+
+    # Then it should have no results
+    results.should.be.empty

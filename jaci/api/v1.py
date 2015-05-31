@@ -60,6 +60,15 @@ def edit_builder(user, id):
     return json_response(item.to_dict())
 
 
+@web.delete('/api/builder/<id>')
+@authenticated
+def remove_builder(user, id):
+    item = Builder.objects.get(id=id)
+    item.delete()
+    logging.info('deleting builder: %s', item.name)
+    return json_response(item.to_dict())
+
+
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):
