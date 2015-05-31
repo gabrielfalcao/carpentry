@@ -38,6 +38,28 @@ def create_builder(user):
     return json_response(builder.to_dict())
 
 
+@web.put('/api/builder/<id>')
+@authenticated
+def edit_builder(user, id):
+    data = ensure_json_request({
+        'name': any,
+        'git_url': any,
+        'shell_script': any,
+        'id_rsa_private': any,
+        'id_rsa_public': any,
+        'status': any,
+    })
+    item = Builder.objects.get(id=id)
+    for attr, value in data.items():
+        if value is None:
+            continue
+        setattr(item, attr, value)
+
+    item.save()
+    logging.info('edit builder: %s', item.name)
+    return json_response(item.to_dict())
+
+
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):

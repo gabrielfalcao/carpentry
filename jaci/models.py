@@ -18,7 +18,7 @@ def slugify(string):
 class Builder(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     name = columns.Text(required=True)
-    git_url = columns.Text(index=True, partition_key=True)
+    git_url = columns.Text(index=True)
     shell_script = columns.Text(required=True)
     id_rsa_private = columns.Text()
     id_rsa_public = columns.Text()
