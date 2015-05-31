@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
+import uuid
 import json
 from jaci.models import Builder, JaciPreference
 
@@ -101,7 +102,27 @@ def test_set_preferences(context):
 
 @api
 def test_list_builders(context):
-    ('POST to /api/builders should list existing builders')
+    ('GET on /api/builders should list existing builders')
+
+    # Givent that there are 3 builders
+    Builder.create(
+        id=uuid.uuid1(),
+        name=u'Builder 1',
+        git_url='1-git-url-one',
+        shell_script='make test',
+    )
+    Builder.create(
+        id=uuid.uuid1(),
+        name=u'Builder 2',
+        git_url='2-git-url-one',
+        shell_script='make test',
+    )
+    Builder.create(
+        id=uuid.uuid1(),
+        name=u'Builder 3',
+        git_url='3-git-url-one',
+        shell_script='make test',
+    )
 
     # When I prepare the headers for authentication
     context.headers.update({
@@ -109,13 +130,8 @@ def test_list_builders(context):
     })
 
     # And I BUILDER to /api/builders
-    response = context.http.post(
-        '/api/preferences',
-        data=json.dumps({
-            'docker_registry_url': 'https://docker.cnry.io',
-            'global_id_rsa_private_key': 'the private key',
-            'global_id_rsa_public_key': 'the public key',
-        }),
+    response = context.http.get(
+        '/api/builders',
         headers=context.headers,
     )
 
@@ -124,14 +140,8 @@ def test_list_builders(context):
 
     # And it should be a json
     data = json.loads(response.data)
-    data.should.equal({
-        'docker_registry_url': 'https://docker.cnry.io',
-        'global_id_rsa_private_key': 'the private key',
-        'global_id_rsa_public_key': 'the public key',
-    })
+    data.should.be.a(list)
+    data.should.have.length_of(3)
 
-    # And it should be in the list of preferences
-    results = list(JaciPreference.all())
-
-    # Then it should have one result
-    results.should.have.length_of(3)
+    # And there are also 3 items in the database
+    Builder.objects.all().should.have.length_of(3)

@@ -38,6 +38,13 @@ def create_builder(user):
     return json_response(builder.to_dict())
 
 
+@web.get('/api/builders')
+@authenticated
+def list_builders(user):
+    items = [b.to_dict() for b in Builder.objects.all()]
+    return json_response(items)
+
+
 @web.post('/api/preferences')
 @authenticated
 def set_preferences(user):
