@@ -100,3 +100,11 @@ def set_preferences(user):
         logging.info('setting preference %s: %s', key, value)
 
     return json_response(results)
+
+
+@web.post('/api/builder/<id>/build')
+@authenticated
+def create_build(user, id):
+    builder = Builder.objects.get(id=id)
+    item = builder.trigger(builder.branch)
+    return json_response(item.to_dict())

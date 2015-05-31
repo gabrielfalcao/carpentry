@@ -3,7 +3,7 @@
 #
 import uuid
 import json
-from jaci.models import Builder, JaciPreference
+from jaci.models import Builder, JaciPreference, Build
 
 from .helpers import api
 
@@ -43,6 +43,7 @@ def test_create_builder(context):
         'id_rsa_private': 'the private key',
         'id_rsa_public': 'the public key',
         'status': 'ready',
+        'branch': 'master',
     })
     builder_id.should_not.be.none
 
@@ -188,6 +189,7 @@ def test_edit_builder(context):
         'id_rsa_private': 'the private key',
         'id_rsa_public': 'the public key',
         'status': 'ready',
+        'branch': 'master',
     })
     builder_id.should_not.be.none
 
@@ -243,6 +245,7 @@ def test_delete_builder(context):
         'id_rsa_private': None,
         'id_rsa_public': None,
         'status': 'ready',
+        'branch': 'master',
     })
     builder_id.should_not.be.none
 
@@ -251,3 +254,62 @@ def test_delete_builder(context):
 
     # Then it should have no results
     results.should.be.empty
+
+
+@api
+def test_create_build_instance_from_builder(context):
+    ('POST to /api/builder/uuid/build should create a new build and scheduler it')
+
+    # Given a builder that there are 3 builders
+    bd1 = Builder.create(
+        id=uuid.uuid1(),
+        name='Device Management [unit tests]',
+        git_url='git@github.com:gabrielfalcao/lettuce.git',
+        shell_script='make test',
+    )
+
+    # When I prepare the headers for authentication
+    context.headers.update({
+        'Authorization': 'Bearer: testtoken'
+    })
+
+    # And I POST on /api/builder/uuid/build
+    response = context.http.post(
+        '/api/builder/{0}/build'.format(bd1.id),
+        headers=context.headers,
+    )
+
+    # Then the response should be 200
+    response.status_code.should.equal(200)
+
+    # And it should be a json
+    data = json.loads(response.data)
+    build_id = data.pop('id', None)
+    builder_id = data.pop('builder_id', None)
+    date_created = data.pop('date_created', None)
+    data.should.equal({
+        'status': 'scheduled',
+        'branch': 'master',
+        'code': None,
+        'stdout': None,
+        'stderr': None,
+        'date_finished': None,
+    })
+    build_id.should_not.be.none
+    date_created.should_not.be.none
+
+    # And it should be in the list of builders
+    results = list(Build.all())
+
+    # Then it should have one result
+    results.should.have.length_of(1)
+
+    # And that one result should match the edited Builder
+    build = results[0]
+    builder_id.should.equal(str(bd1.id))
+    build.should.have.property('stderr').being.equal(None)
+    build.should.have.property('stdout').being.equal(None)
+    build.should.have.property('code').being.equal(None)
+    build.should.have.property('status').being.equal('scheduled')
+    build.should.have.property('builder_id')
+    str(build.builder_id).should.be.equal(str(builder_id))
