@@ -1,72 +1,46 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-import gevent
-import gevent.monkey
-gevent.monkey.patch_all()
-from gevent.event import AsyncResult
-
-import logging
-from haigha.connection import Connection
-from haigha.message import Message
+import time
+import pika
+from threading import Thread
 
 
-def close(ch):
-    conn.close()
-
-conn = Connection(
-    transport='gevent',
-    close_cb=close,
-    logger=logging.getLogger())
-
-waiter = AsyncResult()
+def get_channel(connection):
+    channel = connection.channel()
+    channel.exchange_declare(exchange='test_exchange', exchange_type='topic')
+    channel.queue_declare(queue='test_queue')
+    channel.queue_unbind(queue='test_queue', exchange='test_exchange', routing_key='test_routing_key')
+    return channel
 
 
-def message_pump():
-    print "Entering Message Pump"
-    try:
-        while conn is not None:
-            # Pump
-            conn.read_frames()
-
-            # Yield to other greenlets so they don't starve
-            gevent.sleep(0.1)
-    finally:
-        print "Leaving Message Pump"
-        waiter.set()
+def on_message(channel, method_frame, header_frame, body):
+    print method_frame.delivery_tag
+    print body
+    print
+    channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
 
-gevent.spawn(message_pump)
+def consume():
+    connection = pika.BlockingConnection()
+    channel = get_channel(connection)
+    channel.basic_consume(on_message, 'test_queue')
+    channel.start_consuming()
+# channel.stop_consuming()
+# connection.close()
 
 
-def handle_message_received(msg):
-    print "received message: %s" % (msg, )
+consumption = Thread(target=consume)
+consumption.start()
 
+connection = pika.BlockingConnection()
+channel = get_channel(connection)
 
-channel = conn.channel()
-# todo: try to rename jacipub with jaci.pub
-channel.exchange.declare('jacipub', 'topic')
-channel.queue.declare('jaci.builds')
-channel.queue.bind('jaci.builds', 'jacipub', routing_key='jaci.builds.*')
+for x in range(10):
 
-
-def send_message(body):
-    msg = Message(body, application_headers={'foo': 'bar'})
-    print "Publising message: %s" % (msg,)
-    try:
-        channel.basic.publish(msg, 'test_exchange', 'test_routing_key')
-    except Exception as e:
-        print e
-
-messages = ['foo', 'bar']
-gevent.sleep(0)
-
-while True:
-    try:
-        gevent.sleep(.1)
-        if messages:
-            send_message(messages.pop())
-
-    except KeyboardInterrupt:
-        print "BYE"
-        break
+    channel.basic_publish('test_exchange',
+                          'test_routing_key',
+                          'message body value',
+                          pika.BasicProperties(content_type='text/plain',
+                                               delivery_mode=1))
+    time.sleep(0.1)
