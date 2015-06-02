@@ -75,7 +75,7 @@ angular.module('JaciApp', [
     }
   });
   hotkeys.add({
-    combo: 'f',
+    combo: 'd',
     description: 'dashboard',
     callback: function () {
       $rootScope.go('/');
