@@ -18,10 +18,10 @@
           <tr>
             <th>Builder name</th>
             <th>#</th>
-            <th>Last author</th>
-            <th>Last commit</th>
-            <th>Last branch</th>
-            <th>Build Status</th>
+            <th>author</th>
+            <th>commit</th>
+            <th>branch</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -67,15 +67,15 @@
 <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
             </td>
           </tr>
-          <tr class="success">
+          <tr class="info">
             <td><strong>ansible</strong></td>
             <th scope="row">1</th>
             <td>Jennie Li &lt;jennie@canary.is&gt;</td>
             <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
             <td>master</td>
             <td>
-              <button class="btn btn-xs btn-success" ng-click="go('/build/cnry/ansible/1')">
-                <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
+              <button class="btn btn-xs btn-info" ng-click="go('/build/cnry/ansible/1')">
+                <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
             </td>
           </tr>
 
@@ -90,6 +90,7 @@
             <td>
               <strong>Labels:</strong>
               <br />
+              <span class="glyphicon glyphicon-play"></span> build now <br />
               <span class="glyphicon glyphicon-console"></span> console output <br />
               <span class="glyphicon glyphicon-refresh"></span> retry build <br />
               <span class="glyphicon glyphicon-envelope"></span> notify commit author <br />
