@@ -14,6 +14,9 @@ gunicorn:
 run:
 	python jaci/cli.py run
 
+workers:
+	python jaci/cli.py workers
+
 unit:
 	nosetests -v -s --rednose --with-coverage --cover-erase --cover-package=jaci tests/unit
 

@@ -7,15 +7,18 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import time
 import json
 import logging
 import argparse
 import warnings
 import coloredlogs
 from plant import Node
+from lineup import JSONRedisBackend
 from tumbler.core import Web
 from jaci.version import version
 from jaci import routes
+from jaci.workers.pipelines import LocalBuilder
 
 this_node = Node(__file__).dir
 
@@ -86,10 +89,30 @@ def jaci_run():
     server.run(port=args.port, host=args.host)
 
 
+def jaci_run_local_pipeline():
+    parser = argparse.ArgumentParser(
+        prog='jaci local-workers',
+        description='runs the local workers')
+
+    args = parser.parse_args(get_remaining_sys_argv())
+
+    print LOGO
+    pipeline = LocalBuilder(JSONRedisBackend)
+    pipeline.run_daemon()
+    print "running workers"
+    try:
+        while pipeline.started:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print "Aborting local workers"
+        pipeline.stop()
+
+
 def main():
     HANDLERS = {
         'version': jaci_version,
         'run': jaci_run,
+        'workers': jaci_run_local_pipeline,
     }
 
     parser = argparse.ArgumentParser(prog='jaci')
@@ -115,20 +138,7 @@ def main():
         LOG_LEVEL_NAME = 'WARNING'
 
     LOG_LEVEL = getattr(logging, LOG_LEVEL_NAME)
-    LOG_FILENAME = os.environ.get('LOGFILE')
-
-    root = logging.getLogger()
-    root.setLevel(LOG_LEVEL)
-
-    if LOG_FILENAME:
-        [root.removeHandler(i) for i in root.handlers]
-        fmtr = logging.Formatter('[%(levelname)s][%(asctime)s]: %(message)s')
-        hndlr = logging.FileHandler(LOG_FILENAME)
-        hndlr.setFormatter(fmtr)
-        root.addHandler(hndlr)
-
-    else:
-        coloredlogs.install(level=LOG_LEVEL)
+    coloredlogs.install(level=LOG_LEVEL)
 
     if args.command not in HANDLERS:
         parser.print_help()
@@ -144,4 +154,5 @@ def main():
 
 
 if __name__ == '__main__':
+    routes
     main()
