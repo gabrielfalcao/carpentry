@@ -1,1 +1,1 @@
-include jaci/templates jaci/static
+include jaci/templates jaci/static *.md *.txt
