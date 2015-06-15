@@ -28,7 +28,6 @@ def prepare_db(context):
     # CREATE KEYSPACE jaci
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-    context.connection = connection.setup(['127.0.0.1'], 'jaci')
     create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
 
     for t in get_models():

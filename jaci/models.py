@@ -1,14 +1,25 @@
 # -*- coding: utf-8 -*-
 #
 import re
+import redis
 import uuid
 # import bcrypt
 # import logging
 # from dateutil.parser import parse as parse_datetime
 from datetime import datetime
 from cqlengine import columns
+from cqlengine import connection
 from cqlengine.models import Model
-# from jaci.server import get_absolute_url
+from jaci import conf
+
+
+redis_pool = redis.ConnectionPool(
+    host=conf.redis_host,
+    port=conf.redis_port,
+    db=conf.redis_db
+)
+
+connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
 
 
 def slugify(string):
@@ -73,3 +84,18 @@ class Build(Model):
 
     def to_dict(self):
         return dict(self.items())
+
+    @classmethod
+    def calculate_redis_key_for(Build, builder_id, action):
+        return b'build:{0}:{1}'.format(builder_id, action)
+
+    @classmethod
+    def push_live_output(Build, build_id, stdout, stderr):
+        stdout_key = Build.calculate_redis_key_for(build_id, 'stdout')
+        stderr_key = Build.calculate_redis_key_for(build_id, 'stderr')
+
+        cache = redis.Redis(connection_pool=redis_pool)
+        pipe = cache.pipeline()
+        pipe.append(stdout_key, stdout)
+        pipe.append(stderr_key, stderr)
+        return pipe.execute()
