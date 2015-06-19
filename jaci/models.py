@@ -195,3 +195,7 @@ class User(Model):
     github_access_token = columns.Text(index=True)
     name = columns.Text(required=True)
     email = columns.Text(index=True)
+    jaci_token = columns.UUID(required=True, index=True)
+
+    def to_dict(self):
+        return model_to_dict(self)

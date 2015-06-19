@@ -48,7 +48,7 @@ angular.module('JaciApp', [
     });
     $urlRouterProvider.otherwise('/splash');
 }).run(function ($rootScope, $state, $templateCache, $http, notify, hotkeys) {
-    $http.defaults.headers.common.Authorization = 'Bearer: foobar'
+    $http.defaults.headers.common.Authorization = 'Bearer: ' + window.JACI_TOKEN;
 }).directive('navbar', function ($rootScope, $state, $location) {
     return {
         restrict: 'E',

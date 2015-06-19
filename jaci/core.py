@@ -26,10 +26,13 @@ class JaciHttpServer(Web):
             if user is not None:
                 return user.github_access_token
 
-        @self.flask_app.route('/oauth/github.com', methods=["POST"])
+        @self.flask_app.route('/oauth/github.com')
         @self.github.authorized_handler
         def authorized(access_token):
             next_url = request.args.get('next') or '/'
+            access_token = access_token or request.args.get('access_token')
+
+            logging.warning("authorized_handler token: %s", access_token)
             if access_token is None:
                 return redirect(next_url)
 
@@ -39,13 +42,16 @@ class JaciHttpServer(Web):
             if not user_exists:
                 g.user = User(
                     id=uuid.uuid1(),
+                    jaci_token=uuid.uuid4(),
                 )
             else:
                 g.user = users[0]
-                g.user.github_access_token = access_token
+                g.user.jaci_token = uuid.uuid4()
 
             g.user.save()
             session['user_id'] = g.user.id
+            session['jaci_token'] = g.user.jaci_token
+            session['github_access_token'] = access_token
             return redirect('/')
 
         @self.flask_app.route('/login', methods=["GET"])

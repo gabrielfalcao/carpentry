@@ -6,7 +6,7 @@ import re
 import logging
 
 from tumbler import tumbler
-from flask import request, abort
+from flask import request, abort, g, session, redirect
 web = tumbler.module(__name__)
 
 from functools import wraps
@@ -14,7 +14,7 @@ from jaci.models import User
 
 
 class Authenticator(object):
-    regex = re.compile(r'Bearer:?\s+([\w-]{36})\s*')
+    regex = re.compile(r'Bearer:?\s+(.*)\s*')
 
     def __init__(self, headers):
         self.bearer = headers.get('Authorization')
@@ -35,21 +35,28 @@ class Authenticator(object):
         return string
 
     def get_user(self):
-
         token = self.get_token()
-        user = User(
-            name=token,
-            token=token,
-            email='{0}@jaci.io'.format(token)
-        )
-        return user
+        if not token:
+            logging.warning("no token coming from header")
+            return
+
+        g.user = User.get(jaci_token=token)
+        session['user'] = g.user.to_dict()
+        session['user_id'] = g.user.id
+        session['jaci_token'] = g.user.jaci_token
+        session['github_access_token'] = g.user.github_access_token
+        return g.user
 
 
 def authenticated(resource):
     @wraps(resource)
     def decorator(*args, **kw):
         auth = Authenticator(request.headers)
-        kw['user'] = auth.get_user()
+        user = auth.get_user()
+        if not user:
+            return redirect('/login')
+
+        kw['user'] = user
         return resource(*args, **kw)
 
     return decorator
