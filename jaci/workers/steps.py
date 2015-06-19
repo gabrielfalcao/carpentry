@@ -118,7 +118,7 @@ class LocalRetrieve(Step):
             chdir = build_dir
         else:
             git = render_string('/usr/bin/env git clone {git_uri} ' + build_dir, instructions)
-            chdir = conf.workdir.path
+            chdir = conf.workdir_node.path
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir)
@@ -178,6 +178,7 @@ class PrepareShellScript(Step):
         with io.open(shell_script_path, 'wb') as fd:
             # os.fchmod(fd, 755)
             fd.write("#!/bin/bash\n")
+            fd.write("set -e\n")
             fd.write(instructions['build']['shell'])
 
         instructions['shell_script_path'] = shell_script_path
@@ -194,7 +195,7 @@ class LocalBuild(Step):
 
     def consume(self, instructions):
         set_build_status(instructions, 'running')
-        cmd = instructions['build']['shell']
+        cmd = render_string('bash {shell_script_path}', instructions)
         process = run_command(cmd, chdir=instructions['build_dir'])
         redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
 
@@ -212,5 +213,12 @@ class LocalBuild(Step):
         b.code = int(exit_code)
         b.date_finished = datetime.utcnow()
         b.save()
+
+        if b.code == 0:
+            status = 'succeeded'
+        else:
+            status = 'failed'
+
+        set_build_status(instructions, status)
 
         self.produce(instructions)

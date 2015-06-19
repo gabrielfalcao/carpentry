@@ -26,3 +26,7 @@ unit:
 
 functional:
 	nosetests --stop --logging-level=INFO -v -s --with-coverage --cover-erase --cover-package=jaci --rednose tests/functional
+
+clean:
+	rm -rf sandbox
+	git clean -Xdf
