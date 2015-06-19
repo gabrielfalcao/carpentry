@@ -184,6 +184,8 @@ def main():
 
     args = parser.parse_args(argv)
 
+    logging.getLogger('cqlengine.cql').setLevel(logging.WARNING)
+
     coloredlogs.install(level=logging.INFO)
     for name in ['lineup.steps', 'lineup', 'werkzeug', 'tumbler', 'jaci']:
         logger = logging.getLogger(name)

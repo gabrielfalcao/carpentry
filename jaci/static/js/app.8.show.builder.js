@@ -17,6 +17,8 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
 
             .error(function(data, status, headers, config) {
                 console.log("FAILED", data);
+                clearInterval(poller);
+                $rootScope.go("/");
             });
     }
     $scope.refresh = refresh;

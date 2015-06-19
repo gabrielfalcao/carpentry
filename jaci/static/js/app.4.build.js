@@ -22,7 +22,10 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             console.log(data);
         }).error(function (data, status, headers, config) {
             console.log('failed ' + url, status);
+            clearInterval(poller);
             $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
+            $rootScope.go("/");
+
         });
 
     }
@@ -33,6 +36,8 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
         }).error(function (data, status, headers, config) {
             console.log('failed ' + url, status);
             $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
+            clearInterval(poller);
+            $rootScope.go("/");
         });
     }
 
@@ -41,12 +46,11 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
         get_output();
     }
     var poller = setInterval(function () {
-        get_output();
+        if ($scope.eof) {
+            clearInterval(poller);
+        }
+        refresh();
     }, 1500);
-
-    setInterval(function () {
-        get_build();
-    }, 5000);
-
     refresh();
+
 });

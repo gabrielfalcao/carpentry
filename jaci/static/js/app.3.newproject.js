@@ -8,11 +8,11 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
         $http.post('/api/builder', builder).
             success(function(data, status, headers, config) {
                 console.log("/api/builder OK");
-                go('/');
-                location.href = location.href;
+                $rootScope.go('/');
             }).
             error(function(data, status, headers, config) {
-                console.log("/api/builder FAILED")
+                console.log("/api/builder FAILED");
+                $rootScope.go("/");
             });
     };
 });

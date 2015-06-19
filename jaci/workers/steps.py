@@ -14,6 +14,8 @@ from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
 from jaci.util import calculate_redis_key, render_string
 from jaci.models import Build
+# import unicodedata
+
 
 AUTHOR_REGEX = re.compile(
     r'Author: (?P<name>[^<]+\s*)[<](?P<email>[^>]+)[>]')
@@ -26,19 +28,26 @@ def run_command(command, chdir, bufsize=64):
     return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir)
 
 
+def force_unicode(string):
+    if not isinstance(string, unicode):
+        return unicode(string, errors='ignore')
+
+    return string
+
+
 def stream_output(step, process, redis_stdout_key):
     stdout = []
 
     for out in iter(lambda: process.stdout.read(1), ''):
+        out = force_unicode(out)
         step.backend.redis.append(redis_stdout_key, out)
         stdout.append(out)
 
     exit_code = process.wait()
-
     try:
         return '\n'.join(stdout), exit_code
     except UnicodeDecodeError:
-        return '\n'.decode('utf-8').join(stdout), exit_code
+        return '\n'.encode('utf-8').join(stdout), exit_code
 
 
 def get_build_from_instructions(instructions):
@@ -60,7 +69,7 @@ class PrepareSSHKey(Step):
     def before_consume(self):
         self.log("ready to place ssh keys")
 
-    def write_file(self, path, filename, contents):
+    def write_file(self, path, filename, contents, mode=0755):
         if not os.path.exists(path):
             os.makedirs(path)
 
@@ -68,23 +77,25 @@ class PrepareSSHKey(Step):
         with io.open(destination, 'wb') as fd:
             fd.write(contents)
 
+        os.chmod(destination, mode)
+
     def consume(self, instructions):
         set_build_status(instructions, 'running')
+        slug = instructions['slug']
+        workdir = conf.build_node.join('builds/{0}'.format(slug))
+
+        ssh_dir = conf.workdir_node.join('ssh-keys/{0}'.format(slug))
 
         private_key = instructions['id_rsa_private']
         public_key = instructions['id_rsa_public']
 
         id_rsa_private_key_path = render_string('{slug}-id_rsa', instructions)
         id_rsa_public_key_path = render_string('{slug}-id_rsa.pub', instructions)
-        instructions['id_rsa_private_key_path'] = id_rsa_private_key_path
-        instructions['id_rsa_public_key_path'] = id_rsa_public_key_path
+        instructions['id_rsa_private_key_path'] = os.path.join(ssh_dir, id_rsa_private_key_path)
+        instructions['id_rsa_public_key_path'] = os.path.join(ssh_dir, id_rsa_public_key_path)
 
-        slug = instructions['slug']
-        workdir = conf.build_node.join('builds/{0}'.format(slug))
-
-        ssh_dir = conf.workdir_node.join('ssh-keys/{0}'.format(slug))
-        self.write_file(ssh_dir, id_rsa_private_key_path, private_key)
-        self.write_file(ssh_dir, id_rsa_public_key_path, public_key)
+        self.write_file(ssh_dir, id_rsa_private_key_path, private_key, mode=0600)
+        self.write_file(ssh_dir, id_rsa_public_key_path, public_key, mode=0644)
 
         redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
         instructions['redis_stdout_key'] = redis_stdout_key
@@ -137,9 +148,9 @@ class LocalRetrieve(Step):
 
         b = Build.objects.get(id=instructions['id'])
         if b.stdout is None:
-            b.stdout = ''
+            b.stdout = u''
 
-        b.stdout += stdout
+        b.stdout += force_unicode(stdout)
         b.code = int(exit_code)
         b.save()
 
@@ -201,11 +212,12 @@ class PrepareShellScript(Step):
         build_dir = instructions['build_dir']
         shell_script_path = os.path.join(build_dir, render_string('.{slug}.shell.sh', instructions))
         with io.open(shell_script_path, 'wb') as fd:
-            # os.fchmod(fd, 755)
+
             fd.write("#!/bin/bash\n")
             fd.write("set -e\n")
             fd.write(instructions['build']['shell'])
 
+        os.chmod(shell_script_path, 0755)
         instructions['shell_script_path'] = shell_script_path
         self.produce(instructions)
 
@@ -234,7 +246,7 @@ class LocalBuild(Step):
         if b.stdout is None:
             b.stdout = ''
 
-        b.stdout += stdout
+        b.stdout += force_unicode(stdout)
         b.code = int(exit_code)
         b.date_finished = datetime.utcnow()
         b.save()
