@@ -25,13 +25,15 @@
           </tr>
         </thead>
         <tbody ng-repeat="build in builds">
-          <tr ng-class="builder.css_status">
+          <tr ng-class="build.css_status">
             <td><strong>{{ build.id }}</strong></td>
             <td>{{ build.status }}</td>
             <td>{{ build.code }}</td>
             <td>{{ build.date_created }}</td>
             <td>{{ build.date_finished }}</td>
-            <td>{{ build.stdout }}</td>
+            <td>
+              <a ng-href="/builder/{{builder.id}}/build/{{build.id}}">see output</a>
+            </td>
           </tr>
         </tbody>
       </table>

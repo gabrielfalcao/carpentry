@@ -15,6 +15,10 @@ from cqlengine.models import Model
 from jaci import conf
 
 logger = logging.getLogger('jaci')
+STATUS_MAP = {
+    'succeeded': 'success',
+    'failed': 'danger',
+}
 
 
 redis_pool = redis.ConnectionPool(
@@ -105,10 +109,6 @@ class Builder(Model):
         return results[0]
 
     def to_dict(self):
-        STATUS_MAP = {
-            'succeeded': 'success',
-            'failed': 'danger',
-        }
         last_build = self.get_last_build()
         serialized_build = None
         if last_build:
@@ -154,7 +154,9 @@ class Build(Model):
         return super(Build, self).save()
 
     def to_dict(self):
-        return model_to_dict(self)
+        return model_to_dict(self, {
+            'css_status': STATUS_MAP.get(self.status, 'success'),
+        })
 
     @classmethod
     def calculate_redis_key_for(Build, builder_id, action):
