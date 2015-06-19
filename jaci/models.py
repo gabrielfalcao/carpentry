@@ -15,6 +15,19 @@ from cqlengine.models import Model
 from jaci import conf
 
 logger = logging.getLogger('jaci')
+
+BUILD_STATUSES = [
+    'ready',      # no builds scheduled
+    'scheduled',  # scheduled but not yet running
+    'retrieving',    # git clone
+    'checking',    # looking for .jaci.yml
+    'preparing',    # preparing shell script
+    'running',    # running
+    'succeeded',  # finished with success, subprocess returned status 0
+    'failed',     # finished with an error, subprocess returned status != 0
+]
+
+
 STATUS_MAP = {
     'succeeded': 'success',
     'failed': 'danger',
@@ -67,14 +80,6 @@ def model_to_dict(instance, extra={}):
         raise TypeError(msg.format(type(extra)))
 
     return data
-
-BUILD_STATUSES = [
-    'ready',      # no builds scheduled
-    'scheduled',  # scheduled but not yet running
-    'running',    # running
-    'succeeded',  # finished with success, subprocess returned status 0
-    'failed',     # finished with an error, subprocess returned status != 0
-]
 
 
 class Builder(Model):

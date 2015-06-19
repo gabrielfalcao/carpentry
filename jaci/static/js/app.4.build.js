@@ -5,9 +5,15 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
     $scope.build_id = $stateParams.build_id;
     $scope.eof = false;
     var last_build_output = "";
+    if ($rootScope.buildCache[builderId] === undefined) {
+        $rootScope.buildCache[builderId] = {}
+    }
+    if ($rootScope.buildCache[builderId][$stateParams.build_id] === undefined) {
+        $rootScope.buildCache[builderId][$stateParams.build_id] = {}
+    }
     var build =  $rootScope.buildCache[builderId][$scope.build_id];
 
-    $scope.html_output = $sce.trustAsHtml(build.stdout);
+    $scope.html_output = $sce.trustAsHtml(build.stdout || "");
 
     function get_output() {
         var url = '/api/build/'+$stateParams.build_id+'/output'

@@ -33,6 +33,7 @@
             <td>{{ builder.last_build.branch }}</td>
             <td>
               <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id)">
+                                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>
 
               <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/build/' + builder.last_build.id)">
                 <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>

@@ -37,6 +37,16 @@ def stream_output(step, process, redis_stdout_key):
     return '\n'.join(stdout), exit_code
 
 
+def get_build_from_instructions(instructions):
+    return Build.objects.get(id=instructions['id'])
+
+
+def set_build_status(instructions, status):
+    build = get_build_from_instructions(instructions)
+    build.status = status
+    build.save()
+
+
 class PrepareSSHKey(Step):
     def after_consume(self, instructions):
         path = render_string('{slug}-id_rsa', instructions)
@@ -55,6 +65,8 @@ class PrepareSSHKey(Step):
             fd.write(contents)
 
     def consume(self, instructions):
+        set_build_status(instructions, 'running')
+
         private_key = instructions['id_rsa_private']
         public_key = instructions['id_rsa_public']
 
@@ -89,6 +101,8 @@ class LocalRetrieve(Step):
         self.log("ready to git clone")
 
     def consume(self, instructions):
+        set_build_status(instructions, 'retrieving')
+
         slug = instructions['slug']
         workdir = conf.workdir_node.join(slug)
         build_dir = conf.build_node.join(slug)
@@ -131,6 +145,8 @@ class CheckAndLoadBuildFile(Step):
         self.log("ready to load .jaci.yml")
 
     def consume(self, instructions):
+        set_build_status(instructions, 'checking')
+
         build_dir = instructions['build_dir']
         yml_path = os.path.join(build_dir, '.jaci.yml')
 
@@ -156,6 +172,7 @@ class PrepareShellScript(Step):
         self.log("ready to write shell scripts")
 
     def consume(self, instructions):
+        set_build_status(instructions, 'preparing')
         build_dir = instructions['build_dir']
         shell_script_path = os.path.join(build_dir, render_string('.{slug}.shell.sh', instructions))
         with io.open(shell_script_path, 'wb') as fd:
@@ -176,8 +193,9 @@ class LocalBuild(Step):
         self.log("ready to run builds")
 
     def consume(self, instructions):
-        ls = 'ls'
-        process = run_command(ls, chdir=instructions['build_dir'])
+        set_build_status(instructions, 'running')
+        cmd = instructions['build']['shell']
+        process = run_command(cmd, chdir=instructions['build_dir'])
         redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
 
         stdout, exit_code = stream_output(self, process, redis_stdout_key)
