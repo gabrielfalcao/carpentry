@@ -15,7 +15,7 @@ def test_create_builder(context):
         id=uuid.uuid1(),
         name=u'Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
-        build_instructions='make test',
+        shell_script='make test',
     )
 
     # When I get all results

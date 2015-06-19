@@ -86,18 +86,21 @@ class Builder(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     name = columns.Text(required=True)
     git_uri = columns.Text(index=True)
-    build_instructions = columns.Text(required=True)
+    shell_script = columns.Text(required=True)
     id_rsa_private = columns.Text()
     id_rsa_public = columns.Text()
     status = columns.Text(default='ready')
     branch = columns.Text(default='master')
+    branch = columns.Text(default='master')
 
-    def trigger(self, branch=None):
+    def trigger(self, branch=None, author_name=None, author_email=None):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
             builder_id=self.id,
-            branch=branch or self.branch
+            branch=branch or self.branch,
+            author_name=author_name,
+            author_email=author_email,
         )
         pipeline = get_pipeline()
         payload = self.to_dict()

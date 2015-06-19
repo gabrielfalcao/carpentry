@@ -17,31 +17,27 @@ def read_ssh_file(name):
         return fd.read()
 
 
+PYTHON = """
+set -e
+pip install virtualenv
+virtualenv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -r development.txt || echo OK
+make
+""".strip()
+
+
 def main():
-    Builder.create(
-        id=uuid1(),
-        name=u'Birdseye',
-        git_uri='git@github.com:cnry/birdseye.git',
-        build_instructions='make test',
-        id_rsa_private=read_ssh_file('id_rsa'),
-        id_rsa_public=read_ssh_file('id_rsa.pub'),
-    )
-    Builder.create(
-        id=uuid1(),
-        name=u'Birdseed',
-        git_uri='git@github.com:cnry/birdseed.git',
-        build_instructions='make test',
-        id_rsa_private=read_ssh_file('id_rsa'),
-        id_rsa_public=read_ssh_file('id_rsa.pub'),
-    )
-    Builder.create(
-        id=uuid1(),
-        name=u'Ingress',
-        git_uri='git@github.com:cnry/ingress.git',
-        build_instructions='make test',
-        id_rsa_private=read_ssh_file('id_rsa'),
-        id_rsa_public=read_ssh_file('id_rsa.pub'),
-    )
+    for name in ['sure', 'steadymark', 'lettuce', 'HTTPretty', 'plant', 'tumbler', 'speakers']:
+        Builder.create(
+            id=uuid1(),
+            name=name,
+            git_uri='git@github.com:cnry/{0}.git'.format(name),
+            shell=PYTHON,
+            id_rsa_private=read_ssh_file('id_rsa'),
+            id_rsa_public=read_ssh_file('id_rsa.pub'),
+        )
 
 
 if __name__ == '__main__':

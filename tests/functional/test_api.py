@@ -23,7 +23,7 @@ def test_create_builder(context):
         data=json.dumps({
             'name': 'Device Management [unit tests]',
             'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-            'build_instructions': 'make test',
+            'shell_script': 'make test',
             'id_rsa_private': 'the private key',
             'id_rsa_public': 'the public key',
         }),
@@ -37,15 +37,16 @@ def test_create_builder(context):
     data = json.loads(response.data)
     builder_id = data.pop('id', None)
     data.should.equal({
-        'branch': u'master',
-        'build_instructions': u'make test',
-        'css_status': u'info',
-        'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
-        # 'id_rsa_private': u'the private key',
-        # 'id_rsa_public': u'the public key',
-        'last_build': None,
-        'name': u'Device Management [unit tests]',
-        'status': u'ready'
+        u'branch': u'master',
+         u'css_status': u'success',
+         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
+         u'id_rsa_private': u'the private key',
+         u'id_rsa_public': u'the public key',
+         u'last_build': None,
+         u'name': u'Device Management [unit tests]',
+         u'shell_script': u'make test',
+         u'slug': u'devicemanagementunittests',
+         u'status': u'ready'
     })
     builder_id.should_not.be.none
 
@@ -59,7 +60,7 @@ def test_create_builder(context):
     builder = results[0]
     builder.should.have.property('name').being.equal('Device Management [unit tests]')
     builder.should.have.property('git_uri').being.equal('git@github.com:gabrielfalcao/lettuce.git')
-    builder.should.have.property('build_instructions').being.equal('make test')
+    builder.should.have.property('shell_script').being.equal('make test')
     builder.should.have.property('id_rsa_private').being.equal('the private key')
     builder.should.have.property('id_rsa_public').being.equal('the public key')
     builder.should.have.property('status').being.equal('ready')
@@ -112,19 +113,19 @@ def test_list_builders(context):
         id=uuid.uuid1(),
         name=u'Builder 1',
         git_uri='1-git-url-one',
-        build_instructions='make test',
+        shell_script='make test',
     )
     Builder.create(
         id=uuid.uuid1(),
         name=u'Builder 2',
         git_uri='2-git-url-one',
-        build_instructions='make test',
+        shell_script='make test',
     )
     Builder.create(
         id=uuid.uuid1(),
         name=u'Builder 3',
         git_uri='3-git-url-one',
-        build_instructions='make test',
+        shell_script='make test',
     )
 
     # When I prepare the headers for authentication
@@ -159,7 +160,7 @@ def test_edit_builder(context):
         id=uuid.uuid1(),
         name='Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
-        build_instructions='make test',
+        shell_script='make test',
     )
 
     # When I prepare the headers for authentication
@@ -171,7 +172,7 @@ def test_edit_builder(context):
     response = context.http.put(
         '/api/builder/{0}'.format(bd1.id),
         data=json.dumps({
-            'build_instructions': 'make test',
+            'shell_script': 'make test',
             'id_rsa_private': 'the private key',
             'id_rsa_public': 'the public key',
         }),
@@ -185,13 +186,16 @@ def test_edit_builder(context):
     data = json.loads(response.data)
     builder_id = data.pop('id', None)
     data.should.equal({
-        'name': 'Device Management [unit tests]',
-        'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-        'build_instructions': 'make test',
-        'status': 'ready',
-        'branch': 'master',
+        'branch': u'master',
+        'css_status': u'success',
+        'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
+        'id_rsa_private': u'the private key',
+        'id_rsa_public': u'the public key',
         'last_build': None,
-        'css_status': 'info',
+        'name': u'Device Management [unit tests]',
+        'shell_script': u'make test',
+        'slug': u'devicemanagementunittests',
+        'status': u'ready'
     })
     builder_id.should_not.be.none
 
@@ -205,7 +209,7 @@ def test_edit_builder(context):
     builder = results[0]
     builder.should.have.property('name').being.equal('Device Management [unit tests]')
     builder.should.have.property('git_uri').being.equal('git@github.com:gabrielfalcao/lettuce.git')
-    builder.should.have.property('build_instructions').being.equal('make test')
+    builder.should.have.property('shell_script').being.equal('make test')
     builder.should.have.property('id_rsa_private').being.equal('the private key')
     builder.should.have.property('id_rsa_public').being.equal('the public key')
     builder.should.have.property('status').being.equal('ready')
@@ -220,7 +224,7 @@ def test_delete_builder(context):
         id=uuid.uuid1(),
         name='Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
-        build_instructions='make test',
+        shell_script='make test',
     )
 
     # When I prepare the headers for authentication
@@ -241,13 +245,16 @@ def test_delete_builder(context):
     data = json.loads(response.data)
     builder_id = data.pop('id', None)
     data.should.equal({
-        'branch': u'master',
-        'build_instructions': u'make test',
-        'css_status': u'info',
-        'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
-        'last_build': None,
-        'name': u'Device Management [unit tests]',
-        'status': u'ready'
+        u'branch': u'master',
+        u'css_status': u'success',
+        u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
+        u'id_rsa_private': None,
+        u'id_rsa_public': None,
+        u'last_build': None,
+        u'name': u'Device Management [unit tests]',
+        u'shell_script': u'make test',
+        u'slug': u'devicemanagementunittests',
+        u'status': u'ready'
     })
     builder_id.should_not.be.none
 
@@ -267,7 +274,7 @@ def test_create_build_instance_from_builder(context):
         id=uuid.uuid1(),
         name='Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
-        build_instructions='make test',
+        shell_script='make test',
     )
 
     # When I prepare the headers for authentication
@@ -278,6 +285,11 @@ def test_create_build_instance_from_builder(context):
     # And I POST on /api/builder/uuid/build
     response = context.http.post(
         '/api/builder/{0}/build'.format(bd1.id),
+        data=json.dumps({
+            'author_name': 'Gabriel',
+            'author_email': 'gabriel@nacaolivre.org',
+            'commit': 'oooo',
+        }),
         headers=context.headers,
     )
 
@@ -290,12 +302,16 @@ def test_create_build_instance_from_builder(context):
     builder_id = data.pop('builder_id', None)
     date_created = data.pop('date_created', None)
     data.should.equal({
-        'status': 'scheduled',
-        'branch': 'master',
-        'code': None,
-        'stdout': None,
-        'stderr': None,
-        'date_finished': None,
+        u'author_email': u'gabriel@nacaolivre.org',
+        u'author_name': u'Gabriel',
+        u'branch': u'master',
+        u'code': None,
+        u'commit': None,
+        u'css_status': u'warning',
+        u'date_finished': None,
+        u'status': u'scheduled',
+        u'stderr': None,
+        u'stdout': None
     })
     build_id.should_not.be.none
     date_created.should_not.be.none

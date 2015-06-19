@@ -62,15 +62,13 @@ def create_builder(user):
     data = ensure_json_request({
         'name': unicode,
         'git_uri': unicode,
-        'shell': unicode,
+        'shell_script': unicode,
         'id_rsa_private': any,
         'id_rsa_public': any,
         'status': any,
     })
     data['id'] = uuid.uuid1()
-    data['build_instructions'] = {
-        'shell': data.pop('shell', 'ls -a')
-    }
+
     try:
         builder = models.Builder.create(**data)
         logger.info('creating new builder: %s', builder.name)
@@ -105,10 +103,9 @@ def edit_builder(user, id):
     data = ensure_json_request({
         'name': any,
         'git_uri': any,
-        'build_instructions': any,
+        'shell_script': any,
         'id_rsa_private': any,
         'id_rsa_public': any,
-        'status': any,
     })
     item = models.Builder.objects.get(id=id)
     for attr, value in data.items():
@@ -166,6 +163,11 @@ def set_preferences(user):
 @web.post('/api/builder/<id>/build')
 @authenticated
 def create_build(user, id):
+    data = ensure_json_request({
+        'author_name': any,
+        'author_email': any,
+    })
+
     builder = models.Builder.objects.get(id=id)
-    item = builder.trigger(builder.branch)
+    item = builder.trigger(builder.branch, **data)
     return json_response(item.to_dict())
