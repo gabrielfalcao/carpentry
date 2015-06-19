@@ -3,18 +3,27 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
     var builderId = $stateParams.builder_id;
     $scope.builder = $rootScope.builders[builderId];
     $scope.build_id = $stateParams.build_id;
+    $scope.eof = false;
+    var last_build_output = "";
 
     function get_output() {
         var url = '/api/build/'+$stateParams.build_id+'/output'
         $http.get(url).success(function (data, status, headers, config) {
-            $scope.html_output = $sce.trustAsHtml(data.stdout);
+            if (data.stdout === last_build_output) {
+                $scope.eof = true;
+            } else {
+                $scope.html_output = $sce.trustAsHtml(data.stdout);
+                last_build_output = data.stdout;
+            }
+            $scope.build = data;
         }).error(function (data, status, headers, config) {
             console.log('failed ' + url, status);
             $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
         });
     }
+
     var poller = setInterval(function () {
-        if ($scope.build.done) {
+        if ($scope.eof) {
             clearInterval(poller);
         }
         get_output();

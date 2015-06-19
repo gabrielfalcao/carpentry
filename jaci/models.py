@@ -114,7 +114,7 @@ class Builder(Model):
         if last_build:
             serialized_build = last_build.to_dict()
         result = model_to_dict(self, {
-            'slug': slugify(self.name),
+            'slug': slugify(self.name).lower(),
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'last_build': serialized_build,
         })
