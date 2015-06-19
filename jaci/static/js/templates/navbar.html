@@ -8,24 +8,21 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#/"><b>JACI <img src="/assets/css/jaci-icon-96.png" alt="sleep by Gustav Salomonsson from the Noun Project"  height="48" width="48" style="float: left;padding:0;margin:-14px 10px 0 0;"/></b></a>
+      <a class="navbar-brand" href="/"><strong>JACI </strong></a>
     </div>
-
-
-
 
     <!-- Collect the nav links, forms, and other content for toggling -->
     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
       <ul class="nav navbar-nav navbar-right">
         <li><a ng-href="#/">Dashboard</a></li>
-
-        <li style="padding-top: 12px;">
-          <button ng-click="go('/new-builder')" class="btn btn-s btn-primary">New Builder</button>
-        </li>
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Builders <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
             <li ng-repeat="builder in builders"><a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></li>
+            <li role="separator" class="divider"></li>
+            <li style="background-color:#e51c23;"><a ng-href="#new-builder">
+
+New Builder</a></li>
           </ul>
         </li>
 

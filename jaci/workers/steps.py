@@ -3,37 +3,38 @@
 #
 from __future__ import unicode_literals
 import os
+import re
 import io
+import shutil
 import codecs
 import yaml
 from jaci import conf
 from datetime import datetime
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, check_output
 from lineup import Step
 from jaci.util import calculate_redis_key, render_string
 from jaci.models import Build
 
+AUTHOR_REGEX = re.compile(
+    r'Author: (?P<name>[^<]+\s*)[<](?P<email>[^>]+)[>]')
 
-def run_command(command, chdir):
+COMMIT_REGEX = re.compile(
+    r'commit\s*(?P<commit>\w+)', re.I)
+
+
+def run_command(command, chdir, bufsize=64):
     return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir)
 
 
 def stream_output(step, process, redis_stdout_key):
     stdout = []
-    attemps = 0
-    while attemps < 10:
-        out = process.stdout.readline() or ''
-        # err = process.stderr.readline() or ''
 
-        if not out:  # and not err:
-            attemps += 1
-            continue
-
+    for out in iter(lambda: process.stdout.read(1), ''):
         step.backend.redis.append(redis_stdout_key, out)
         stdout.append(out)
-        # self.backend.redis.append(redis_stderr_key, err)
 
-    exit_code = process.returncode or 0
+    exit_code = process.wait()
+
     return '\n'.join(stdout), exit_code
 
 
@@ -114,11 +115,10 @@ class LocalRetrieve(Step):
         instructions['build_dir'] = build_dir
 
         if os.path.exists(build_dir):
-            git = '/usr/bin/env git pull'
-            chdir = build_dir
-        else:
-            git = render_string('/usr/bin/env git clone {git_uri} ' + build_dir, instructions)
-            chdir = conf.workdir_node.path
+            shutil.rmtree(build_dir)
+        # else:
+        git = render_string('/usr/bin/env git clone {git_uri} ' + build_dir, instructions)
+        chdir = conf.workdir_node.path
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir)
@@ -136,6 +136,16 @@ class LocalRetrieve(Step):
         b.stdout += stdout
         b.code = int(exit_code)
         b.save()
+
+        git_show = '/usr/bin/env git show HEAD'
+        git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
+
+        author = AUTHOR_REGEX.search(git_show_stdout)
+        commit = COMMIT_REGEX.search(git_show_stdout)
+        if commit:
+            instructions.update(commit.groupdict())
+        if author:
+            instructions.update(author.groupdict())
 
         self.produce(instructions)
 

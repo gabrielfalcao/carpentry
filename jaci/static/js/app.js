@@ -57,6 +57,26 @@ angular.module('JaciApp', [
     };
 }).controller('JaciMainCtrl', function ($scope, $http, $location, $rootScope, hotkeys, $state, $templateCache) {
     $rootScope.buildCache = {};
+
+        $rootScope.triggerBuild = function(builder){
+        console.log( "triggerBuild");
+        $http
+            .post('/api/builder/' + builder.id + '/build')
+
+        .success(function(data, status, headers, config) {
+            $rootScope.go('/builder/' + builder.id + '/build/' + data.id);
+        })
+
+        .error(function(data, status, headers, config) {
+            for (var x in data) {
+                var build = data[x];
+                $rootScope.buildCache[builderId][build.id] = build;
+            }
+        });
+
+    };
+
+
     $rootScope.refresh = function(){
         $http.get("/api/builders").
             success(function(data, status, headers, config) {
