@@ -192,6 +192,6 @@ class Build(Model):
 
 class User(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
-    token = columns.Text(index=True)
+    github_access_token = columns.Text(index=True)
     name = columns.Text(required=True)
     email = columns.Text(index=True)

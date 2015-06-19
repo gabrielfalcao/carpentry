@@ -6,7 +6,7 @@
 from __future__ import unicode_literals
 
 import sys
-
+import time
 import json
 import logging
 import argparse
@@ -18,7 +18,7 @@ from plant import Node
 from lineup import JSONRedisBackend
 from jaci.version import version
 from jaci import routes
-from jaci.core import JaciHttpServer
+from jaci.core import JaciHttpServer, setup_logging
 from jaci.api.v1 import get_models
 from jaci.workers.pipelines import LocalBuilder
 
@@ -129,15 +129,21 @@ def jaci_run_local_pipeline():
 
     print LOGO
     pipeline = LocalBuilder(JSONRedisBackend)
+
+    coloredlogs.install(level=logging.INFO)
+    setup_logging(logging.INFO)
+
     pipeline.run_daemon()
     try:
         while pipeline.started:
-            result = pipeline.get_result()
-            print "+" * 80
-            print 'RESULT'
-            print "." * 80
-            print json.dumps(result, indent=2)
-            print "+" * 80
+            time.sleep(0.1)
+            result = pipeline.output.get(wait=False)
+            if result:
+                print "+" * 80
+                print 'RESULT'
+                print "." * 80
+                print json.dumps(result, indent=2)
+                print "+" * 80
 
     except KeyboardInterrupt:
         pipeline.stop()
@@ -149,7 +155,7 @@ def jaci_setup():
         description='sets up the cassandra database')
     parser.add_argument('--drop', action='store_true', default=False, help='drop any existing tables before syncing')
     parser.add_argument('--flush-redis', action='store_true', default=False, help='flush all jaci-related redis keys')
-
+    setup_logging(logging.DEBUG)
     args = parser.parse_args(get_remaining_sys_argv())
     print LOGO
     # CREATE KEYSPACE jaci

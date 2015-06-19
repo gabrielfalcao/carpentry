@@ -3,14 +3,13 @@
 # Copyright © 2013 Gabriel Falcão <gabriel@jaci.com>
 #
 from __future__ import unicode_literals
-import os
+
 import io
-import commands
+
 from plant import Node
 import logging
 
 from jaci.api.v1 import web
-from tumbler import json_response
 # from jaci.api.core import authenticated
 
 from flask import Response, render_template
