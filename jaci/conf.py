@@ -25,7 +25,8 @@ def set_things(self, env):
     self.redis_db = env.get_int('redis_db', 0)
     self.cassandra_hosts = env.get('cassandra_hosts')
     self.workdir = env.get('workdir', DEFAULT_WORKDIR)
-    self.node = Node(self.workdir)
+    self.workdir_node = Node(self.workdir)
+    self.build_node = self.workdir_node.cd('builds')
 
 
 def setup_from_config_path(self, path):

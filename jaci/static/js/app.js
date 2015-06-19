@@ -56,6 +56,7 @@ angular.module('JaciApp', [
         }
     };
 }).controller('JaciMainCtrl', function ($scope, $http, $location, $rootScope, hotkeys, $state, $templateCache) {
+    $rootScope.buildCache = {};
     $rootScope.refresh = function(){
         $http.get("/api/builders").
             success(function(data, status, headers, config) {

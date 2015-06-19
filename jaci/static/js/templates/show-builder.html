@@ -13,8 +13,30 @@
   <div class="row">
     <div class="col-lg-12">
       <h4>Build History</h4>
-      <p>No builds so far</p>
-
-      <button ng-if="builder" class="btn btn-large btn-primary" ng-click="triggerBuild(builder)">Build now</button>
+      <table class="table" ng-hide="!builders">
+        <thead>
+          <tr>
+            <th>build id</th>
+            <th>status</th>
+            <th>exit code</th>
+            <th>created at</th>
+            <th>finished at</th>
+            <th>output</th>
+          </tr>
+        </thead>
+        <tbody ng-repeat="build in builds">
+          <tr ng-class="builder.css_status">
+            <td><strong>{{ build.id }}</strong></td>
+            <td>{{ build.status }}</td>
+            <td>{{ build.code }}</td>
+            <td>{{ build.date_created }}</td>
+            <td>{{ build.date_finished }}</td>
+            <td>{{ build.stdout }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p ng-hide="builds">No builds so far</p>
     </div>
   </div>
+  <button ng-if="builder" class="btn btn-large btn-warning" ng-click="triggerBuild(builder)">build now</button>
+</div>

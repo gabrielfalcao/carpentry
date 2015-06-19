@@ -2,6 +2,7 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
 
     var builderId = $stateParams.builder_id;
     $scope.builder = $rootScope.builders[builderId];
+    $rootScope.buildCache[builderId] = [];
 
     $rootScope.triggerBuild = function(){
         console.log( "triggerBuild");
@@ -18,4 +19,15 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
 
     };
 
+        $http
+            .get('/api/builder/' + $scope.builder.id + '/builds')
+
+        .success(function(data, status, headers, config) {
+            $rootScope.buildCache[builderId] = data;
+            $scope.builds = data;
+        })
+
+        .error(function(data, status, headers, config) {
+            console.log("FAILED", data);
+        });
 });

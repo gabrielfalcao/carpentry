@@ -17,7 +17,6 @@ from cqlengine.models import Model
 
 from jaci import models
 from jaci.util import calculate_redis_key
-from jaci.models import Builder, JaciPreference
 from ansi2html import Ansi2HTMLConverter
 
 conv = Ansi2HTMLConverter()
@@ -70,7 +69,7 @@ def create_builder(user):
     })
     data['id'] = uuid.uuid1()
     try:
-        builder = Builder.create(**data)
+        builder = models.Builder.create(**data)
         logger.info('creating new builder: %s', builder.name)
 
         payload = builder.to_dict()
@@ -85,9 +84,16 @@ def create_builder(user):
 @web.get('/api/builder/<id>')
 @authenticated
 def retrieve_builder(user, id):
-    item = Builder.objects.get(id=id)
+    item = models.Builder.objects.get(id=id)
     logger.info('show builder: %s', item.name)
     return json_response(item.to_dict())
+
+
+@web.get('/api/builder/<id>/builds')
+@authenticated
+def builds_from_builder(user, id):
+    items = models.Build.objects.filter(builder_id=id)
+    return json_response([item.to_dict() for item in items])
 
 
 @web.put('/api/builder/<id>')
@@ -101,7 +107,7 @@ def edit_builder(user, id):
         'id_rsa_public': any,
         'status': any,
     })
-    item = Builder.objects.get(id=id)
+    item = models.Builder.objects.get(id=id)
     for attr, value in data.items():
         if value is None:
             continue
@@ -115,7 +121,7 @@ def edit_builder(user, id):
 @web.delete('/api/builder/<id>')
 @authenticated
 def remove_builder(user, id):
-    item = Builder.objects.get(id=id)
+    item = models.Builder.objects.get(id=id)
     item.delete()
     logger.info('deleting builder: %s', item.name)
     return json_response(item.to_dict())
@@ -124,7 +130,7 @@ def remove_builder(user, id):
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):
-    items = [b.to_dict() for b in Builder.objects.all()]
+    items = [b.to_dict() for b in models.Builder.objects.all()]
     return json_response(items)
 
 
@@ -147,7 +153,7 @@ def set_preferences(user):
             'key': key,
             'value': value
         }
-        preferences = JaciPreference.create(**data)
+        preferences = models.JaciPreference.create(**data)
         results[key] = value
         logger.info('setting preference %s: %s', key, value)
 
@@ -157,6 +163,6 @@ def set_preferences(user):
 @web.post('/api/builder/<id>/build')
 @authenticated
 def create_build(user, id):
-    builder = Builder.objects.get(id=id)
+    builder = models.Builder.objects.get(id=id)
     item = builder.trigger(builder.branch)
     return json_response(item.to_dict())

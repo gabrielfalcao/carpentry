@@ -115,7 +115,7 @@ class Builder(Model):
             serialized_build = last_build.to_dict()
         result = model_to_dict(self, {
             'slug': slugify(self.name).lower(),
-            'css_status': STATUS_MAP.get(self.status, 'warning'),
+            'css_status': STATUS_MAP.get(self.status, 'success'),
             'last_build': serialized_build,
         })
         # result.pop('id_rsa_private', None)
