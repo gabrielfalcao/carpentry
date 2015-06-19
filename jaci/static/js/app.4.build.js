@@ -31,5 +31,5 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             clearInterval(poller);
         }
         get_output();
-    }, 1000);
+    }, 500);
 });

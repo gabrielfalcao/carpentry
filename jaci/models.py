@@ -143,6 +143,9 @@ class Build(Model):
     branch = columns.Text(required=True)
     stdout = columns.Text()
     stderr = columns.Text()
+    author_name = columns.Text()
+    author_email = columns.Text()
+    commit = columns.Text()
     code = columns.Integer()
     status = columns.Text(default='scheduled')
     date_created = columns.DateTime()
@@ -160,7 +163,7 @@ class Build(Model):
 
     def to_dict(self):
         return model_to_dict(self, {
-            'css_status': STATUS_MAP.get(self.status, 'success'),
+            'css_status': STATUS_MAP.get(self.status, 'info'),
         })
 
     @classmethod

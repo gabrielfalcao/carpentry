@@ -1,6 +1,7 @@
 angular.module('JaciApp', [
     'ngCookies',
     'ui.router',
+    'hljs',
     'cfp.hotkeys',
     'cgNotify',
     'luegg.directives',

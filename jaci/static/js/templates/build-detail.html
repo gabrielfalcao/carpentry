@@ -16,7 +16,7 @@
           <h3 class="panel-title" id="panel-title">build # {{ build_id }}</h3>
         </div>
         <div class="panel-body">
-          <pre scroll-glue style="overflow-y: auto;max-height: 800px"  ng-bind-html="html_output"></pre>
+          <pre hljs scroll-glue style="overflow-y: auto;max-height: 800px"  ng-bind-html="html_output"></pre>
         </div>
       </div>
       <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">back to builder</button>

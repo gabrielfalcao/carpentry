@@ -16,7 +16,9 @@
       <table class="table" ng-hide="!builders">
         <thead>
           <tr>
-            <th>build id</th>
+            <th>commit</th>
+            <th>author name</th>
+            <th>author email</th>
             <th>status</th>
             <th>exit code</th>
             <th>created at</th>
@@ -26,7 +28,9 @@
         </thead>
         <tbody ng-repeat="build in builds">
           <tr ng-class="build.css_status">
-            <td><strong>{{ build.id }}</strong></td>
+            <td><strong>{{ build.commit }}</strong></td>
+            <td>{{ build.author_name }}</td>
+            <td>{{ build.author_email }}</td>
             <td>{{ build.status }}</td>
             <td>{{ build.code }}</td>
             <td>{{ build.date_created }}</td>

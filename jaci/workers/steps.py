@@ -142,11 +142,20 @@ class LocalRetrieve(Step):
 
         author = AUTHOR_REGEX.search(git_show_stdout)
         commit = COMMIT_REGEX.search(git_show_stdout)
-        if commit:
-            instructions.update(commit.groupdict())
-        if author:
-            instructions.update(author.groupdict())
+        meta = {}
 
+        if commit:
+            b.commit = commit.group('commit')
+            meta.update(commit.groupdict())
+
+        if author:
+            b.author_name = author.group('name')
+            b.author_email = author.group('email')
+            meta.update(author.groupdict())
+
+        b.save()
+        self.log("meta: %s", meta)
+        instructions['git'].update(meta)
         self.produce(instructions)
 
 

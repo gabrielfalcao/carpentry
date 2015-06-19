@@ -6,16 +6,25 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
         $rootScope.buildCache[builderId] = {};
     }
 
+    function refresh() {
+        $http
+            .get('/api/builder/' + $rootScope.builder.id + '/builds')
 
-    $http
-        .get('/api/builder/' + $rootScope.builder.id + '/builds')
+            .success(function(data, status, headers, config) {
+                $rootScope.buildCache[builderId] = data;
+                $scope.builds = data;
+            })
 
-        .success(function(data, status, headers, config) {
-            $rootScope.buildCache[builderId] = data;
-            $scope.builds = data;
-        })
+            .error(function(data, status, headers, config) {
+                console.log("FAILED", data);
+            });
+    }
+    $scope.refresh = refresh;
 
-        .error(function(data, status, headers, config) {
-            console.log("FAILED", data);
-        });
+    var poller = setInterval(function () {
+        if ($scope.eof) {
+            clearInterval(poller);
+        }
+        refresh();
+    }, 750);
 });
