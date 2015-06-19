@@ -7,7 +7,7 @@ import logging
 from plant import Node
 from jaci import routes
 
-from tumbler.core import Web
+from jaci.core import JaciHttpServer
 
 log_path = os.getenv('JACI_LOG_PATH', 'jaci.log')
 
@@ -18,7 +18,8 @@ logging.basicConfig(
 
 root_node = Node(__file__).dir
 
-application = Web(
+application = JaciHttpServer(
+    log_level=logging.INFO,
     template_folder=root_node.join('templates'),
     static_folder=root_node.join('jaci/static'),
     static_url_path='/assets',

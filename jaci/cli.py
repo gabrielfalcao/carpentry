@@ -16,9 +16,9 @@ from cqlengine.management import sync_table, drop_table, create_keyspace
 
 from plant import Node
 from lineup import JSONRedisBackend
-from tumbler.core import Web
 from jaci.version import version
 from jaci import routes
+from jaci.core import JaciHttpServer
 from jaci.api.v1 import get_models
 from jaci.workers.pipelines import LocalBuilder
 
@@ -80,12 +80,15 @@ def jaci_run():
     parser.add_argument('--host', default='localhost', help='the hostname to listen to')
 
     args = parser.parse_args(get_remaining_sys_argv())
-    server = Web(
+    server = JaciHttpServer(
+        log_level=logging.INFO,
         template_folder=this_node.join('templates'),
         static_folder=this_node.join('static'),
         static_url_path='/assets',
         use_sqlalchemy=False,
     )
+    coloredlogs.install(logging.INFO)
+
     print LOGO
     print "listening on http://{0}:{1}".format(args.host, args.port)
     server.run(port=args.port, host=args.host)
@@ -190,12 +193,6 @@ def main():
 
     args = parser.parse_args(argv)
 
-    logging.getLogger('cqlengine.cql').setLevel(logging.WARNING)
-
-    coloredlogs.install(level=logging.INFO)
-    for name in ['lineup.steps', 'lineup', 'werkzeug', 'tumbler', 'jaci']:
-        logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
 
     if args.command not in HANDLERS:
         parser.print_help()
