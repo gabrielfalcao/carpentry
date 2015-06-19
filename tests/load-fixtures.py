@@ -33,8 +33,9 @@ def main():
         Builder.create(
             id=uuid1(),
             name=name,
-            git_uri='git@github.com:cnry/{0}.git'.format(name),
-            shell=PYTHON,
+            git_uri='git@github.com:gabrielfalcao/{0}.git'.format(name),
+            shell_script=PYTHON,
+            status='checking',
             id_rsa_private=read_ssh_file('id_rsa'),
             id_rsa_public=read_ssh_file('id_rsa.pub'),
         )

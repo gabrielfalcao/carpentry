@@ -10,6 +10,7 @@ from flask import request, abort
 web = tumbler.module(__name__)
 
 from functools import wraps
+from jaci.models import User
 
 
 class Authenticator(object):
@@ -34,8 +35,14 @@ class Authenticator(object):
         return string
 
     def get_user(self):
+
         token = self.get_token()
-        return token
+        user = User(
+            name=token,
+            token=token,
+            email='{0}@jaci.io'.format(token)
+        )
+        return user
 
 
 def authenticated(resource):
@@ -48,8 +55,8 @@ def authenticated(resource):
     return decorator
 
 
-def ensure_json_request(spec):
-    data = request.get_json(silent=True)
+def ensure_json_request(spec, fallback={}):
+    data = request.get_json(silent=True) or fallback
     if not data:
         logging.error('missing json body')
         abort(400)

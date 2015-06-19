@@ -1,5 +1,5 @@
-include jaci/templates
-include jaci/static
-include jaci/static/*
-include *.md
-include *.txt
+include templates/**
+include static/*/*/*/*
+include templates/*
+include static/*
+include *

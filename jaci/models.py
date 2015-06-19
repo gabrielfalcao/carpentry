@@ -31,6 +31,9 @@ BUILD_STATUSES = [
 STATUS_MAP = {
     'succeeded': 'success',
     'failed': 'danger',
+    'running': 'info',
+    'checking': 'warning',
+    'preparing': 'warning',
 }
 
 
@@ -183,3 +186,10 @@ class Build(Model):
         pipe.append(stdout_key, stdout)
         pipe.append(stderr_key, stderr)
         return pipe.execute()
+
+
+class User(Model):
+    id = columns.TimeUUID(primary_key=True, partition_key=True)
+    token = columns.Text(index=True)
+    name = columns.Text(required=True)
+    email = columns.Text(index=True)

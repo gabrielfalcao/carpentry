@@ -11,12 +11,15 @@
 
   <div class="row">
     <div class="col-lg-12">
-      <div class="panel panel-success">
+
+      <div ng-class="'panel panel-'+build.css_status">
         <div class="panel-heading">
-          <h3 class="panel-title" id="panel-title">build # {{ build_id }}</h3>
+          <h3 class="panel-title" id="panel-title">commit {{ build.commit }}</h3>
+          <h4>by {{ build.author_name }} ({{ build.author_email }})</h4>
+          <h5>branch {{ build.branch }}</h5>
         </div>
         <div class="panel-body">
-          <pre hljs scroll-glue style="overflow-y: auto;max-height: 800px"  ng-bind-html="html_output"></pre>
+          <pre hljs scroll-glue style="overflow-y: auto;max-height: 640px; background: #222; color: white;"  ng-bind-html="html_output"></pre>
         </div>
       </div>
       <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">back to builder</button>

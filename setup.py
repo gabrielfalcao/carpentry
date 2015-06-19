@@ -5,6 +5,7 @@
 from setuptools import setup, find_packages
 
 requirements = [
+    'github-flask==2.0.1',
     'tumbler==0.0.19',
     'cqlengine==0.21.0',
     'blist==1.3.6',
@@ -27,7 +28,14 @@ setup(
     author_email='gabriel@nacaolivre.org',
     url='http://falcao.it/jaci',
     packages=find_packages(exclude=['*tests*']),
-    include_package_data=True,
+    package_data={'jaci': [
+        'include templates/**',
+        'include static/*/*/*/*',
+        'include templates/*',
+        'include static/*',
+        'include_package_data *',
+    ]},
+    include=True,
     install_requires=requirements,
     zip_safe=False,
 )

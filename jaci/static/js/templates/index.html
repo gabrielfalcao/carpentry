@@ -21,6 +21,7 @@
             <th>author</th>
             <th>commit</th>
             <th>branch</th>
+            <th>status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -28,16 +29,17 @@
           <tr ng-class="builder.css_status">
             <td><strong>{{ builder.name }}</strong></td>
             <th scope="row">{{ builder.last_build.number }}</th>
-            <td>{{ builder.last_build.author.name }} &lt;{{ builder.last_build.author.email }}&gt;</td>
+            <td>{{ builder.last_build.author_name }} &lt;{{ builder.last_build.author_email }}&gt;</td>
             <td>{{ builder.last_build.commit }}</td>
             <td>{{ builder.last_build.branch }}</td>
+            <td>{{ builder.last_build.status }}</td>
             <td>
               <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id)">
                 <span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>
               <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="triggerBuild(builder, true)">
                 <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
 
-              <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/build/' + builder.last_build.id)">
+              <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id + '/build/' + builder.last_build.id)">
                 <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
             </td>
           </tr>

@@ -35,7 +35,10 @@ def stream_output(step, process, redis_stdout_key):
 
     exit_code = process.wait()
 
-    return '\n'.join(stdout), exit_code
+    try:
+        return '\n'.join(stdout), exit_code
+    except UnicodeDecodeError:
+        return '\n'.decode('utf-8').join(stdout), exit_code
 
 
 def get_build_from_instructions(instructions):
@@ -173,7 +176,7 @@ class CheckAndLoadBuildFile(Step):
         yml_path = os.path.join(build_dir, '.jaci.yml')
 
         if not os.path.exists(yml_path):
-            instructions['build'] = {'shell': 'ls'}
+            instructions['build'] = {'shell': instructions['shell_script']}
             return self.produce(instructions)
 
         with codecs.open(yml_path, 'r', 'utf-8') as fd:

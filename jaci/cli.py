@@ -163,7 +163,6 @@ def jaci_setup():
             logging.exception('Failed to drop/sync %s', t)
 
 
-
 def main():
     HANDLERS = {
         'version': jaci_version,

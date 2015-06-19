@@ -56,6 +56,18 @@ def get_build_output(user, id):
     })
 
 
+@web.get('/api/build/<id>')
+@authenticated
+def get_build(user, id):
+    b = models.Build.get(id=id)
+    builder = models.Builder.get(id=b.builder_id)
+
+    data = builder.to_dict()
+    data.update(b.to_dict())
+
+    return json_response(data)
+
+
 @web.post('/api/builder')
 @authenticated
 def create_builder(user):
@@ -163,10 +175,17 @@ def set_preferences(user):
 @web.post('/api/builder/<id>/build')
 @authenticated
 def create_build(user, id):
-    data = ensure_json_request({
-        'author_name': any,
-        'author_email': any,
-    })
+    data = ensure_json_request(
+        {
+            'author_name': any,
+            'author_email': any,
+        },
+        {
+            'author_name': user.name,
+            'author_email': user.email,
+
+        }
+    )
 
     builder = models.Builder.objects.get(id=id)
     item = builder.trigger(builder.branch, **data)

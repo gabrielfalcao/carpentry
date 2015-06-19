@@ -33,7 +33,14 @@
             <div class="form-group">
               <label for="yaml_input" class="col-lg-2 control-label">shell</label>
               <div class="col-lg-10">
-                <textarea id="yaml_input" class="form-control" ng-model="builder.shell" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+                <textarea id="yaml_input" class="form-control" ng-model="builder.shell" rows="25" style="font-family: Monaco,monospace;font-size:12px">#!/bin/bash
+set -e
+pip install virtualenv
+virtualenv .venv
+source .venv/bin/activate
+pip install -r requirements.txt || echo "skipped development.txt"
+pip install -r development.txt || echo "skipped development.txt"
+make</textarea>
               </div>
             </div>
             <div class="form-group">
