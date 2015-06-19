@@ -1,27 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# flake8: noqa
-import inspect
+
 import logging
 from sure import scenario
 
 from tumbler.core import Web
-import jaci.models
-from cqlengine import connection
-from cqlengine.models import Model
+
 from cqlengine.management import sync_table, drop_table, create_keyspace
-from jaci.api.v1 import web
-
-
-def is_model(v):
-    return (
-        isinstance(v, type) and
-        issubclass(v, Model) and
-        v != Model
-    )
-
-def get_models():
-    return [v for (k, v) in inspect.getmembers(jaci.models) if is_model(v)]
+from jaci.api.v1 import get_models
 
 
 def prepare_db(context):

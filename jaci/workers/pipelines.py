@@ -3,7 +3,7 @@
 #
 from __future__ import unicode_literals
 from lineup import Pipeline
-from jaci.workers.steps import LocalRetrieve, LocalBuild
+from jaci.workers.steps import PrepareSSHKey, LocalRetrieve, LocalBuild
 
 
 class LocalBuilder(Pipeline):
@@ -11,4 +11,4 @@ class LocalBuilder(Pipeline):
     machine where jaci is installed.
     """
     name = 'local-builder'
-    steps = [LocalRetrieve, LocalBuild]
+    steps = [PrepareSSHKey, LocalRetrieve, LocalBuild]

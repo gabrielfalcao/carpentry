@@ -5,7 +5,6 @@
 
 from __future__ import unicode_literals
 
-import os
 import sys
 import time
 import json
@@ -13,11 +12,14 @@ import logging
 import argparse
 import warnings
 import coloredlogs
+from cqlengine.management import sync_table, drop_table, create_keyspace
+
 from plant import Node
 from lineup import JSONRedisBackend
 from tumbler.core import Web
 from jaci.version import version
 from jaci import routes
+from jaci.api.v1 import get_models
 from jaci.workers.pipelines import LocalBuilder
 
 this_node = Node(__file__).dir
@@ -89,29 +91,84 @@ def jaci_run():
     server.run(port=args.port, host=args.host)
 
 
+class Spinner(object):
+    steps = [
+        r'|',
+        r'/',
+        r'-',
+        '\\',
+
+    ]
+
+    def __init__(self, stream=None):
+        self.state = 0
+        self.stream = stream or sys.stdout
+
+    def next(self):
+        if self.state != 0:
+            position = self.state % 4
+            base = "\033[A\rwaiting for work {0}\n"
+        else:
+            position = 0
+            base = "\rwaiting for work {0}\n"
+
+        symbol = self.steps[position]
+        self.stream.write(base.format(symbol))
+        self.state += 1
+
+
 def jaci_run_local_pipeline():
     parser = argparse.ArgumentParser(
         prog='jaci local-workers',
-        description='runs the local workers')
+        description='waiting for jobs')
 
-    args = parser.parse_args(get_remaining_sys_argv())
+    parser.parse_args(get_remaining_sys_argv())
 
     print LOGO
     pipeline = LocalBuilder(JSONRedisBackend)
     pipeline.run_daemon()
-    print "running workers"
     try:
         while pipeline.started:
-            time.sleep(0.1)
+            result = pipeline.get_result()
+            print "+" * 80
+            print 'RESULT'
+            print "." * 80
+            print json.dumps(result, indent=2)
+            print "+" * 80
+
     except KeyboardInterrupt:
-        print "Aborting local workers"
         pipeline.stop()
+
+
+def jaci_setup():
+    parser = argparse.ArgumentParser(
+        prog='jaci setup',
+        description='sets up the cassandra database')
+    parser.add_argument('--drop', action='store_true', default=False, help='drop any existing tables before syncing')
+
+    args = parser.parse_args(get_remaining_sys_argv())
+    print LOGO
+    # CREATE KEYSPACE jaci
+    #        WITH REPLICATION =
+    #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+    create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
+
+    for t in get_models():
+        try:
+            if args.drop:
+                drop_table(t)
+
+            sync_table(t)
+        except Exception:
+            logging.exception('Failed to drop/sync %s', t)
+
 
 
 def main():
     HANDLERS = {
         'version': jaci_version,
         'run': jaci_run,
+        'setup': jaci_setup,
         'workers': jaci_run_local_pipeline,
     }
 
@@ -128,17 +185,10 @@ def main():
 
     args = parser.parse_args(argv)
 
-    if args.info:
-        LOG_LEVEL_NAME = 'INFO'
-
-    elif args.debug:
-        LOG_LEVEL_NAME = 'DEBUG'
-
-    else:
-        LOG_LEVEL_NAME = 'WARNING'
-
-    LOG_LEVEL = getattr(logging, LOG_LEVEL_NAME)
-    coloredlogs.install(level=LOG_LEVEL)
+    coloredlogs.install(level=logging.INFO)
+    for name in ['lineup.steps', 'lineup', 'werkzeug', 'tumbler', 'jaci']:
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.INFO)
 
     if args.command not in HANDLERS:
         parser.print_help()

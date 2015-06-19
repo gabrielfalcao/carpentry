@@ -31,21 +31,14 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="docker_image_input" class="col-lg-2 control-label">docker image</label>
+              <label for="yaml_input" class="col-lg-2 control-label">yaml instructions</label>
               <div class="col-lg-10">
-                <input type="text" id="docker_image_input" class="form-control" ng-model="docker.image" placeholder="cnry/python-testing"  />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="yaml_input" class="col-lg-2 control-label">yaml script</label>
-              <div class="col-lg-10">
-                <textarea id="yaml_input" class="form-control" ng-model="builder.yaml_conf" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+                <textarea id="yaml_input" class="form-control" ng-model="builder.build_instructions" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group">
               <div class="col-lg-10 col-lg-offset-2">
-                <button type="submit" class="btn btn-primary">save</button>
+                <button type="submit" ng-click="createBuilder(builder)" class="btn btn-primary">save</button>
               </div>
             </div>
           </fieldset>

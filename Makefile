@@ -14,6 +14,10 @@ gunicorn:
 run:
 	python jaci/cli.py run
 
+db:
+	python jaci/cli.py setup --drop
+	python tests/load-fixtures.py
+
 workers:
 	python jaci/cli.py workers
 

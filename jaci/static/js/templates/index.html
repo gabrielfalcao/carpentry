@@ -4,7 +4,7 @@
     <div class="row">
       <div class="col-lg-12">
         <h1 id="buttons">Latest builds
-                  <button ng-click="go('/fullscreen')" class="btn btn-s btn-info">Full Screen</button>
+          <button ng-click="go('/fullscreen')" class="btn btn-s btn-info">Full Screen</button>
         </h1>
 
       </div>
@@ -24,63 +24,20 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="success">
-            <td><strong>client-api</strong></td>
-            <th scope="row">1</th>
-            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
-            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
-            <td>master</td>
+        <tbody ng-repeat="builder in builders">
+          <tr ng-class="builder.css_status">
+            <td><strong>{{ builder.name }}</strong></td>
+            <th scope="row">{{ builder.last_build.number }}</th>
+            <td>{{ builder.last_build.author.name }} &lt;{{ builder.last_build.author.email }}&gt;</td>
+            <td>{{ builder.last_build.commit }}</td>
+            <td>{{ builder.last_build.branch }}</td>
             <td>
-              <button class="btn btn-xs btn-success" ng-click="go('/build/cnry/client-api/1')">
+              <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/build/' + builder.last_build.id)">
                 <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
             </td>
           </tr>
-          <tr class="danger">
-            <td><strong>device_management [unit tests]</strong></td>
-            <th scope="row">1</th>
-            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
-            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
-            <td>master</td>
-            <td>
-              <button class="btn btn-xs btn-danger" ng-click="go('/build/cnry/device_management/1')">
-<span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
-              <button class="btn btn-xs btn-primary">
-                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button>
-                <button class="btn btn-xs btn-default">
-                <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span></button>
-              <button class="btn btn-xs btn-default">
-
-<span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span></button>
-
-
-            </td>
-          </tr>
-          <tr class="success">
-            <td><strong>device_management [functional tests]</strong></td>
-            <th scope="row">1</th>
-            <td>Gabriel Falcao &lt;gabriel@canary.is&gt;</td>
-            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
-            <td>master</td>
-            <td>
-              <button class="btn btn-xs btn-success" ng-click="go('/build/cnry/device_management/1')">
-<span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
-            </td>
-          </tr>
-          <tr class="info">
-            <td><strong>ansible</strong></td>
-            <th scope="row">1</th>
-            <td>Jennie Li &lt;jennie@canary.is&gt;</td>
-            <td>f3efab0dcd6d1a3d0effa600267b7aaf6856928f</td>
-            <td>master</td>
-            <td>
-              <button class="btn btn-xs btn-info" ng-click="go('/build/cnry/ansible/1')">
-                <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
-            </td>
-          </tr>
-
         </tbody>
-                <tfoot>
+        <tfoot ng-show="builders">
           <tr>
             <td></td>
             <td></td>

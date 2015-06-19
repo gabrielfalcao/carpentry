@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import uuid
 import logging
-
+import inspect
 from dateutil.parser import parse as parse_datetime
 from tumbler import tumbler
 from tumbler import json_response
@@ -13,11 +13,48 @@ web = tumbler.module(__name__)
 
 # from jaci.models import Builder
 from jaci.api.core import authenticated, ensure_json_request
+from cqlengine.models import Model
+
+from jaci import models
+from jaci.util import calculate_redis_key
 from jaci.models import Builder, JaciPreference
+from ansi2html import Ansi2HTMLConverter
+
+conv = Ansi2HTMLConverter()
+
+
+def is_model(v):
+    return (
+        isinstance(v, type) and
+        issubclass(v, Model) and
+        v != Model
+    )
+
+
+def get_models():
+    return [v for (k, v) in inspect.getmembers(models) if is_model(v)]
 
 
 def autodatetime(s):
     return s and parse_datetime(s) or None
+
+logger = logging.getLogger('werkzeug')
+
+
+@web.get('/api/build/<id>/output')
+@authenticated
+def get_build_output(user, id):
+    partial_instructions = {'id': id}
+    pipeline = models.get_pipeline()
+    backend = pipeline.get_backend()
+    out_key, err_key = calculate_redis_key(partial_instructions)
+
+    stdout = backend.redis.get(out_key) or 'waiting...'
+    # stderr = backend.redis.get(err_key) or ''
+
+    return json_response({
+        'stdout': conv.convert(stdout, full=False),
+    })
 
 
 @web.post('/api/builder')
@@ -25,17 +62,32 @@ def autodatetime(s):
 def create_builder(user):
     data = ensure_json_request({
         'name': unicode,
-        'git_url': unicode,
-        'shell_script': unicode,
+        'git_uri': unicode,
+        'build_instructions': unicode,
         'id_rsa_private': any,
         'id_rsa_public': any,
         'status': any,
     })
     data['id'] = uuid.uuid1()
-    builder = Builder.create(**data)
-    logging.info('creating new builder: %s', builder.name)
+    try:
+        builder = Builder.create(**data)
+        logger.info('creating new builder: %s', builder.name)
 
-    return json_response(builder.to_dict())
+        payload = builder.to_dict()
+        return json_response(payload, status=200)
+
+    except Exception as e:
+        logger.exception('Failed to create builder')
+        payload = {'error': unicode(e)}
+    return json_response(payload, status=500)
+
+
+@web.get('/api/builder/<id>')
+@authenticated
+def retrieve_builder(user, id):
+    item = Builder.objects.get(id=id)
+    logger.info('show builder: %s', item.name)
+    return json_response(item.to_dict())
 
 
 @web.put('/api/builder/<id>')
@@ -43,8 +95,8 @@ def create_builder(user):
 def edit_builder(user, id):
     data = ensure_json_request({
         'name': any,
-        'git_url': any,
-        'shell_script': any,
+        'git_uri': any,
+        'build_instructions': any,
         'id_rsa_private': any,
         'id_rsa_public': any,
         'status': any,
@@ -56,7 +108,7 @@ def edit_builder(user, id):
         setattr(item, attr, value)
 
     item.save()
-    logging.info('edit builder: %s', item.name)
+    logger.info('edit builder: %s', item.name)
     return json_response(item.to_dict())
 
 
@@ -65,7 +117,7 @@ def edit_builder(user, id):
 def remove_builder(user, id):
     item = Builder.objects.get(id=id)
     item.delete()
-    logging.info('deleting builder: %s', item.name)
+    logger.info('deleting builder: %s', item.name)
     return json_response(item.to_dict())
 
 
@@ -87,7 +139,7 @@ def set_preferences(user):
     results = {}
     for key, value in preferences.items():
         if not value:
-            logging.info('skipping None key: %s', key)
+            logger.info('skipping None key: %s', key)
             continue
 
         data = {
@@ -97,7 +149,7 @@ def set_preferences(user):
         }
         preferences = JaciPreference.create(**data)
         results[key] = value
-        logging.info('setting preference %s: %s', key, value)
+        logger.info('setting preference %s: %s', key, value)
 
     return json_response(results)
 

@@ -13,7 +13,7 @@ log_path = os.getenv('JACI_LOG_PATH', 'jaci.log')
 
 logging.basicConfig(
     filename=log_path,
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 root_node = Node(__file__).dir

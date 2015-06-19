@@ -4,13 +4,17 @@ import re
 import redis
 import uuid
 # import bcrypt
-# import logging
+import logging
+import datetime
 # from dateutil.parser import parse as parse_datetime
-from datetime import datetime
+from lineup import JSONRedisBackend
+
 from cqlengine import columns
 from cqlengine import connection
 from cqlengine.models import Model
 from jaci import conf
+
+logger = logging.getLogger('jaci')
 
 
 redis_pool = redis.ConnectionPool(
@@ -22,8 +26,43 @@ redis_pool = redis.ConnectionPool(
 connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
 
 
+def get_pipeline():
+    from jaci.workers import LocalBuilder
+    return LocalBuilder(JSONRedisBackend)
+
+
 def slugify(string):
     return re.sub(r'\W+', '', string)
+
+
+def serialize_value(value):
+    if isinstance(value, uuid.UUID):
+        result = str(value)
+    elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
+        result = str(value)
+    elif hasattr(value, 'to_dict'):
+        result = value.to_dict()
+    else:
+        result = value
+
+    return result
+
+
+def model_to_dict(instance, extra={}):
+    data = {}
+    for key, value in instance.items():
+        data[key] = serialize_value(value)
+    if isinstance(extra, dict):
+        data.update(extra)
+    else:
+        msg = (
+            "jaci.models.model_to_dict's 2nd "
+            "argument `extra` must be a dict,"
+            " got a {0} instead"
+        )
+        raise TypeError(msg.format(type(extra)))
+
+    return data
 
 BUILD_STATUSES = [
     'ready',      # no builds scheduled
@@ -37,23 +76,51 @@ BUILD_STATUSES = [
 class Builder(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     name = columns.Text(required=True)
-    git_url = columns.Text(index=True)
-    shell_script = columns.Text(required=True)
+    git_uri = columns.Text(index=True)
+    build_instructions = columns.Text(required=True)
     id_rsa_private = columns.Text()
     id_rsa_public = columns.Text()
     status = columns.Text(default='ready')
     branch = columns.Text(default='master')
 
-    def trigger(self, branch):
-        return Build.create(
+    def trigger(self, branch=None):
+        build = Build.create(
             id=uuid.uuid1(),
-            date_created=datetime.utcnow(),
+            date_created=datetime.datetime.utcnow(),
             builder_id=self.id,
             branch=branch or self.branch
         )
+        pipeline = get_pipeline()
+        payload = self.to_dict()
+        payload.update(build.to_dict())
+        pipeline.input.put(payload)
+        logger.info("Pushing payload to workers %s", payload)
+        return build
+
+    def get_last_build(self):
+        results = Build.objects.filter(builder_id=self.id)
+        if not results:
+            return None
+
+        return results[0]
 
     def to_dict(self):
-        return dict(self.items())
+        STATUS_MAP = {
+            'succeeded': 'success',
+            'failed': 'danger',
+        }
+        last_build = self.get_last_build()
+        serialized_build = None
+        if last_build:
+            serialized_build = last_build.to_dict()
+        result = model_to_dict(self, {
+            'slug': slugify(self.name),
+            'css_status': STATUS_MAP.get(self.status, 'warning'),
+            'last_build': serialized_build,
+        })
+        # result.pop('id_rsa_private', None)
+        # result.pop('id_rsa_public', None)
+        return result
 
 
 class JaciPreference(Model):
@@ -62,12 +129,12 @@ class JaciPreference(Model):
     value = columns.Text(required=True)
 
     def to_dict(self):
-        return dict(self.items())
+        return model_to_dict(self)
 
 
 class Build(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
-    builder_id = columns.TimeUUID(required=True, partition_key=True)
+    builder_id = columns.TimeUUID(required=True, index=True)
     branch = columns.Text(required=True)
     stdout = columns.Text()
     stderr = columns.Text()
@@ -76,6 +143,10 @@ class Build(Model):
     date_created = columns.DateTime()
     date_finished = columns.DateTime()
 
+    @property
+    def builder(self):
+        return Builder.get(id=self.builder_id)
+
     def save(self):
         builder = Builder.objects.get(id=self.builder_id)
         builder.status = self.status
@@ -83,7 +154,7 @@ class Build(Model):
         return super(Build, self).save()
 
     def to_dict(self):
-        return dict(self.items())
+        return model_to_dict(self)
 
     @classmethod
     def calculate_redis_key_for(Build, builder_id, action):
