@@ -23,21 +23,19 @@
             <th>exit code</th>
             <th>created at</th>
             <th>finished at</th>
-            <th>output</th>
           </tr>
         </thead>
         <tbody ng-repeat="build in builds">
           <tr ng-class="build.css_status">
-            <td><strong>{{ build.commit }}</strong></td>
+            <td>
+              <a ng-href="#builder/{{builder.id}}/build/{{build.id}}">
+              <strong>{{ build.commit }}</strong></a></td>
             <td>{{ build.author_name }}</td>
             <td>{{ build.author_email }}</td>
             <td>{{ build.status }}</td>
             <td>{{ build.code }}</td>
             <td>{{ build.date_created }}</td>
             <td>{{ build.date_finished }}</td>
-            <td>
-              <a ng-href="#builder/{{builder.id}}/build/{{build.id}}">see output</a>
-            </td>
           </tr>
         </tbody>
       </table>

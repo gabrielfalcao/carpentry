@@ -7,7 +7,9 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
     $scope.createBuilder = function(builder) {
         $http.post('/api/builder', builder).
             success(function(data, status, headers, config) {
-                console.log("/api/builder OK")
+                console.log("/api/builder OK");
+                go('/');
+                location.href = location.href;
             }).
             error(function(data, status, headers, config) {
                 console.log("/api/builder FAILED")

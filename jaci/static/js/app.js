@@ -46,7 +46,7 @@ angular.module('JaciApp', [
         url: '/not-found',
         templateUrl: '/assets/js/templates/404.html'
     });
-    $urlRouterProvider.otherwise('/');
+    $urlRouterProvider.otherwise('/splash');
 }).run(function ($rootScope, $state, $templateCache, $http, notify, hotkeys) {
     $http.defaults.headers.common.Authorization = 'Bearer: foobar'
 }).directive('navbar', function ($rootScope, $state, $location) {
