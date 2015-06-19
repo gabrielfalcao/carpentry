@@ -10,7 +10,7 @@ import codecs
 import yaml
 from jaci import conf
 from datetime import datetime
-from subprocess import Popen, PIPE, STDOUT, check_output
+from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
 from jaci.util import calculate_redis_key, render_string
 from jaci.models import Build
@@ -89,7 +89,10 @@ class PrepareSSHKey(Step):
 
         instructions['ssh_dir'] = ssh_dir
         instructions['workdir'] = workdir
-
+        try:
+            instructions['ssh_add'] = check_output(render_string('ssh-add {id_rsa_private_key_path}', instructions), shell=True)
+        except CalledProcessError:
+            pass
         self.produce(instructions)
 
 
