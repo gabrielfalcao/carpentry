@@ -163,7 +163,7 @@ class Build(Model):
 
     def to_dict(self):
         return model_to_dict(self, {
-            'css_status': STATUS_MAP.get(self.status, 'info'),
+            'css_status': STATUS_MAP.get(self.status, 'warning'),
         })
 
     @classmethod
