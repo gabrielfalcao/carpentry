@@ -48,7 +48,7 @@ def get_build_output(user, id):
     backend = pipeline.get_backend()
     out_key, err_key = calculate_redis_key(partial_instructions)
 
-    stdout = backend.redis.get(out_key) or 'waiting...'
+    stdout = backend.redis.get(out_key) or 'waiting for workers...'
     # stderr = backend.redis.get(err_key) or ''
 
     return json_response({
@@ -62,12 +62,15 @@ def create_builder(user):
     data = ensure_json_request({
         'name': unicode,
         'git_uri': unicode,
-        'build_instructions': unicode,
+        'shell': unicode,
         'id_rsa_private': any,
         'id_rsa_public': any,
         'status': any,
     })
     data['id'] = uuid.uuid1()
+    data['build_instructions'] = {
+        'shell': data.pop('shell', 'ls -a')
+    }
     try:
         builder = models.Builder.create(**data)
         logger.info('creating new builder: %s', builder.name)
