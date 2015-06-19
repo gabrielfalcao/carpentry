@@ -31,7 +31,9 @@ BUILD_STATUSES = [
 STATUS_MAP = {
     'succeeded': 'success',
     'failed': 'danger',
+    'retrieving': 'primary',
     'running': 'info',
+    'scheduled': 'warning',
     'checking': 'warning',
     'preparing': 'warning',
 }

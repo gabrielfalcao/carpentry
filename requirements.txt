@@ -8,3 +8,4 @@ ansi2html==1.1.0
 lineup==0.1.4
 python-dateutil==2.4.2
 github-flask==2.0.1
+pyOpenSSL==0.15.1

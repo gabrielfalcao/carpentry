@@ -14,8 +14,12 @@ gunicorn:
 run:
 	python jaci/cli.py run
 
+dependencies:
+	pip install -U pip
+	pip install -r requirements.txt
+
 db:
-	python jaci/cli.py setup --drop
+	python jaci/cli.py setup --drop --flush-redis
 	python tests/load-fixtures.py
 
 workers:

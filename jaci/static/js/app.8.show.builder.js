@@ -23,10 +23,13 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
     }
     $scope.refresh = refresh;
 
-    var poller = setInterval(function () {
-        if ($scope.eof) {
+    var limit = 720;
+    var counter = 0;
+    var poller = setInterval(function(){
+        counter++;
+        if (counter > 720) {
             clearInterval(poller);
         }
         refresh();
-    }, 750);
+    }, 500);
 });

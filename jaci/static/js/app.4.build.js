@@ -45,12 +45,19 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
         get_build();
         get_output();
     }
-    var poller = setInterval(function () {
-        if ($scope.eof) {
+
+    $scope.refresh = refresh;
+    var limit = 720;
+    var counter = 0;
+    var poller = setInterval(function(){
+        counter++;
+        if (counter > 720) {
             clearInterval(poller);
         }
         refresh();
-    }, 1500);
+    }, 500);
+
+
     refresh();
 
 });

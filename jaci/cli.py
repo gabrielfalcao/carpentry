@@ -6,7 +6,7 @@
 from __future__ import unicode_literals
 
 import sys
-import time
+
 import json
 import logging
 import argparse
@@ -145,6 +145,7 @@ def jaci_setup():
         prog='jaci setup',
         description='sets up the cassandra database')
     parser.add_argument('--drop', action='store_true', default=False, help='drop any existing tables before syncing')
+    parser.add_argument('--flush-redis', action='store_true', default=False, help='flush all jaci-related redis keys')
 
     args = parser.parse_args(get_remaining_sys_argv())
     print LOGO
@@ -152,6 +153,11 @@ def jaci_setup():
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
     create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
+    pipeline = LocalBuilder(JSONRedisBackend)
+    backend = pipeline.get_backend()
+    if args.flush_redis:
+        for key in backend.redis.keys('jaci*'):
+            backend.redis.delete(key)
 
     for t in get_models():
         try:

@@ -193,6 +193,7 @@ class CheckAndLoadBuildFile(Step):
         with codecs.open(yml_path, 'r', 'utf-8') as fd:
             raw_yml = fd.read()
 
+        self.log("Successfully loaded {0}".format(yml_path))
         build = yaml.load(raw_yml)
         instructions['build'] = build
 
@@ -207,18 +208,27 @@ class PrepareShellScript(Step):
     def before_consume(self):
         self.log("ready to write shell scripts")
 
+    def write_script_to_fd(self, fd, template, instructions):
+        rendered = render_string(template, instructions)
+        self.log(rendered.strip())
+        fd.write(rendered)
+        fd.write('\n')
+
     def consume(self, instructions):
         set_build_status(instructions, 'preparing')
         build_dir = instructions['build_dir']
         shell_script_path = os.path.join(build_dir, render_string('.{slug}.shell.sh', instructions))
-        with io.open(shell_script_path, 'wb') as fd:
+        instructions['shell_script_path'] = shell_script_path
 
-            fd.write("#!/bin/bash\n")
-            fd.write("set -e\n")
-            fd.write(instructions['build']['shell'])
+        self.log(render_string('writing {shell_script_path}', instructions))
+
+        with io.open(shell_script_path, 'wb') as fd:
+            self.write_script_to_fd(fd, "#!/bin/bash", instructions)
+            self.write_script_to_fd(fd, "set -e", instructions)
+            self.write_script_to_fd(fd, instructions['build']['shell'], instructions)
 
         os.chmod(shell_script_path, 0755)
-        instructions['shell_script_path'] = shell_script_path
+
         self.produce(instructions)
 
 
@@ -233,6 +243,10 @@ class LocalBuild(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'running')
         cmd = render_string('bash {shell_script_path}', instructions)
+
+        self.log(render_string("running: bash {shell_script_path}", instructions))
+        self.log(render_string("cwd: {build_dir}", instructions))
+
         process = run_command(cmd, chdir=instructions['build_dir'])
         redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
 
@@ -256,6 +270,8 @@ class LocalBuild(Step):
         else:
             status = 'failed'
 
-        set_build_status(instructions, status)
+        instructions['status'] = status
+        self.log(render_string("build of {name} {status}", instructions))
 
+        set_build_status(instructions, status)
         self.produce(instructions)

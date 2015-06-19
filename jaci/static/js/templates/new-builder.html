@@ -14,33 +14,21 @@
         <form class="form-horizontal">
           <fieldset>
             <div class="form-group">
-              <label for="builder_name_input" class="col-lg-2 control-label">project name</label>
+              <label for="builder_name_input" class="col-lg-2 control-label"><strong>project name</strong></label>
               <div class="col-lg-10">
                 <input type="text" id="builder_name_input" class="form-control" ng-model="builder.name" placeholder="Builder Name"  />
               </div>
             </div>
             <div class="form-group">
-              <label for="git_repository_input" class="col-lg-2 control-label">git clone uri</label>
+              <label for="git_repository_input" class="col-lg-2 control-label"><strong>git uri</strong></label>
               <div class="col-lg-10">
                 <input type="text" id="git_repository_input" class="form-control" ng-model="builder.git_uri" placeholder="git@github.com/gabrielfalcao/sure.git"  />
-                <div class="checkbox">
-                  <label>
-                    <input type="checkbox"> choose public key
-                  </label>
-                </div>
               </div>
             </div>
             <div class="form-group">
-              <label for="yaml_input" class="col-lg-2 control-label">shell</label>
+              <label for="shell_script" class="col-lg-2 control-label"><strong>shell script</strong></label>
               <div class="col-lg-10">
-                <textarea id="yaml_input" class="form-control" ng-model="builder.shell" rows="25" style="font-family: Monaco,monospace;font-size:12px">#!/bin/bash
-set -e
-pip install virtualenv
-virtualenv .venv
-source .venv/bin/activate
-pip install -r requirements.txt || echo "skipped development.txt"
-pip install -r development.txt || echo "skipped development.txt"
-make</textarea>
+                <textarea id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group">
