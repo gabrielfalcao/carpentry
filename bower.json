@@ -9,7 +9,7 @@
     "angular-hotkeys": "chieffancypants/angular-hotkeys#~1.4.5",
     "angular-cookies": "~1.3.9",
     "angular-notify": "~2.0.2",
-    "bootswatch": "~3.3.4+1",
+    "bootswatch": "~v3.3.5",
     "angular-scroll-glue": "~2.0.5",
     "angular-highlightjs": "~0.4.1"
   },
