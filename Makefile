@@ -36,6 +36,5 @@ clean:
 	git clean -Xdf
 
 
-release: test
-	bower install
+release:
 	./.release
