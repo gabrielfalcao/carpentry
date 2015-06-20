@@ -1,7 +1,9 @@
 CWD			:= $(shell pwd)
 JACI_CONFIG_PATH	:= $(CWD)/tests/jaci.yml
+JACI_LOG_PATH		:= $(CWD)/jaci.log
 PYTHONPATH		:= $(CWD)
 export JACI_CONFIG_PATH
+export JACI_LOG_PATH
 export PYTHONPATH
 
 all: test
@@ -9,7 +11,7 @@ all: test
 test: unit functional
 
 gunicorn:
-	gunicorn wsgi:application --bind 0.0.0.0:5000 --log-level debug
+	gunicorn jaci.wsgi:application --bind 0.0.0.0:5000 --log-level debug --workers=10
 
 run:
 	python jaci/cli.py run
