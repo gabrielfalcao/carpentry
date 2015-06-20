@@ -24,7 +24,6 @@ if [ "$current_version" == "$newversion" ] || [ $sure == "yes" ]; then
     if [ "$current_version" == "$newversion" ]; then
         git add `find_files`
         git commit -am "New release: $newversion"
-        git tag $newversion
     fi;
     python setup.py sdist register upload
 fi;
