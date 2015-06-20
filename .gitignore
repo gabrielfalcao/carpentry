@@ -18,3 +18,4 @@ sandbox
 dist
 jaci-*
 jaci.egg*
+jaci/static/vendor/
