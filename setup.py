@@ -48,7 +48,7 @@ requirements = [
 
 setup(
     name='jaci',
-    version='0.0.2',
+    version='0.0.3',
     description='Jaci',
     entry_points={
         'console_scripts': ['jaci = jaci.cli:main'],
