@@ -49,8 +49,11 @@ angular.module('JaciApp', [
     $urlRouterProvider.otherwise('/splash');
 }).run(function ($rootScope, $state, $templateCache, $http, notify, hotkeys) {
     $http.defaults.headers.common.Authorization = 'Bearer: ' + window.JACI_TOKEN;
-    $rootScope.isAuthenticated = false;
     $rootScope.hasToken = ((window.JACI_TOKEN + "").length > 0);
+    $rootScope.isAuthenticated = $rootScope.hasToken;
+
+    /* // github-based authentication confirmation by retrieving user data
+    $rootScope.isAuthenticated = false;
     if ($rootScope.hasToken) {
         $http.get("/api/user").success(function(data, status){
             $rootScope.user = data;
@@ -61,6 +64,7 @@ angular.module('JaciApp', [
             location.href = "/logout";
         });
     }
+    */
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
             $rootScope.go('/splash');
