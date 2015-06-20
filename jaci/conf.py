@@ -28,7 +28,7 @@ def set_things(self, env):
     self.workdir_node = Node(self.workdir)
     self.build_node = self.workdir_node.cd('builds')
     self.GITHUB_CLIENT_ID = env.get('github_client_id')
-    self.GITHUB_CLIENT_SECRET = env.get('github_client_id')
+    self.GITHUB_CLIENT_SECRET = env.get('github_client_secret')
 
 
 def setup_from_config_path(self, path):

@@ -193,9 +193,18 @@ class Build(Model):
 class User(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     github_access_token = columns.Text(index=True)
-    name = columns.Text(required=True)
-    email = columns.Text(index=True)
+    name = columns.Text()
+    email = columns.Text()
     jaci_token = columns.UUID(required=True, index=True)
 
     def to_dict(self):
         return model_to_dict(self)
+
+    @classmethod
+    def from_jaci_token(cls, jaci_token):
+        if not jaci_token:
+            return
+
+        users = User.objects.filter(jaci_token=jaci_token)
+        if len(users) > 0:
+            return users[0]

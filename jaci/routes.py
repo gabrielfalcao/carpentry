@@ -12,14 +12,14 @@ import logging
 from jaci.api.v1 import web
 # from jaci.api.core import authenticated
 
-from flask import Response, render_template, session
+from flask import Response, render_template, request
 
 
 @web.get('/')
 def index():
     logging.info("serving index")
     return render_template("index.html", **{
-        'user_token': session.get('jaci_token', "")
+        'user_token': request.cookies.get('jaci_token') or ''
     })
 
 

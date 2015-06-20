@@ -5,8 +5,8 @@ from __future__ import unicode_literals
 import re
 import logging
 
-from tumbler import tumbler
-from flask import request, abort, g, session, redirect
+from tumbler import tumbler, json_response
+from flask import request, abort, g
 web = tumbler.module(__name__)
 
 from functools import wraps
@@ -36,16 +36,15 @@ class Authenticator(object):
 
     def get_user(self):
         token = self.get_token()
-        if not token:
-            logging.warning("no token coming from header")
+        if not token or token == 'None':
+            logging.warning("no token coming from header: %s", request.path)
+            logging.warning("request headers: %s", request.headers)
+            logging.warning("request method: %s", request.method)
+            logging.warning("request data: %s", request.data)
             return
 
-        g.user = User.get(jaci_token=token)
-        session['user'] = g.user.to_dict()
-        session['user_id'] = g.user.id
-        session['jaci_token'] = g.user.jaci_token
-        session['github_access_token'] = g.user.github_access_token
-        return g.user
+        g.user = result = User.from_jaci_token(token)
+        return result
 
 
 def authenticated(resource):
@@ -54,8 +53,9 @@ def authenticated(resource):
         auth = Authenticator(request.headers)
         user = auth.get_user()
         if not user:
-            return redirect('/login')
-
+            return json_response({
+                'error': 'not authorized'
+            }, status_code=401)
         kw['user'] = user
         return resource(*args, **kw)
 

@@ -3,7 +3,8 @@
 #
 import uuid
 import logging
-from tumbler.core import Web
+from tumbler import set_cors_into_headers
+from tumbler.core import Web, MODULES
 from flask import g, redirect, request, session
 from flask.ext.github import GitHub
 from jaci.models import User
@@ -17,9 +18,16 @@ class JaciHttpServer(Web):
         self.flask_app.config.from_object('jaci.conf')
         self.github = GitHub(self.flask_app)
         self.setup_github_authentication()
+        MODULES.clear()
+        self.collect_modules()
         setup_logging(log_level)
 
     def setup_github_authentication(self):
+        @self.flask_app.before_request
+        def prepare_user():
+            jaci_token = request.cookies.get('jaci_token')
+            g.user = User.from_jaci_token(jaci_token)
+
         @self.github.access_token_getter
         def token_getter():
             user = g.user
@@ -43,20 +51,29 @@ class JaciHttpServer(Web):
                 g.user = User(
                     id=uuid.uuid1(),
                     jaci_token=uuid.uuid4(),
+                    github_access_token=access_token
                 )
             else:
                 g.user = users[0]
                 g.user.jaci_token = uuid.uuid4()
+                g.user.github_access_token = access_token
 
             g.user.save()
-            session['user_id'] = g.user.id
-            session['jaci_token'] = g.user.jaci_token
-            session['github_access_token'] = access_token
-            return redirect('/')
+
+            logging.warning("user exists: %s", user_exists)
+            logging.warning("g.user: %s", g.user)
+
+            response = redirect(next_url)
+            response.set_cookie('jaci_token', bytes(g.user.jaci_token))
+            return response
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
             return self.github.authorize()
+
+        @self.flask_app.route('/logout', methods=["GET"])
+        def logout():
+            return request.cookies.clear()
 
 
 def setup_logging(level):
@@ -65,4 +82,4 @@ def setup_logging(level):
 
     for name in LOGHANDLERS:
         logger = logging.getLogger(name)
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)

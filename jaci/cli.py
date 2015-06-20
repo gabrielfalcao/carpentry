@@ -81,13 +81,13 @@ def jaci_run():
 
     args = parser.parse_args(get_remaining_sys_argv())
     server = JaciHttpServer(
-        log_level=logging.INFO,
+        log_level=logging.DEBUG,
         template_folder=this_node.join('templates'),
         static_folder=this_node.join('static'),
         static_url_path='/assets',
         use_sqlalchemy=False,
     )
-    coloredlogs.install(logging.INFO)
+    coloredlogs.install(logging.DEBUG)
 
     print LOGO
     print "listening on http://{0}:{1}".format(args.host, args.port)
