@@ -155,8 +155,10 @@ def jaci_setup():
         description='sets up the cassandra database')
     parser.add_argument('--drop', action='store_true', default=False, help='drop any existing tables before syncing')
     parser.add_argument('--flush-redis', action='store_true', default=False, help='flush all jaci-related redis keys')
-    setup_logging(logging.DEBUG)
+    setup_logging(logging.INFO)
     args = parser.parse_args(get_remaining_sys_argv())
+    coloredlogs.install(logging.INFO)
+
     print LOGO
     # CREATE KEYSPACE jaci
     #        WITH REPLICATION =
@@ -166,13 +168,16 @@ def jaci_setup():
     backend = pipeline.get_backend()
     if args.flush_redis:
         for key in backend.redis.keys('jaci*'):
+            logging.warning("redis: deleting key %s", key)
             backend.redis.delete(key)
 
     for t in get_models():
         try:
             if args.drop:
+                logging.warning("cassandra: dropping table %s", t)
                 drop_table(t)
 
+            logging.info("cassandra: creating table %s", t)
             sync_table(t)
         except Exception:
             logging.exception('Failed to drop/sync %s', t)

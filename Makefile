@@ -37,6 +37,5 @@ clean:
 
 
 release: test
-	npm install
 	bower install
 	./.release
