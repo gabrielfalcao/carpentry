@@ -45,6 +45,7 @@ requirements = [
     'requests==2.5.1',
     'tumbler==0.0.19',
     'coloredlogs==1.0.1',
+    'cqlengine==0.21.0'
 ]
 
 setup(
