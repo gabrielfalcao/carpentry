@@ -12,12 +12,7 @@ from .helpers import api
 def test_create_builder(context):
     ('POST to /api/builder should create a builder')
 
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
-
-    # And I POST to /api/builders
+    # Given that I POST to /api/builders
     response = context.http.post(
         '/api/builder',
         data=json.dumps({
@@ -70,10 +65,6 @@ def test_create_builder(context):
 def test_set_preferences(context):
     ('POST to /api/preferences should set multiple preferences')
 
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
 
     # And I POST to /api/builders
     response = context.http.post(
@@ -128,10 +119,6 @@ def test_list_builders(context):
         shell_script='make test',
     )
 
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
 
     # And I GET on /api/builders
     response = context.http.get(
@@ -163,10 +150,6 @@ def test_edit_builder(context):
         shell_script='make test',
     )
 
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
 
     # And I PUT on /api/builders
     response = context.http.put(
@@ -227,10 +210,6 @@ def test_delete_builder(context):
         shell_script='make test',
     )
 
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
 
     # And I DELETE to /api/builders
     response = context.http.delete(
@@ -276,11 +255,6 @@ def test_create_build_instance_from_builder(context):
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         shell_script='make test',
     )
-
-    # When I prepare the headers for authentication
-    context.headers.update({
-        'Authorization': 'Bearer: testtoken'
-    })
 
     # And I POST on /api/builder/uuid/build
     response = context.http.post(

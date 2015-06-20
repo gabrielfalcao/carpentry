@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import uuid
 from sure import scenario
 
 from tumbler.core import Web
 
 from cqlengine.management import sync_table, drop_table, create_keyspace
 from jaci.api.v1 import get_models
+from jaci.models import User
 
 
 def prepare_db(context):
@@ -27,8 +29,11 @@ def prepare_db(context):
 def prepare_http_client(context):
     context.web = Web()
     context.http = context.web.flask_app.test_client()
+    context.user = User(id=uuid.uuid1(), jaci_token=uuid.uuid4())
+    context.user.save()
     context.headers = {
         'Content-Type': 'application/json',
+        'Authorization': 'Bearer: {0}'.format(context.user.jaci_token)
     }
 
 

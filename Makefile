@@ -36,7 +36,7 @@ clean:
 	git clean -Xdf
 
 
-release:
+release: test
 	npm install
 	bower install
 	./.release
