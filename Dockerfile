@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM ubuntu
 
 ENV DEBIAN_FRONTEND  noninteractive
 ENV PYTHONUNBUFFERED true
@@ -14,7 +14,13 @@ RUN apt-get update \
     libc6-dev \
     python2.7 \
     python2.7-dev \
+    python-dev \
+    libffi-dev \
+    libssl-dev \
+    libgnutls-dev \
+    libsqlite3-dev \
     python-pip \
+    git-core \
   && rm -rf /var/lib/apt/lists/*
 
 RUN pip install virtualenv \
@@ -33,8 +39,7 @@ RUN apt-get update \
   build-essential libevent-dev libffi-dev openjdk-7-jre openjdk-7-jdk nginx \
   && rm -rf /var/lib/apt/lists/*
 
-# Adding these files here lets us add the entire source directory
-# later, which means fewer cache invalidations for the install steps.
+ENV PYTHONPATH /srv/jaci
 ADD requirements.txt /tmp/
 
 # development.txt includes requirements.txt
@@ -46,9 +51,3 @@ RUN pip install uwsgi
 ADD . /srv/jaci
 
 USER jaci
-
-VOLUME /var/log
-
-EXPOSE 5000
-
-CMD exec uwsgi --enable-threads --http-socket 0.0.0.0.5000 --wsgi-file jaci/wsgi.py --master --processes $WORKERS

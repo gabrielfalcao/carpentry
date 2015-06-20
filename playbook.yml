@@ -1,0 +1,59 @@
+---
+- hosts: all
+  sudo: yes
+  remote_user: root
+  vars:
+    docker_version: 1.6.1
+    docker_admin_users: []
+    docker_opts:
+      - "--iptables=false"
+
+
+  tasks:
+    - name: install docker dependencies
+      apt: pkg={{ item }} state=present
+      with_items:
+        - linux-image-extra-virtual
+
+    - name: install jaci dependencies
+      apt:
+        pkg: "{{ item }}"
+        state: present
+      with_items:
+        - python-dev
+        - libffi-dev
+        - libssl-dev
+        - libgnutls-dev
+        - libsqlite3-dev
+        - python-pip
+        - python-virtualenv
+        - git-core
+        - redis-server
+
+
+    - name: add docker repository key
+      apt_key: url=https://get.docker.io/gpg state=present
+
+    - name: add docker repository
+      apt_repository: >-
+        repo="deb http://get.docker.io/ubuntu docker main" state=present
+
+    - name: install docker
+      apt: >-
+        pkg=lxc-docker-{{ docker_version }}
+        state=latest update_cache=yes cache_valid_time=3600
+
+    - name: update docker defaults file
+      template: src=ansible/docker.default.j2 dest=/etc/default/docker
+
+    - name: add admin users to docker group
+      user: name={{ item }} groups=docker append=yes
+      with_items: docker_admin_users
+
+    - name: start docker
+      service: name=docker state=restarted
+
+    - name: build docker image
+      shell: docker build -t gabrielfalcao/jaci /vagrant
+
+      #rm -rf /var/lib/docker if you want to cleanup docker
