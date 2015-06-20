@@ -1,5 +1,2 @@
-include templates/**
-include static/*/*/*/*
-include templates/*
-include static/*
-include *
+recursive-include jaci/templates *
+recursive-include jaci/static *

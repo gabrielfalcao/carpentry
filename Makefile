@@ -34,3 +34,9 @@ functional:
 clean:
 	rm -rf sandbox
 	git clean -Xdf
+
+
+release:
+	npm install
+	bower install
+	./.release

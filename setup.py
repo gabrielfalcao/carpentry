@@ -28,14 +28,11 @@ setup(
     author_email='gabriel@nacaolivre.org',
     url='http://falcao.it/jaci',
     packages=find_packages(exclude=['*tests*']),
-    package_data={'jaci': [
-        'include templates/**',
-        'include static/*/*/*/*',
-        'include templates/*',
-        'include static/*',
-        'include_package_data *',
-    ]},
-    include=True,
+    # package_data={'jaci': [
+    #     'recursive-include jaci/templates *'
+    #     'recursive-include jaci/static *'
+    # ]},
+    include_package_data=True,
     install_requires=requirements,
     zip_safe=False,
 )

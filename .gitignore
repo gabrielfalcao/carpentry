@@ -15,3 +15,6 @@ deploy/terraform.tfstate.backup
 deploy/terraform.tfvars
 jaci.log
 sandbox
+dist
+jaci-*
+jaci.egg*
