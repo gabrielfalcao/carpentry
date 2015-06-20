@@ -9,7 +9,7 @@ from jaci import routes
 
 from jaci.core import JaciHttpServer
 
-log_path = os.getenv('JACI_LOG_PATH', 'jaci.log')
+log_path = os.getenv('JACI_LOG_PATH', '/var/log/jaci.log')
 
 logging.basicConfig(
     filename=log_path,
@@ -21,7 +21,7 @@ root_node = Node(__file__).dir
 application = JaciHttpServer(
     log_level=logging.INFO,
     template_folder=root_node.join('templates'),
-    static_folder=root_node.join('jaci/static'),
+    static_folder=root_node.join('static'),
     static_url_path='/assets',
     use_sqlalchemy=False
 )
