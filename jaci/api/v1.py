@@ -190,3 +190,9 @@ def create_build(user, id):
     builder = models.Builder.objects.get(id=id)
     item = builder.trigger(builder.branch, **data)
     return json_response(item.to_dict())
+
+
+@web.get('/api/user')
+@authenticated
+def get_user(user):
+    return json_response(user.get_github_metadata(), status=200)

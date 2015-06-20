@@ -49,7 +49,25 @@ angular.module('JaciApp', [
     $urlRouterProvider.otherwise('/splash');
 }).run(function ($rootScope, $state, $templateCache, $http, notify, hotkeys) {
     $http.defaults.headers.common.Authorization = 'Bearer: ' + window.JACI_TOKEN;
-    $rootScope.isAuthenticated = ((window.JACI_TOKEN + "").length > 0);
+    $rootScope.isAuthenticated = false;
+    $rootScope.hasToken = ((window.JACI_TOKEN + "").length > 0);
+    if ($rootScope.hasToken) {
+        $http.get("/api/user").success(function(data, status){
+            $rootScope.user = data;
+            $rootScope.isAuthenticated = true;
+            console.log("GitHub Metadata", data);
+            $rootScope.go('/');
+        }).error(function(data, status){
+            location.href = "/logout";
+        });
+    }
+    $rootScope.defaultErrorHandler = function(data, status, headers, config) {
+        if (status === 401) {
+            $rootScope.go('/splash');
+        } else {
+            $rootScope.go("/");
+        }
+    };
 }).directive('navbar', function ($rootScope, $state, $location) {
     return {
         restrict: 'E',
@@ -60,13 +78,15 @@ angular.module('JaciApp', [
 }).controller('JaciMainCtrl', function ($scope, $http, $location, $rootScope, hotkeys, $state, $templateCache) {
     $rootScope.buildCache = {};
 
-        $rootScope.triggerBuild = function(builder){
+    $rootScope.triggerBuild = function(builder, stay){
         console.log( "triggerBuild");
         $http
             .post('/api/builder/' + builder.id + '/build')
 
-        .success(function(data, status, headers, config) {
-            $rootScope.go('/builder/' + builder.id + '/build/' + data.id);
+            .success(function(data, status, headers, config) {
+                if (stay !== true) {
+                    $rootScope.go('/builder/' + builder.id + '/build/' + data.id);
+                }
         })
 
         .error(function(data, status, headers, config) {
@@ -84,10 +104,7 @@ angular.module('JaciApp', [
             success(function(data, status, headers, config) {
                 $rootScope.builders = Builder.fromList(data);
                 //console.log("OK", $rootScope.builders);
-            }).
-            error(function(data, status, headers, config) {
-                //console.log("FAILED", data);
-            });
+            }).error($rootScope.defaultErrorHandler);
     };
 
     $rootScope.refresh();

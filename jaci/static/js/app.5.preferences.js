@@ -4,9 +4,6 @@ angular.module('JaciApp.Preferences', ['JaciApp.Common']).controller('Preference
             success(function(data, status, headers, config) {
                 console.log("/api/preferences", data)
             }).
-            error(function(data, status, headers, config) {
-                console.log("/api/preferences", data)
-                $rootScope.go("/");
-            });
+            error($rootScope.defaultErrorHandler);
     };
 });

@@ -51,7 +51,7 @@ def app_js():
     })
 
 
-@web.get('/assets/<path:path>')
+#@web.get('/assets/<path:path>')
 def assets(path):
     local_path = this_node.cd('static').join(path)
     with io.open(local_path) as fd:

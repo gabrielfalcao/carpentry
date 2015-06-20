@@ -137,7 +137,6 @@ def jaci_run_local_pipeline():
         while pipeline.started:
             time.sleep(0.1)
 
-
     except KeyboardInterrupt:
         pipeline.stop()
 

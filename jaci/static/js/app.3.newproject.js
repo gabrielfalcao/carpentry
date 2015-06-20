@@ -21,10 +21,6 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
             success(function(data, status, headers, config) {
                 console.log("/api/builder OK");
                 $rootScope.go('/');
-            }).
-            error(function(data, status, headers, config) {
-                console.log("/api/builder FAILED");
-                $rootScope.go("/");
-            });
+            }).error($rootScope.defaultErrorHandler);
     };
 });

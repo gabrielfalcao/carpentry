@@ -3,6 +3,7 @@
 import re
 import redis
 import uuid
+import requests
 # import bcrypt
 import logging
 import datetime
@@ -29,13 +30,14 @@ BUILD_STATUSES = [
 
 
 STATUS_MAP = {
+    'ready': 'active',
     'succeeded': 'success',
     'failed': 'danger',
-    'retrieving': 'primary',
-    'running': 'info',
+    'retrieving': 'info',
+    'running': 'active',
     'scheduled': 'warning',
-    'checking': 'warning',
-    'preparing': 'warning',
+    'checking': 'info',
+    'preparing': 'active',
 }
 
 
@@ -156,7 +158,7 @@ class Build(Model):
     author_email = columns.Text()
     commit = columns.Text()
     code = columns.Integer()
-    status = columns.Text(default='scheduled')
+    status = columns.Text(default='ready')
     date_created = columns.DateTime()
     date_finished = columns.DateTime()
 
@@ -200,6 +202,19 @@ class User(Model):
 
     def to_dict(self):
         return model_to_dict(self)
+
+    def get_github_metadata(self):
+        headers = {
+            'Authorization': 'token {0}'.format(self.github_access_token)
+        }
+        response = requests.get('https://api.github.com/user', headers=headers)
+        metadata = response.json()
+        logging.warning("GITHUB USER METADATA: %s", metadata)
+        return metadata
+
+    def reset_token(self):
+        self.jaci_token = uuid.uuid4()
+        self.save()
 
     @classmethod
     def from_jaci_token(cls, jaci_token):

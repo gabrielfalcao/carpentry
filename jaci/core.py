@@ -78,6 +78,8 @@ class JaciHttpServer(Web):
         @self.flask_app.route('/logout', methods=["GET"])
         def logout():
             response = redirect('/')
+            if g.user:
+                g.user.reset_token()
             response.set_cookie('jaci_token', '')
             return response
 

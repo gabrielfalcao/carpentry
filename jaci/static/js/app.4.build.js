@@ -24,7 +24,7 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             console.log('failed ' + url, status);
             clearInterval(poller);
             $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
-            $rootScope.go("/");
+            $rootScope.defaultErrorHandler(data, status, headers, config);
 
         });
 
@@ -37,7 +37,7 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             console.log('failed ' + url, status);
             $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
             clearInterval(poller);
-            $rootScope.go("/");
+            $rootScope.defaultErrorHandler(data, status, headers, config);
         });
     }
 

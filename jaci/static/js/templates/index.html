@@ -27,20 +27,25 @@
           <tr ng-class="builder.css_status">
             <td><strong>
               <a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></strong></td>
-              <th scope="row">{{ builder.last_build.number }}</th>
-              <td>{{ builder.last_build.author_name }} &lt;{{ builder.last_build.author_email }}&gt;</td>
-              <td>
+              <th class="ng-cloak" ng-hide="!builder.last_build" scope="row">{{ builder.last_build.number }}</th>
+              <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.author_name }} &lt;{{ builder.last_build.author_email }}&gt;</td>
+              <td class="ng-cloak" ng-hide="!builder.last_build">
                 <a ng-href="#builder/{{builder.id}}/build/{{builder.last_build.id}}">{{ builder.last_build.commit }}</a>
               </td>
-              <td>{{ builder.last_build.branch }}</td>
-              <td>{{ builder.last_build.status }}</td>
+              <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.branch }}</td>
+              <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.status }}</td>
+              <td colspan="4" class="ng-cloak" ng-show="!builder.last_build"></td>
+              <td class="ng-cloak" ng-show="!builder.last_build">
+                No builds so far
+              </td>
               <td>
                 <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id)">
-                  <span class="glyphicon glyphicon-cog" aria-hidden="true"></span></button>
-                  <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="triggerBuild(builder, true)">
-                    <span class="glyphicon glyphicon-play" aria-hidden="true"></span></button>
-                    <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id + '/build/' + builder.last_build.id)">
-                      <span class="glyphicon glyphicon-console" aria-hidden="true"></span></button>
+                  <i class="fa fa-cog"></i>
+                </button>
+                <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="triggerBuild(builder, true)">
+                  <i class="fa fa-play-circle"></i></button>
+                  <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id + '/build/' + builder.last_build.id)">
+                    <i class="fa fa-desktop"></i></button>
               </td>
           </tr>
         </tbody>
@@ -54,11 +59,11 @@
             <td>
               <strong>Labels:</strong>
               <br />
-              <span class="glyphicon glyphicon-play"></span> build now <br />
-              <span class="glyphicon glyphicon-console"></span> console output <br />
-              <span class="glyphicon glyphicon-refresh"></span> retry build <br />
-              <span class="glyphicon glyphicon-envelope"></span> notify commit author <br />
-              <span class="glyphicon glyphicon-bullhorn"></span> notify team <br />
+              <i class="fa fa-play-circle"></i> build now <br />
+              <i class="fa fa-desktop"></i> console output <br />
+              <i class="fa fa-refresh"></i> retry build <br />
+              <i class="fa fa-envelope-o"></i> notify commit author <br />
+              <i class="fa fa-bullhorn"></i> notify team <br />
             </td>
           </tr>
         </tfoot>
