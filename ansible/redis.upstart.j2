@@ -1,0 +1,8 @@
+description     "Redis"
+
+start on (started networking)
+
+respawn
+respawn limit 5 60
+
+exec docker run redis

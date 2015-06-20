@@ -1,0 +1,9 @@
+description     "Cassandra Master"
+
+start on (started networking)
+
+respawn
+respawn limit 5 60
+
+
+exec docker run -v /srv/jaci/data:/var/lib/cassandra/data cassandra

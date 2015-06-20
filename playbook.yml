@@ -28,6 +28,7 @@
         - python-pip
         - python-virtualenv
         - git-core
+        - docker-compose
         - redis-server
 
 
@@ -43,6 +44,9 @@
         pkg=lxc-docker-{{ docker_version }}
         state=latest update_cache=yes cache_valid_time=3600
 
+    - name: ensuring that the cassandra data dir is present
+      file: path=/srv/jaci/data state=directory
+
     - name: update docker defaults file
       template: src=ansible/docker.default.j2 dest=/etc/default/docker
 
@@ -53,7 +57,32 @@
     - name: start docker
       service: name=docker state=restarted
 
-    - name: build docker image
-      shell: docker build -t gabrielfalcao/jaci /vagrant
+    - name: install the cassandra upstart
+      template: src=ansible/cassandra.upstart.j2
+        dest=/etc/init/cassandra.conf
+        owner=root group=root mode=644
 
+    - name: install the redis upstart
+      template: src=ansible/redis.upstart.j2
+        dest=/etc/init/redis.conf
+        owner=root group=root mode=644
+
+    - name: pull dependency docker images
+      shell: docker pull {{ item }}
+      with_items:
+        - cassandra
+        - redis
+        - gabrielfalcao/jaci-web
+
+    - name: start redis
+      service: name=redis state=restarted
+
+    - name: start cassandra
+      service: name=cassandra state=restarted
+
+    # - name: pull jaci-workers docker image
+    #   shell: docker pull gabrielfalcao/jaci-workers
+
+    # - name: build docker image
+    #   shell: docker build -t gabrielfalcao/jaci /vagrant
       #rm -rf /var/lib/docker if you want to cleanup docker

@@ -8,11 +8,12 @@ Vagrant.configure("2") do |config|
     c.vm.provider "virtualbox" do |v|
       # https://github.com/jpetazzo/pipework#virtualbox
       v.customize ['modifyvm', :id, '--nicpromisc1', 'allow-all']
+      v.memory = 8192
     end
 
     c.vm.provision :ansible do |ansible|
       ansible.playbook = "playbook.yml"
-      ansible.verbose = 'vvvv'
+      # ansible.verbose = 'vvvv'
       ansible.extra_vars = {
             ansible_ssh_user: 'vagrant',
             ansible_connection: 'ssh',

@@ -11,7 +11,6 @@ import datetime
 from lineup import JSONRedisBackend
 
 from cqlengine import columns
-from cqlengine import connection
 from cqlengine.models import Model
 from jaci import conf
 
@@ -46,8 +45,6 @@ redis_pool = redis.ConnectionPool(
     port=conf.redis_port,
     db=conf.redis_db
 )
-
-connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
 
 
 def get_pipeline():

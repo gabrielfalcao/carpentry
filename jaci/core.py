@@ -9,6 +9,7 @@ from flask import g, redirect, request
 from jaci import conf
 from flask.ext.github import GitHub
 from jaci.models import User
+from cqlengine import connection
 
 LOGHANDLERS = ['lineup.steps', 'lineup', 'tumbler', 'jaci']
 
@@ -22,6 +23,7 @@ class JaciHttpServer(Web):
         MODULES.clear()
         self.collect_modules()
         setup_logging(log_level)
+        connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
 
     def setup_github_authentication(self):
         @self.flask_app.before_request
