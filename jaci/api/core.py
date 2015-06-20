@@ -37,10 +37,6 @@ class Authenticator(object):
     def get_user(self):
         token = self.get_token()
         if not token or token == 'None':
-            logging.warning("no token coming from header: %s", request.path)
-            logging.warning("request headers: %s", request.headers)
-            logging.warning("request method: %s", request.method)
-            logging.warning("request data: %s", request.data)
             return
 
         g.user = result = User.from_jaci_token(token)
@@ -55,7 +51,7 @@ def authenticated(resource):
         if not user:
             return json_response({
                 'error': 'not authorized'
-            }, status_code=401)
+            }, status=401)
         kw['user'] = user
         return resource(*args, **kw)
 

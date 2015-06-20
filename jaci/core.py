@@ -3,9 +3,10 @@
 #
 import uuid
 import logging
-from tumbler import set_cors_into_headers
+
 from tumbler.core import Web, MODULES
-from flask import g, redirect, request, session
+from flask import g, redirect, request
+from jaci import conf
 from flask.ext.github import GitHub
 from jaci.models import User
 
@@ -37,11 +38,15 @@ class JaciHttpServer(Web):
         @self.flask_app.route('/oauth/github.com')
         @self.github.authorized_handler
         def authorized(access_token):
-            next_url = request.args.get('next') or '/'
+            next_url = request.args.get('next') or conf.get_full_url('/')
             access_token = access_token or request.args.get('access_token')
 
-            logging.warning("authorized_handler token: %s", access_token)
             if access_token is None:
+                logging.warning(
+                    "No access token retrieved, set the log level "
+                    "to debug and check flask-github's output. "
+                    "You likely set the wrong github client id "
+                    "and secret", access_token)
                 return redirect(next_url)
 
             users = User.objects.filter(github_access_token=access_token)
@@ -60,8 +65,7 @@ class JaciHttpServer(Web):
 
             g.user.save()
 
-            logging.warning("user exists: %s", user_exists)
-            logging.warning("g.user: %s", g.user)
+            logging.warning("authorized: %s", g.user)
 
             response = redirect(next_url)
             response.set_cookie('jaci_token', bytes(g.user.jaci_token))
@@ -73,7 +77,9 @@ class JaciHttpServer(Web):
 
         @self.flask_app.route('/logout', methods=["GET"])
         def logout():
-            return request.cookies.clear()
+            response = redirect('/')
+            response.set_cookie('jaci_token', '')
+            return response
 
 
 def setup_logging(level):

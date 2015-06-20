@@ -109,9 +109,10 @@ class Builder(Model):
         )
         pipeline = get_pipeline()
         payload = self.to_dict()
+        payload.pop('last_build')
         payload.update(build.to_dict())
         pipeline.input.put(payload)
-        logger.info("Pushing payload to workers %s", payload)
+        logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
         return build
 
     def get_last_build(self):

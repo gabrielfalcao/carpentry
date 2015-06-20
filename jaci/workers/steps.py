@@ -134,7 +134,7 @@ class LocalRetrieve(Step):
         if os.path.exists(build_dir):
             shutil.rmtree(build_dir)
         # else:
-        git = render_string('/usr/bin/env git clone {git_uri} ' + build_dir, instructions)
+        git = render_string('/usr/bin/env git clone -b {branch} {git_uri} ' + build_dir, instructions)
         chdir = conf.workdir_node.path
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
