@@ -136,13 +136,7 @@ def jaci_run_local_pipeline():
     try:
         while pipeline.started:
             time.sleep(0.1)
-            result = pipeline.output.get(wait=False)
-            if result:
-                print "+" * 80
-                print 'RESULT'
-                print "." * 80
-                print json.dumps(result, indent=2)
-                print "+" * 80
+
 
     except KeyboardInterrupt:
         pipeline.stop()

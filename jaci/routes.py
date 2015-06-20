@@ -5,14 +5,17 @@
 from __future__ import unicode_literals
 
 import io
+import mimetypes
+import logging
 
 from plant import Node
-import logging
 
 from jaci.api.v1 import web
 # from jaci.api.core import authenticated
 
 from flask import Response, render_template, request
+this_node = Node(__file__).dir
+mimedb = mimetypes.MimeTypes()
 
 
 @web.get('/')
@@ -45,4 +48,16 @@ def app_js():
     logging.info("serving app.js: %skb", len(joined) / 1000.0)
     return Response(joined, status=200, headers={
         'Content-Type': 'text/javascript'
+    })
+
+
+@web.get('/assets/<path:path>')
+def assets(path):
+    local_path = this_node.cd('static').join(path)
+    with io.open(local_path) as fd:
+        joined = fd.read()
+
+    logging.info("serving %s: %skb", path, len(joined) / 1000.0)
+    return Response(joined, status=200, headers={
+        'Content-Type': mimetypes.guess_type(path)
     })

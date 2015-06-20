@@ -9,7 +9,7 @@ from plant import Node
 from milieu import Environment
 
 self = sys.modules[__name__]
-DEFAULT_WORKDIR = os.getenv('JACI_WORKDIR') or '/srv/jaci'
+DEFAULT_WORKDIR = os.getenv('JACI_WORKDIR') or '/tmp/jaci'
 
 
 def get_env(self, path):

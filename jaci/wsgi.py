@@ -22,6 +22,6 @@ application = JaciHttpServer(
     log_level=logging.INFO,
     template_folder=root_node.join('templates'),
     static_folder=root_node.join('static'),
-    static_url_path='/assets',
+    static_url_path='/static',
     use_sqlalchemy=False
 )

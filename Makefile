@@ -1,5 +1,6 @@
 CWD			:= $(shell pwd)
 JACI_CONFIG_PATH	:= $(CWD)/tests/jaci.yml
+JACI_WORKDIR		:= $(CWD)/sandbox
 JACI_LOG_PATH		:= $(CWD)/jaci.log
 PYTHONPATH		:= $(CWD)
 export JACI_CONFIG_PATH
@@ -10,9 +11,11 @@ all: test
 
 test: unit functional
 
-gunicorn:
+gunicorn: assets
 	gunicorn jaci.wsgi:application --bind 0.0.0.0:5000 --log-level debug --workers=10
 
+assets:
+	bower install
 run:
 	python jaci/cli.py run
 
@@ -38,5 +41,5 @@ clean:
 	git clean -Xdf
 
 
-release:
+release: test assets
 	./.release
