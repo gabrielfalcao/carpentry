@@ -14,6 +14,9 @@
 
 
   tasks:
+    - name: update apt cache
+      shell: apt-get update
+
     - name: install docker dependencies
       apt: pkg={{ item }} state=present
       with_items:
@@ -32,7 +35,6 @@
         - python-pip
         - python-virtualenv
         - git-core
-        - redis-server
 
 
     - name: add docker repository key
@@ -60,6 +62,9 @@
     - name: start docker
       service: name=docker state=restarted
 
+    - name: ensure docker is clean
+      shell: docker rm -f $(docker ps -qa)
+
     - name: install the cassandra upstart
       template: src=ansible/cassandra.upstart.j2
         dest=/etc/init/cassandra.conf
@@ -75,15 +80,23 @@
         dest=/etc/init/jaci-web.conf
         owner=root group=root mode=644
 
+    - name: build jaci-base docker image
+      shell: docker build -t gabrielfalcao/jaci-base /vagrant/docker/jaci-base
+
+    - name: build jaci-web docker image
+      shell: docker build -t gabrielfalcao/jaci-web /vagrant/docker/jaci-web
+
     - name: pull dependency docker images
       shell: docker pull {{ item }}
       with_items:
         - cassandra
         - redis
-        - gabrielfalcao/jaci-web
 
     - name: start redis
       service: name=redis state=restarted
+
+    - name: start jaci-web
+      service: name=jaci-web state=restarted
 
     # - name: pull jaci-workers docker image
     #   shell: docker pull gabrielfalcao/jaci-workers
