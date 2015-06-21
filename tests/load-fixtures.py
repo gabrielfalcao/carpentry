@@ -7,6 +7,8 @@ import os
 from plant import Node
 from uuid import uuid1
 from jaci.models import Builder
+from jaci import conf
+from cqlengine import connection
 
 ssh_folder = Node(os.path.expanduser('~/.ssh'))
 
@@ -29,6 +31,7 @@ make
 
 
 def main():
+    connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
     for name in ['sure', 'steadymark', 'lettuce', 'HTTPretty', 'plant', 'tumbler', 'speakers']:
         Builder.create(
             id=uuid1(),

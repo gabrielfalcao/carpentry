@@ -3,6 +3,7 @@
   sudo: yes
   remote_user: root
   vars:
+    full_server_url: http://localhost:9000
     jaci_http_hostname: 0.0.0.0
     jaci_http_port: 5000
     jaci_web_processes: 2
@@ -36,6 +37,7 @@
         - python-pip
         - python-virtualenv
         - git-core
+        - nginx
 
 
     - name: add docker repository key
@@ -52,6 +54,9 @@
 
     - name: ensuring that the cassandra data dir is present
       file: path=/srv/jaci/data state=directory
+
+    - name: ensuring that the assets dir exists
+      file: path=/srv/jaci/assets state=directory
 
     - name: update docker defaults file
       template: src=ansible/docker.default.j2 dest=/etc/default/docker
@@ -97,9 +102,17 @@
     - name: start redis
       service: name=redis state=restarted
 
-    - name: start jaci-web
+    - name: copy assets from inside of the jaci-web docker image
+      shell: docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web jaci-web-boot.sh
+
+    - name: restart jaci-web
       service: name=jaci-web state=restarted
 
+    - name: place nginx configuration
+      template: src=ansible/jaci-web.nginx.j2 dest=/etc/nginx/sites-enabled/jaci-web.conf
+
+    - name: restart nginx
+      service: name=nginx state=restarted
 
     # - name: pull jaci-workers docker image
     #   shell: docker pull gabrielfalcao/jaci-workers
