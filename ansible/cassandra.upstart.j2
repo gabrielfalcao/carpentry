@@ -6,4 +6,4 @@ stop on stopped redis
 respawn
 respawn limit 5 60
 
-exec docker run --name jacicassandra -p 9160 -p 9042 -u root -v /srv/jaci/data:/var/lib/cassandra/data cassandra
+exec docker run --rm --name jacicassandra -p 9160 -p 9042 -u root -v /srv/jaci/data:/var/lib/cassandra/data cassandra
