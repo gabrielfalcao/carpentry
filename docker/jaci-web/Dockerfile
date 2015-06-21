@@ -1,4 +1,4 @@
-FROM gabrielfalcao/jaci-base
+oFROM gabrielfalcao/jaci-base
 
 USER root
 
@@ -26,7 +26,7 @@ RUN chmod +x /usr/bin/jaci-set-config.sh
 RUN chmod +x /usr/bin/jaci-web-run.sh
 RUN chmod +x /usr/bin/jaci-web-boot.sh
 
-RUN pip install jaci==0.0.9
+RUN pip install jaci==0.0.10
 RUN mkdir -p $JACI_WORKDIR
 
 # ENTRYPOINT jaci-web-run.sh --bind $JACI_HTTP_HOST:$JACI_HTTP_PORT --log-level debug --workers=$JACI_TOTAL_WORKERS
