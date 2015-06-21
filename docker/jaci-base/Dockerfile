@@ -10,8 +10,8 @@ MAINTAINER gabriel@nacaolivre.org
 
 USER root
 
-RUN apt-get update \
-  && apt-get --yes --no-install-recommends install \
+RUN apt-get update
+RUN apt-get --yes --no-install-recommends install \
     gcc \
     g++ \
     libc6-dev \
@@ -34,6 +34,3 @@ RUN mkdir -p /srv/jaci
 RUN pip install virtualenv \
   && mkdir -p "${VIRTUAL_ENV}" \
   && virtualenv "${VIRTUAL_ENV}"
-
-
-RUN pip install -U gunicorn jaci
