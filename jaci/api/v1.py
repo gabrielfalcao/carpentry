@@ -70,7 +70,11 @@ def get_build_output(user, id):
 @web.get('/api/build/<id>')
 @authenticated
 def get_build(user, id):
-    b = models.Build.get(id=id)
+    try:
+        b = models.Build.get(id=id)
+    except Exception as e:
+        return json_response({'error': str(e)}, status=400)
+
     builder = models.Builder.get(id=b.builder_id)
 
     data = builder.to_dict()

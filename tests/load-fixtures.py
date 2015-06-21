@@ -32,13 +32,13 @@ make
 
 def main():
     connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
-    for name in ['sure', 'steadymark', 'lettuce', 'HTTPretty', 'plant', 'tumbler', 'speakers']:
+    for name in ['sure', 'tumbler']:
         Builder.create(
             id=uuid1(),
             name=name,
             git_uri='git@github.com:gabrielfalcao/{0}.git'.format(name),
             shell_script=PYTHON,
-            status='checking',
+            status='ready',
             id_rsa_private=read_ssh_file('id_rsa'),
             id_rsa_public=read_ssh_file('id_rsa.pub'),
         )

@@ -83,7 +83,11 @@ angular.module('JaciApp', [
         if (status === 401) {
             go("/splash");
         } else {
-            location.href = "/logout";
+            if (data.error) {
+                notify("ERROR: " + data.error);
+            } else {
+                console.log("ERROR", data, status);
+            }
         }
     };
 }).directive('navbar', function ($rootScope, $state, $location) {
