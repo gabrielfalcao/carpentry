@@ -13,6 +13,7 @@ angular.module('JaciApp', [
     'JaciApp.Preferences',
     'JaciApp.Fullscreen',
     'JaciApp.ShowBuilder',
+    'JaciApp.UserProfile',
     'JaciApp.Splash'
 ]).config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider.state('index', {
@@ -47,6 +48,10 @@ angular.module('JaciApp', [
         url: '/splash',
         templateUrl: '/assets/js/templates/splash.html',
         controller: 'SplashController'
+    }).state('user-profile', {
+        url: '/profile',
+        templateUrl: '/assets/js/templates/profile.html',
+        controller: 'UserProfileController'
     }).state('not-found', {
         url: '/not-found',
         templateUrl: '/assets/js/templates/404.html'
@@ -76,7 +81,7 @@ angular.module('JaciApp', [
 
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
-            location.href = "/login";
+            go("/splash");
         } else {
             location.href = "/logout";
         }

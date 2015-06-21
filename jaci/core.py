@@ -75,14 +75,17 @@ class JaciHttpServer(Web):
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
-            return self.github.authorize()
+            response = self.github.authorize()
+            response.set_cookie('jaci_token', '', expires=0)
+            return response
 
         @self.flask_app.route('/logout', methods=["GET"])
         def logout():
             response = redirect('/')
             if g.user:
                 g.user.reset_token()
-            response.set_cookie('jaci_token', '')
+
+            response.set_cookie('jaci_token', '', expires=0)
             return response
 
 
