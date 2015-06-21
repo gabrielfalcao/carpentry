@@ -97,7 +97,7 @@ class Builder(Model):
     branch = columns.Text(default='master')
     branch = columns.Text(default='master')
 
-    def trigger(self, branch=None, author_name=None, author_email=None):
+    def trigger(self, user, branch=None, author_name=None, author_email=None):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
@@ -110,6 +110,7 @@ class Builder(Model):
         payload = self.to_dict()
         payload.pop('last_build')
         payload.update(build.to_dict())
+        payload['user'] = user.to_dict()
         pipeline.input.put(payload)
         logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
         return build

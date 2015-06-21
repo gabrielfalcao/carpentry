@@ -4,6 +4,9 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
     // 'build_instructions': 'make test',
 
     $scope.builder = {
+        'generate_ssh_keys': true,
+        'name': 'Your Project',
+        'git_uri': 'git@github.com:username/repo.git',
         'shell_script':[
             '#!/bin/bash',
             'set -e',
@@ -21,6 +24,9 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
             success(function(data, status, headers, config) {
                 console.log("/api/builder OK");
                 $rootScope.go('/');
-            }).error($rootScope.defaultErrorHandler);
+            }).error(function(data, status){
+                notify('Failed to create builder');
+                console.log('Failed to create builder', status, data);
+            });
     };
 });

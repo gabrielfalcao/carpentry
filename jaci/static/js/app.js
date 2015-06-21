@@ -56,6 +56,9 @@ angular.module('JaciApp', [
     $http.defaults.headers.common.Authorization = 'Bearer: ' + window.JACI_TOKEN;
     $rootScope.hasToken = ((window.JACI_TOKEN + "").length > 0);
     $rootScope.isAuthenticated = $rootScope.hasToken;
+    notify.config({
+        "templateUrl": "/assets/vendor/angular-notify/angular-notify.html"
+    });
 
     /* // github-based authentication confirmation by retrieving user data
     $rootScope.isAuthenticated = false;

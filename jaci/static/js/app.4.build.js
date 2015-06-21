@@ -56,8 +56,5 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
         }
         refresh();
     }, 500);
-
-
     refresh();
-
 });

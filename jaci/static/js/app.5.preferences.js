@@ -4,6 +4,9 @@ angular.module('JaciApp.Preferences', ['JaciApp.Common']).controller('Preference
             success(function(data, status, headers, config) {
                 console.log("/api/preferences", data)
             }).
-            error($rootScope.defaultErrorHandler);
+            error(function(data, status){
+                notify('failed to retrieve preferences');
+                console.log('failed to retrieve preferences', data, status);
+            });
     };
 });

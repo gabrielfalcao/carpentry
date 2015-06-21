@@ -206,7 +206,7 @@ def create_build(user, id):
     )
 
     builder = models.Builder.objects.get(id=id)
-    item = builder.trigger(builder.branch, **data)
+    item = builder.trigger(user, branch=builder.branch, **data)
     return json_response(item.to_dict())
 
 

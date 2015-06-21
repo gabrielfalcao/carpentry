@@ -41,7 +41,7 @@ functional:
 clean:
 	rm -rf sandbox
 	git clean -Xdf
-
+	make assets
 
 release: test assets
 	./.release

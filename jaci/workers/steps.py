@@ -4,7 +4,9 @@
 from __future__ import unicode_literals
 import os
 import re
+import json
 import io
+import requests
 import shutil
 import codecs
 import yaml
@@ -107,6 +109,24 @@ class PrepareSSHKey(Step):
             instructions['ssh_add'] = check_output(render_string('ssh-add {id_rsa_private_key_path}', instructions), shell=True)
         except CalledProcessError:
             pass
+        self.produce(instructions)
+
+
+class PushKeyToGithub(Step):
+    def consume(self, instructions):
+        github_access_token = instructions['user']['github_access_token']
+
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+        url = 'https://api.github.com/repos/{owner}/{repo}/keys'
+        payload = json.dumps({
+            "title": "jaci {0}".format(instructions['name']),
+            "key": instructions['id_rsa_private'],
+            "read_only": True
+        })
+        response = requests.post(url, data=payload, headers=headers)
+        instructions['github_deploy_key'] = response.json()
         self.produce(instructions)
 
 

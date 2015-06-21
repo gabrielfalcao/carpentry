@@ -13,6 +13,8 @@ angular.module('JaciApp.EditBuilder', ['JaciApp.Common']).controller('EditBuilde
             })
 
             .error(function(data, status, headers, config) {
+                notify('Failed to load builder for editing');
+
                 console.log("Failed to load builder for editing", data);
                 $rootScope.go("/");
             });
@@ -21,12 +23,27 @@ angular.module('JaciApp.EditBuilder', ['JaciApp.Common']).controller('EditBuilde
     $scope.editBuilder = function(builder){
         $http.put('/api/builder/' + $scope.builder.id, builder)
             .success(function(data, status, headers, config) {
-                console.log("PUT BUILDER", data);
+                notify($scope.builder.name +' saved successfully');
                 $scope.builder = data;
             })
 
             .error(function(data, status, headers, config) {
+                notify('Failed to edit builder');
                 console.log("Failed to edit builder", builder, data, status);
             });
     };
+    $scope.deleteBuilder = function(builder){
+        $http.delete('/api/builder/' + $scope.builder.id)
+            .success(function(data, status, headers, config) {
+                notify($scope.builder.name +' deleted successfully');
+                $scope.builder = data;
+                $rootScope.go('/');
+            })
+
+            .error(function(data, status, headers, config) {
+                notify('Failed to delete builder');
+                console.log("Failed to delete builder", builder, data, status);
+            });
+    };
+
 });

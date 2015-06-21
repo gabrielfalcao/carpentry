@@ -16,6 +16,7 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
             })
 
             .error(function(data, status, headers, config) {
+                notify('failed to retreve builder info');
                 console.log("failed to retreve builder info", data);
                 clearInterval(poller);
             });
