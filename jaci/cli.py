@@ -11,12 +11,14 @@ import logging
 import argparse
 import warnings
 import coloredlogs
+from cqlengine import connection
 from cqlengine.management import sync_table, drop_table, create_keyspace
 
 from plant import Node
 from lineup import JSONRedisBackend
 from jaci.version import version
 from jaci import routes
+from jaci import conf
 from jaci.core import JaciHttpServer, setup_logging
 from jaci.api.v1 import get_models
 from jaci.workers.pipelines import LocalBuilder
@@ -152,9 +154,8 @@ def jaci_setup():
     coloredlogs.install(logging.INFO)
 
     print LOGO
-    # CREATE KEYSPACE jaci
-    #        WITH REPLICATION =
-    #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+    connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
+
     create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
     pipeline = LocalBuilder(JSONRedisBackend)
     backend = pipeline.get_backend()
