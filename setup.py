@@ -50,7 +50,7 @@ requirements = [
 
 setup(
     name='jaci',
-    version='0.0.10',
+    version='0.0.11',
     description='continuous integration for the people',
     entry_points={
         'console_scripts': ['jaci = jaci.cli:main'],
