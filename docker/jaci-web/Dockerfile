@@ -26,6 +26,7 @@ RUN chmod +x /usr/bin/jaci-set-config.sh
 RUN chmod +x /usr/bin/jaci-web-run.sh
 RUN chmod +x /usr/bin/jaci-web-boot.sh
 
+RUN pip install gunicorn
 RUN pip install jaci==0.0.14
 RUN mkdir -p $JACI_WORKDIR
 
