@@ -6,4 +6,4 @@ stop on stopped cassandra
 respawn
 respawn limit 5 60
 
-exec docker run -p {{ jaci_http_port }} --rm --link jaciredis:jaciredis --link jacicassandra:jacicassandra -v /srv/jaci -e JACI_CASSANDRA_HOST=jacicassandra -e JACI_REDIS_HOST=jaciredis gabrielfalcao/jaci-web jaci-web-run.sh --bind {{ jaci_http_hostname }}:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}
+exec docker run -p {{ jaci_http_port }} --rm --net=host -v /srv/jaci -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web jaci-web-run.sh --bind {{ jaci_http_hostname }}:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}

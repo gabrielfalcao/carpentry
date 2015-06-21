@@ -27,6 +27,7 @@
         pkg: "{{ item }}"
         state: present
       with_items:
+        - bash-completion
         - python-dev
         - libffi-dev
         - libssl-dev
@@ -64,6 +65,7 @@
 
     - name: ensure docker is clean
       shell: docker rm -f $(docker ps -qa)
+      ignore_errors: yes
 
     - name: install the cassandra upstart
       template: src=ansible/cassandra.upstart.j2
