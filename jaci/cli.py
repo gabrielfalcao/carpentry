@@ -136,6 +136,7 @@ def jaci_run_local_pipeline():
         description='waiting for jobs')
 
     parser.parse_args(get_remaining_sys_argv())
+    connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
 
     print LOGO
     pipeline = LocalBuilder(JSONRedisBackend)

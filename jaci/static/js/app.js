@@ -67,9 +67,9 @@ angular.module('JaciApp', [
     */
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
-            $rootScope.go('/splash');
+            location.href = "/login";
         } else {
-            $rootScope.go("/");
+            location.href = "/logout";
         }
     };
 }).directive('navbar', function ($rootScope, $state, $location) {
