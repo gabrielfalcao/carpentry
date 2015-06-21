@@ -5,7 +5,7 @@
     <div class="row">
       <div class="col-lg-12">
         <h1 ng-hide="builder">loading...</h1>
-        <h1 id="buttons">{{ builder.name }}</h1>
+        <h1>{{ builder.name }}</h1>
       </div>
     </div>
   </div>
@@ -46,7 +46,7 @@
     <div class="col-lg-12">
       <h4>Actions</h4>
       <button ng-if="builder" class="btn btn-large btn-primary" ng-click="triggerBuild(builder)">build now</button>
-      <button ng-if="builder" class="btn btn-large btn-primary" ng-click="triggerBuild(builder)">edit builder</button>
+      <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">edit builder</button>
       <button ng-if="builder" class="btn btn-large btn-success" ng-click="clearBuilds(builder)">clear builds</button>
     </div>
   </div>

@@ -24,6 +24,7 @@
         </div>
       </div>
       <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">back to builder</button>
+      <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">edit builder</button>
     </div>
   </div>
 </div>

@@ -8,6 +8,8 @@ import inspect
 from dateutil.parser import parse as parse_datetime
 from tumbler import tumbler
 from tumbler import json_response
+from os import chmod
+from Crypto.PublicKey import RSA
 
 web = tumbler.module(__name__)
 
@@ -38,6 +40,15 @@ def autodatetime(s):
     return s and parse_datetime(s) or None
 
 logger = logging.getLogger('werkzeug')
+
+
+def generate_ssh_key_pair(length=2048):
+    private_key = RSA.generate(2048)
+    public_key = private_key.publickey()
+
+    private_string = private_key.exportKey('PEM')
+    public_string = public_key.exportKey('OpenSSH')
+    return private_string, public_string
 
 
 @web.get('/api/build/<id>/output')
@@ -76,10 +87,17 @@ def create_builder(user):
         'git_uri': unicode,
         'shell_script': unicode,
         'id_rsa_private': any,
+        'generate_ssh_keys': bool,
         'id_rsa_public': any,
         'status': any,
     })
     data['id'] = uuid.uuid1()
+    should_generate_ssh_keys = data.pop('generate_ssh_keys')
+
+    if should_generate_ssh_keys:
+        private_key, public_key = generate_ssh_key_pair(2048)
+        data['id_rsa_private'] = private_key
+        data['id_rsa_public'] = public_key
 
     try:
         builder = models.Builder.create(**data)

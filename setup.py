@@ -35,6 +35,7 @@ requirements = [
     'bcrypt==1.1.1',
     'blist==1.3.6',
     'cffi==1.1.2',
+    'pycrypto==2.6.1',
     'GitHub-Flask==2.0.1',
     'lineup==0.1.4',
     'milieu==0.1.5',

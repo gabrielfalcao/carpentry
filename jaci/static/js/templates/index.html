@@ -42,6 +42,9 @@
                 <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id)">
                   <i class="fa fa-cog"></i>
                 </button>
+                <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id + '/edit')">
+                  <i class="fa fa-pencil"></i>
+                </button>
                 <button class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="triggerBuild(builder, true)">
                   <i class="fa fa-play-circle"></i></button>
                   <button ng-if="builder.last_build" class="btn btn-xs" ng-class="'btn-' + builder.css_status" ng-click="go('/builder/' + builder.id + '/build/' + builder.last_build.id)">

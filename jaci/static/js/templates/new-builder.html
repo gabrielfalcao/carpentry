@@ -31,8 +31,20 @@
                 <textarea id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
+            <div class="form-group ng-cloak" ng-hide="builder.generate_ssh_keys">
+              <label for="id_rsa_private" class="col-lg-2 control-label"><strong>id_rsa private key</strong></label>
+              <div class="col-lg-10">
+                <textarea id="id_rsa_private" class="form-control" ng-model="builder.id_rsa_private" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+              </div>
+              <label for="id_rsa_public" class="col-lg-2 control-label"><strong>id_rsa public key</strong></label>
+              <div class="col-lg-10">
+                <textarea id="id_rsa_public" class="form-control" ng-model="builder.id_rsa_public" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+              </div>
+            </div>
             <div class="form-group">
               <div class="col-lg-10 col-lg-offset-2">
+                <label for="should-generate-keys" class="col-lg-2 control-label"><strong>generate ssh keys</strong></label>
+                <input id="should-generate-keys" type="checkbox" ng-model="builder.generate_ssh_keys" value="true" />
                 <button type="submit" ng-click="createBuilder(builder)" class="btn btn-primary">save</button>
               </div>
             </div>

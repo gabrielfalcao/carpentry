@@ -8,6 +8,7 @@ angular.module('JaciApp', [
     'JaciApp.Common',
     'JaciApp.Index',
     'JaciApp.NewBuilder',
+    'JaciApp.EditBuilder',
     'JaciApp.Build',
     'JaciApp.Preferences',
     'JaciApp.Fullscreen',
@@ -22,6 +23,10 @@ angular.module('JaciApp', [
         url: '/new-builder',
         templateUrl: '/assets/js/templates/new-builder.html',
         controller: 'NewBuilderController'
+    }).state('edit-builder', {
+        url: '/builder/:builder_id/edit',
+        templateUrl: '/assets/js/templates/edit-builder.html',
+        controller: 'EditBuilderController'
     }).state('build-detail', {
         url: '/builder/:builder_id/build/:build_id',
         templateUrl: '/assets/js/templates/build-detail.html',
@@ -54,6 +59,7 @@ angular.module('JaciApp', [
 
     /* // github-based authentication confirmation by retrieving user data
     $rootScope.isAuthenticated = false;
+    */
     if ($rootScope.hasToken) {
         $http.get("/api/user").success(function(data, status){
             $rootScope.user = data;
@@ -64,7 +70,7 @@ angular.module('JaciApp', [
             location.href = "/logout";
         });
     }
-    */
+
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
             location.href = "/login";
