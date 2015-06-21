@@ -3,6 +3,10 @@
   sudo: yes
   remote_user: root
   vars:
+    jaci_http_hostname: 0.0.0.0
+    jaci_http_port: 5000
+    jaci_web_processes: 2
+
     docker_version: 1.6.1
     docker_admin_users: []
     docker_opts:
