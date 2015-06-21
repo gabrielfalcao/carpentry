@@ -105,13 +105,28 @@ class PrepareSSHKey(Step):
 
 
 class PushKeyToGithub(Step):
+    REGEX = re.compile(r'(?P<owner>[^/]+)/(?P<repo>[^/]+)(.git)?')
+
+    def parse_github_repo(self, instructions):
+        git_uri = instructions['git_uri']
+        found = self.REGEX.search(git_uri)
+        if found:
+            data = found.groupdict()
+            return data['owner'], data['repo']
+
     def consume(self, instructions):
         github_access_token = instructions['user']['github_access_token']
 
         headers = {
             'Authorization': 'token {0}'.format(github_access_token)
         }
-        url = 'https://api.github.com/repos/{owner}/{repo}/keys'
+        owner_and_repo = self.parse_github_repo(instructions)
+        if not owner_and_repo:
+            self.log('INVALID GITHUB REPO, not pushing ssh keys as deploy keys')
+            return self.produce(instructions)
+
+        owner, repo = owner_and_repo
+        url = 'https://api.github.com/repos/{0}/{1}/keys'.format(owner, repo)
         payload = json.dumps({
             "title": "jaci {0}".format(instructions['name']),
             "key": instructions['id_rsa_private'],
