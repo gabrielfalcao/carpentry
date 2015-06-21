@@ -1,4 +1,4 @@
-oFROM gabrielfalcao/jaci-base
+FROM gabrielfalcao/jaci-base
 
 USER root
 

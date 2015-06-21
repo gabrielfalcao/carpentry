@@ -100,6 +100,7 @@
     - name: start jaci-web
       service: name=jaci-web state=restarted
 
+
     # - name: pull jaci-workers docker image
     #   shell: docker pull gabrielfalcao/jaci-workers
 
