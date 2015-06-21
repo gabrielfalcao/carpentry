@@ -28,7 +28,6 @@
         - python-pip
         - python-virtualenv
         - git-core
-        - docker-compose
         - redis-server
 
 
