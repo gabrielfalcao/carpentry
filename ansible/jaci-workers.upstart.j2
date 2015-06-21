@@ -1,0 +1,16 @@
+description     "JACI Workers"
+
+start on starting jaci-web
+stop on stopped jaci-web
+
+respawn
+respawn limit 5 60
+
+exec docker run --name jaci-workers \
+    --rm --net=host \
+    -v /srv/jaci \
+    -e JACI_CASSANDRA_HOST=localhost \
+    -e JACI_REDIS_HOST=localhost \
+    -e JACI_GITHUB_CLIEND_ID={{ jaci_github_client_id }} \
+    -e JACI_GITHUB_CLIENT_SECRET={{ jaci_github_client_secret }} \
+    gabrielfalcao/jaci-web jaci workers

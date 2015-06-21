@@ -7,8 +7,8 @@
     jaci_http_hostname: 0.0.0.0
     jaci_http_port: 5000
     jaci_web_processes: 2
-    jaci_github_cliend_id: 1c061315e9b34dc153aa
-    jaci_github_cliend_secret: 5c9909556b60f3e6c618f278230620415cc15da8
+    jaci_github_client_id: 1c061315e9b34dc153aa
+    jaci_github_client_secret: 5c9909556b60f3e6c618f278230620415cc15da8
     docker_version: 1.6.1
     docker_admin_users: []
     docker_opts:
@@ -88,6 +88,11 @@
         dest=/etc/init/jaci-web.conf
         owner=root group=root mode=644
 
+    - name: install the jaci-workers upstart
+      template: src=ansible/jaci-workers.upstart.j2
+        dest=/etc/init/jaci-workers.conf
+        owner=root group=root mode=644
+
     - name: build jaci-base docker image
       shell: docker build -t gabrielfalcao/jaci-base /vagrant/docker/jaci-base
 
@@ -108,6 +113,9 @@
 
     - name: restart jaci-web
       service: name=jaci-web state=restarted
+
+    - name: restart jaci-workers
+      service: name=jaci-workers state=restarted
 
     - name: ensuring that default nginx config is not present
       shell: rm -f /etc/nginx/sites-enabled/*

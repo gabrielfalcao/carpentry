@@ -6,6 +6,7 @@ server {
     listen 9000 default;
 
     server_name localhost;
+    root /srv/jaci/static;
 
     access_log /var/log/nginx/jaci-access.log;
     error_log /var/log/nginx/jaci-error.log;
@@ -15,10 +16,13 @@ server {
     send_timeout 4;
 
     location / {
-        # We only accept HLS chunks via POST
         proxy_set_header           Host $http_host;
         proxy_set_header           X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_redirect             off;
         proxy_pass                 http://jaci;
     }
+    location /assets {
+       alias /srv/jaci/static
+    }
+
 }
