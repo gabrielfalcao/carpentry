@@ -16,6 +16,8 @@ gunicorn: assets
 
 assets:
 	bower install
+	python jaci/cli.py static
+
 run:
 	python jaci/cli.py run
 

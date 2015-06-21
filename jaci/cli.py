@@ -56,6 +56,15 @@ def get_remaining_sys_argv():
     return argv
 
 
+def jaci_static():
+    parser = argparse.ArgumentParser(
+        prog='jaci static',
+        description='prints the static path')
+
+    parser.parse_args(get_remaining_sys_argv())
+    print this_node.join('static')
+
+
 def jaci_version():
     parser = argparse.ArgumentParser(
         prog='jaci version --json',
@@ -178,6 +187,7 @@ def jaci_setup():
 
 def main():
     HANDLERS = {
+        'static': jaci_static,
         'version': jaci_version,
         'run': jaci_run,
         'setup': jaci_setup,
@@ -196,7 +206,6 @@ def main():
         argv = sys.argv[1:2]
 
     args = parser.parse_args(argv)
-
 
     if args.command not in HANDLERS:
         parser.print_help()
