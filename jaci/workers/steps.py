@@ -63,14 +63,6 @@ def set_build_status(instructions, status):
 
 
 class PrepareSSHKey(Step):
-    def after_consume(self, instructions):
-        path = render_string('{slug}-id_rsa', instructions)
-        msg = "The SSH key is in place: {0}".format(path)
-        self.log(msg)
-
-    def before_consume(self):
-        self.log("ready to place ssh keys")
-
     def write_file(self, path, filename, contents, mode=0755):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -131,13 +123,6 @@ class PushKeyToGithub(Step):
 
 
 class LocalRetrieve(Step):
-    def after_consume(self, instructions):
-        msg = render_string("Done git cloning {git_uri}", instructions)
-        self.log(msg)
-
-    def before_consume(self):
-        self.log("ready to git clone")
-
     def consume(self, instructions):
         set_build_status(instructions, 'retrieving')
 
@@ -197,9 +182,6 @@ class LocalRetrieve(Step):
 
 
 class CheckAndLoadBuildFile(Step):
-    def before_consume(self):
-        self.log("ready to load .jaci.yml")
-
     def consume(self, instructions):
         set_build_status(instructions, 'checking')
 
@@ -221,13 +203,6 @@ class CheckAndLoadBuildFile(Step):
 
 
 class PrepareShellScript(Step):
-    def after_consume(self, instructions):
-        msg = "Shell script ready"
-        self.log(msg)
-
-    def before_consume(self):
-        self.log("ready to write shell scripts")
-
     def write_script_to_fd(self, fd, template, instructions):
         rendered = render_string(template, instructions)
         self.log(rendered.strip())
@@ -253,13 +228,6 @@ class PrepareShellScript(Step):
 
 
 class LocalBuild(Step):
-    def after_consume(self, instructions):
-        msg = render_string("Done testing {name}", instructions)
-        self.log(msg)
-
-    def before_consume(self):
-        self.log("ready to run builds")
-
     def consume(self, instructions):
         set_build_status(instructions, 'running')
         cmd = render_string('bash {shell_script_path}', instructions)
