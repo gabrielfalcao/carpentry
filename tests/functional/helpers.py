@@ -6,16 +6,18 @@ import uuid
 from sure import scenario
 
 from tumbler.core import Web
-
+from cqlengine import connection
 from cqlengine.management import sync_table, drop_table, create_keyspace
 from jaci.api.v1 import get_models
 from jaci.models import User
+from jaci import conf
 
 
 def prepare_db(context):
     # CREATE KEYSPACE jaci
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+    connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
     create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
 
     for t in get_models():

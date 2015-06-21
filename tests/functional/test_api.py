@@ -33,7 +33,7 @@ def test_create_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         u'branch': u'master',
-         u'css_status': u'success',
+         u'css_status': u'active',
          u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
          u'id_rsa_private': u'the private key',
          u'id_rsa_public': u'the public key',
@@ -170,7 +170,7 @@ def test_edit_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         'branch': u'master',
-        'css_status': u'success',
+        'css_status': u'active',
         'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
         'id_rsa_private': u'the private key',
         'id_rsa_public': u'the public key',
@@ -210,7 +210,6 @@ def test_delete_builder(context):
         shell_script='make test',
     )
 
-
     # And I DELETE to /api/builders
     response = context.http.delete(
         '/api/builder/{0}'.format(bd1.id),
@@ -225,7 +224,7 @@ def test_delete_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         u'branch': u'master',
-        u'css_status': u'success',
+        u'css_status': u'active',
         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
         u'id_rsa_private': None,
         u'id_rsa_public': None,
@@ -281,9 +280,9 @@ def test_create_build_instance_from_builder(context):
         u'branch': u'master',
         u'code': None,
         u'commit': None,
-        u'css_status': u'warning',
+        u'css_status': u'active',
         u'date_finished': None,
-        u'status': u'scheduled',
+        u'status': u'ready',
         u'stderr': None,
         u'stdout': None
     })
@@ -302,6 +301,6 @@ def test_create_build_instance_from_builder(context):
     build.should.have.property('stderr').being.equal(None)
     build.should.have.property('stdout').being.equal(None)
     build.should.have.property('code').being.equal(None)
-    build.should.have.property('status').being.equal('scheduled')
+    build.should.have.property('status').being.equal('ready')
     build.should.have.property('builder_id')
     str(build.builder_id).should.be.equal(str(builder_id))
