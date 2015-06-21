@@ -52,13 +52,13 @@ def app_js():
     })
 
 
-@web.get('/assets/<path:path>')
-def assets(path):
-    local_path = this_node.cd('static').join(path)
-    with io.open(local_path) as fd:
-        joined = fd.read()
+# @web.get('/assets/<path:path>')
+# def assets(path):
+#     local_path = this_node.cd('static').join(path)
+#     with io.open(local_path) as fd:
+#         joined = fd.read()
 
-    logging.info("serving %s: %skb", path, len(joined) / 1000.0)
-    return Response(joined, status=200, headers={
-        'Content-Type': mimetypes.guess_type(path)
-    })
+#     logging.info("serving %s: %skb", path, len(joined) / 1000.0)
+#     return Response(joined, status=200, headers={
+#         'Content-Type': mimetypes.guess_type(path)
+#     })
