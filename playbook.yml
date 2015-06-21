@@ -66,6 +66,11 @@
         dest=/etc/init/redis.conf
         owner=root group=root mode=644
 
+    - name: install the jaci-web upstart
+      template: src=ansible/jaci-web.upstart.j2
+        dest=/etc/init/jaci-web.conf
+        owner=root group=root mode=644
+
     - name: pull dependency docker images
       shell: docker pull {{ item }}
       with_items:
@@ -78,6 +83,9 @@
 
     - name: start cassandra
       service: name=cassandra state=restarted
+
+    - name: start jaci-web
+      service: name=jaci-web state=restarted
 
     # - name: pull jaci-workers docker image
     #   shell: docker pull gabrielfalcao/jaci-workers

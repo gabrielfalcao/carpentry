@@ -4,6 +4,7 @@ Vagrant.configure("2") do |config|
   config.ssh.forward_agent = true
   config.vm.define "jaci-vm" do |c|
     c.vm.box = "ubuntu/trusty64"
+    c.vm.network :forwarded_port, guest: 5000, host: 5000
 
     c.vm.provider "virtualbox" do |v|
       # https://github.com/jpetazzo/pipework#virtualbox
