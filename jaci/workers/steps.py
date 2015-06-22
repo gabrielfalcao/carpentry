@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 import os
 import re
-import traceback
 import json
 import logging
 import io
@@ -188,54 +187,61 @@ class LocalRetrieve(Step):
         instructions['build_dir'] = build_dir
 
         if os.path.exists(build_dir):
-            b.stdout = b.stdout or 'removing old copy of git repo...\n'
-            b.save()
             shutil.rmtree(build_dir)
-
         # else:
-        with open(instructions['id_rsa_private_key_path']) as private_key_fd:
-            auth = GittleAuth(pkey=private_key_fd, look_for_keys=True, allow_agent=True)
+        git = render_string('/usr/bin/env git clone -b {branch} {git_uri} ' + build_dir, instructions)
+        chdir = conf.workdir_node.path
 
-        try:
-            Gittle.clone(instructions['git_uri'], build_dir, auth=auth)
-        except Exception as e:
-            self.log('Git clone failed {0}'.format(e))
+        # TODO: sanitize the git url before using it, avoid shell injection :O
+        process = run_command(git, chdir=chdir, environment={
+            'GIT_SSH_COMMAND': render_string("ssh -i {id_rsa_private_key_path}", instructions),
+            'GIT_SSH': render_string("ssh -i {id_rsa_private_key_path}", instructions),
+        })
+
+        b = Build.get(id=instructions['id'])
+        stdout, exit_code = stream_output(self, process, b)
+        instructions['git'] = {
+            'stdout': stdout,
+            'exit_code': exit_code,
+        }
+
+        if int(exit_code) != 0:
+            self.log('Git clone failed {0}'.format(stdout))
             b.stdout = b.stdout or ''
             b.status = 'failed'
 
-            b.stdout += render_string("Failed to git clone {git_uri}\n", instructions)
-            b.stdout += traceback.format_exc(e)
+            b.stdout += "Failed to {0}\n".format(git)
+            b.stdout += stdout
             b.stdout += "\n"
             b.save()
-            raise RuntimeError('git clone failed:\n{0}'.format(e))
+            raise RuntimeError('git clone failed:\n{0}'.format(stdout))
 
-        # {'author': {'email': 'gabriel@nacaolivre.org',
-        #    'name': 'Gabriel Falc\xc3\xa3o',
-        #    'raw': 'Gabriel Falc\xc3\xa3o <gabriel@nacaolivre.org>'},
-        #   'committer': {'email': 'gabriel@nacaolivre.org',
-        #    'name': 'Gabriel Falc\xc3\xa3o',
-        #    'raw': 'Gabriel Falc\xc3\xa3o <gabriel@nacaolivre.org>'},
-        #   'description': '',
-        #   'message': 'JACI\n',
-        #   'sha': 'cf8ded581588f98125da31d9b55c1bd445c7ee50',
-        #   'summary': 'JACI',
-        #   'time': 1429147474,
-        #   'timezone': -14400}
-        repo = Gittle(build_dir)
+        if b.stdout is None:
+            b.stdout = u''
 
-        try:
-            last_commit = repo.log()[0]
-        except Exception as e:
-            b.stdout = traceback.format_exc(e)
-            last_commit = None
+        b.stdout += force_unicode(stdout)
+        b.code = int(exit_code)
+        b.save()
 
-        if last_commit:
-            b.commit = last_commit['sha']
-            b.author_name = last_commit['author']['name']
-            b.author_email = last_commit['author']['email']
+        git_show = '/usr/bin/env git show HEAD'
+        git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
+
+        author = AUTHOR_REGEX.search(git_show_stdout)
+        commit = COMMIT_REGEX.search(git_show_stdout)
+        meta = {}
+
+        if commit:
+            b.commit = commit.group('commit')
+            meta.update(commit.groupdict())
+
+        if author:
+            b.author_name = author.group('name')
+            b.author_email = author.group('email')
+            meta.update(author.groupdict())
 
         b.save()
-        instructions['git']['last_commit'] = last_commit
+        self.log("meta: %s", meta)
+        instructions['git'].update(meta)
         self.produce(instructions)
 
 
