@@ -28,9 +28,6 @@
       shell: dpkg --configure -a
       ignore_errors: yes
 
-    - name: update apt cache
-      shell: apt-get update
-
     - name: install docker dependencies
       apt: pkg={{ item }} state=present
       with_items:
@@ -139,6 +136,7 @@
         dest=/srv/jaci/src
         accept_hostkey=yes
       tags:
+        - docker
         - upstart
 
     - name: pull dependency docker images
@@ -149,9 +147,13 @@
 
     - name: build jaci-base docker image
       shell: docker build --force-rm -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
+      tags:
+        - docker
 
     - name: build jaci-web docker image
       shell: docker build --force-rm -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
+      tags:
+        - docker
 
     - name: start redis
       service: name=redis state=restarted

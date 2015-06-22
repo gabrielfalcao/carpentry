@@ -197,7 +197,7 @@ class LocalRetrieve(Step):
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
             # http://stackoverflow.com/questions/14220929/git-clone-with-custom-ssh-using-git-ssh-error/27607760#27607760
-            'GIT_SSH_COMMAND': render_string("/usr/bin/ssh -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
+            'GIT_SSH_COMMAND': render_string("/usr/bin/ssh -v -K -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
         })
 
         b = Build.get(id=instructions['id'])

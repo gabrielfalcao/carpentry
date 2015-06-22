@@ -11,7 +11,14 @@
 
   <div class="row">
     <div class="col-lg-12">
-      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!html_output">waiting for workers...</div>
+      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!html_output">
+        <div class="panel-heading">
+          <h3 class="panel-title" ng-show="build.commit" id="panel-title">please wait</h3>
+        </div>
+        <div class="panel-body">
+          <h5>loading output...</h5>
+        </div>
+      </div>
 
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!html_output">
         <div class="panel-heading">

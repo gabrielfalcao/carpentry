@@ -21,7 +21,7 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             $scope.html_output = $sce.trustAsHtml(data.stdout);
             console.log(data);
         }).error(function (data, status, headers, config) {
-            notify('failed to retrieve build: '+ data)
+            notify('failed to retrieve build: '+ status)
             console.log('failed ' + url, status);
             clearInterval(poller);
             $scope.html_output = null;
