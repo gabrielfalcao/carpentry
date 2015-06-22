@@ -11,9 +11,9 @@
 
   <div class="row">
     <div class="col-lg-12">
-      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!build.commit">waiting for workers...</div>
+      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!build.stdout">waiting for workers...</div>
 
-      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!build.commit">
+      <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!build.stdout">
         <div class="panel-heading">
           <h3 class="panel-title" id="panel-title">commit {{ build.commit }}</h3>
           <h4>by {{ build.author_name }} ({{ build.author_email }})</h4>
