@@ -199,6 +199,7 @@ class LocalRetrieve(Step):
             b.stdout += stdout
             b.stdout += "\n"
             b.save()
+            raise RuntimeError('git clone failed:\n{0}'.format(stdout))
 
         if b.stdout is None:
             b.stdout = u''
