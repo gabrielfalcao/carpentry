@@ -10,7 +10,6 @@ MAINTAINER gabriel@nacaolivre.org
 
 USER root
 
-RUN add-apt-repository ppa:git-core
 RUN apt-get update
 RUN apt-get --yes --no-install-recommends install \
     gcc \
@@ -25,11 +24,15 @@ RUN apt-get --yes --no-install-recommends install \
     libgnutls-dev \
     libsqlite3-dev \
     python-pip \
-    git-core \
+    python-software-properties \
     build-essential \
     libevent-dev \
     libffi-dev \
   && rm -rf /var/lib/apt/lists/*
+
+RUN add-apt-repository ppa:git-core
+RUN apt-get update
+RUN apt-get --yes --no-install-recommends install git-core
 
 RUN mkdir -p /srv/jaci
 
