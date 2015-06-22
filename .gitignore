@@ -10,6 +10,5 @@ pip-delete-this-directory.txt
 builds.db
 .vagrant/
 jaci.log
-sandbox
-dist
+./sandbox
 jaci.egg*

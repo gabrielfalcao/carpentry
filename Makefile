@@ -39,7 +39,7 @@ functional:
 	nosetests --stop --logging-level=INFO -v -s --with-coverage --cover-erase --cover-package=jaci --rednose tests/functional
 
 clean:
-	rm -rf sandbox
+	rm -rf sandbox dist
 	git clean -Xdf
 	make assets
 
