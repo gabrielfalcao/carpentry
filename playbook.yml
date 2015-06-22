@@ -28,6 +28,9 @@
       shell: dpkg --configure -a
       ignore_errors: yes
 
+    - name: update apt cache
+      shell: apt-get update
+
     - name: install docker dependencies
       apt: pkg={{ item }} state=present
       with_items:
