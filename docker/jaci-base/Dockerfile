@@ -20,6 +20,7 @@ RUN apt-get --yes --no-install-recommends install \
     python-dev \
     libffi-dev \
     libssl-dev \
+    openssh-client \
     libgnutls-dev \
     libsqlite3-dev \
     python-pip \
