@@ -2,11 +2,11 @@
 - hosts: all
   sudo: yes
   remote_user: ubuntu
-  include_vars: ansible/vars-vault.yml
+
 
   vars:
-    build_images: false
-    full_server_url: http://jaci.io
+    production: false
+    full_server_url: http://localhost:9000
     jaci_http_hostname: jaci.io
     jaci_http_port: 5000
     jaci_web_processes: 2
@@ -18,6 +18,12 @@
       - "--iptables=false"
 
   tasks:
+    - include_vars: ansible/vars-prod.yml
+      when: production
+
+    - include_vars: ansible/vars-vault.yml
+      when: production
+
     - name: ensure apt is ok
       shell: dpkg --configure -a
       ignore_errors: yes
@@ -128,15 +134,15 @@
 
     - name: pull dependency docker images
       shell: docker pull gabrielfalcao/jaci-web
-      when: not build_images
+      when: production
 
     - name: build jaci-base docker image
       shell: docker build -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
-      when: build_images
+      when: not production
 
     - name: build jaci-web docker image
       shell: docker build -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
-      when: build_images
+      when: not production
 
     - name: start redis
       service: name=redis state=restarted

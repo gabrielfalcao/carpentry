@@ -47,4 +47,4 @@ release: test assets
 	./.release
 
 deploy:
-	ansible-playbook -i ansible/inventory.ini -u ubuntu playbook.yml
+	ansible-playbook -i ansible/inventory.ini -u ubuntu --ask-vault-pass --extra-vars "production=true" playbook.yml
