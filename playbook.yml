@@ -33,6 +33,9 @@
       with_items:
         - linux-image-extra-virtual
 
+    - name: add git core ppa
+      apt_repository: repo='ppa:git-core'
+
     - name: install jaci dependencies
       apt:
         pkg: "{{ item }}"

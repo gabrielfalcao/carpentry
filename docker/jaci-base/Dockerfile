@@ -24,6 +24,7 @@ RUN apt-get --yes --no-install-recommends install \
     libgnutls-dev \
     libsqlite3-dev \
     python-pip \
+    software-properties-common \
     python-software-properties \
     build-essential \
     libevent-dev \
