@@ -47,9 +47,9 @@ def stream_output(step, process, redis_stdout_key):
 
     exit_code = process.wait()
     try:
-        return '\n'.join(stdout), exit_code
+        return ''.join(stdout), exit_code
     except UnicodeDecodeError:
-        return '\n'.encode('utf-8').join(stdout), exit_code
+        return ''.encode('utf-8').join(stdout), exit_code
 
 
 def get_build_from_instructions(instructions):
