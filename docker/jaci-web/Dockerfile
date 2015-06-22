@@ -27,7 +27,7 @@ RUN chmod +x /usr/bin/jaci-web-run.sh
 RUN chmod +x /usr/bin/jaci-web-boot.sh
 
 RUN pip install gunicorn
-RUN pip install jaci==0.0.20
+RUN pip install jaci==0.0.21
 RUN mkdir -p $JACI_WORKDIR
 
 # ENTRYPOINT jaci-web-run.sh --bind $JACI_HTTP_HOST:$JACI_HTTP_PORT --log-level debug --workers=$JACI_TOTAL_WORKERS
