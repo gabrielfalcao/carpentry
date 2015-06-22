@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import os
 import re
 import json
+import logging
 import io
 import requests
 import shutil
@@ -14,7 +15,7 @@ from jaci import conf
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
-from jaci.util import calculate_redis_key, render_string
+from jaci.util import render_string
 from jaci.models import Build
 # import unicodedata
 
@@ -37,12 +38,15 @@ def force_unicode(string):
     return string
 
 
-def stream_output(step, process, redis_stdout_key):
+def stream_output(step, process, build):
     stdout = []
-
+    build.stdout = build.stdout or ''
+    build.stderr = build.stderr or ''
     for out in iter(lambda: process.stdout.read(1), ''):
         out = force_unicode(out)
-        step.backend.redis.append(redis_stdout_key, out)
+        build.stdout += out
+        build.stderr += out
+        build.save()
         stdout.append(out)
 
     exit_code = process.wait()
@@ -91,10 +95,6 @@ class PrepareSSHKey(Step):
         self.write_file(ssh_dir, id_rsa_private_key_path, private_key, mode=0600)
         self.write_file(ssh_dir, id_rsa_public_key_path, public_key, mode=0644)
 
-        redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
-        instructions['redis_stdout_key'] = redis_stdout_key
-        instructions['redis_stderr_key'] = redis_stderr_key
-
         instructions['ssh_dir'] = ssh_dir
         instructions['workdir'] = workdir
         try:
@@ -105,7 +105,7 @@ class PrepareSSHKey(Step):
 
 
 class PushKeyToGithub(Step):
-    REGEX = re.compile(r'(?P<owner>[^/]+)/(?P<repo>[^/]+)(.git)?')
+    REGEX = re.compile(r'(?P<owner>[\w_-]+)/(?P<repo>[\w_-]+)([.]git)?$')
 
     def parse_github_repo(self, instructions):
         git_uri = instructions['git_uri']
@@ -120,6 +120,7 @@ class PushKeyToGithub(Step):
         headers = {
             'Authorization': 'token {0}'.format(github_access_token)
         }
+
         owner_and_repo = self.parse_github_repo(instructions)
         if not owner_and_repo:
             self.log('INVALID GITHUB REPO, not pushing ssh keys as deploy keys')
@@ -129,11 +130,35 @@ class PushKeyToGithub(Step):
         url = 'https://api.github.com/repos/{0}/{1}/keys'.format(owner, repo)
         payload = json.dumps({
             "title": "jaci {0}".format(instructions['name']),
-            "key": instructions['id_rsa_private'],
+            "key": instructions['id_rsa_public'],
             "read_only": True
-        })
+        }, indent=2)
+
+        self.log("Pushing deploy keys to github {0}".format(url))
+        self.log("Pushing deploy keys to github {0}".format(payload))
+
         response = requests.post(url, data=payload, headers=headers)
-        instructions['github_deploy_key'] = response.json()
+        if int(response.status_code) > 300:
+            logging.error("%s: Failed to push deploy key %s", response.status_code, response.text)
+            b = Build.objects.get(id=instructions['id'])
+            b.stdout = b.stdout or ''
+            b.status = 'failed'
+
+            b.stdout += "\n--------------------\n"
+            b.stdout += "Failed to push deploy key\n"
+            b.stdout += "POST {0}\n".format(url)
+            b.stdout += "RESPONSE:\n\n"
+            try:
+                b.stdout += json.dumps(response.json(), indent=2)
+            except Exception as e:
+                b.stdout += str(e)
+                b.stdout += response.text
+
+            b.stdout += "\n--------------------\n"
+            b.save()
+        else:
+            instructions['github_deploy_key'] = response.json()
+
         self.produce(instructions)
 
 
@@ -145,9 +170,6 @@ class LocalRetrieve(Step):
         workdir = conf.workdir_node.join(slug)
         build_dir = conf.build_node.join(slug)
 
-        redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
-        instructions['redis_stdout_key'] = redis_stdout_key
-        instructions['redis_stderr_key'] = redis_stderr_key
         instructions['workdir'] = workdir
         instructions['build_dir'] = build_dir
 
@@ -160,17 +182,22 @@ class LocalRetrieve(Step):
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir)
 
-        stdout, exit_code = stream_output(self, process, redis_stdout_key)
+        b = Build.get(id=instructions['id'])
+        stdout, exit_code = stream_output(self, process, b)
         instructions['git'] = {
             'stdout': stdout,
             'exit_code': exit_code,
         }
-        b = Build.objects.get(id=instructions['id'])
+
         if int(exit_code) != 0:
             self.log('Git clone failed {0}'.format(stdout))
+            b.stdout = b.stdout or ''
             b.status = 'failed'
+
+            b.stdout += "Failed to {0}\n".format(git)
+            b.stdout += stdout
+            b.stdout += "\n"
             b.save()
-            raise RuntimeError('Failed to git clone')
 
         if b.stdout is None:
             b.stdout = u''
@@ -256,17 +283,14 @@ class LocalBuild(Step):
         self.log(render_string("cwd: {build_dir}", instructions))
 
         process = run_command(cmd, chdir=instructions['build_dir'])
-        redis_stdout_key, redis_stderr_key = calculate_redis_key(instructions)
 
-        stdout, exit_code = stream_output(self, process, redis_stdout_key)
+        b = Build.get(id=instructions['id'])
+
+        stdout, exit_code = stream_output(self, process, b)
         instructions['shell'] = {
             'stdout': stdout,
             'exit_code': exit_code,
         }
-
-        b = Build.objects.get(id=instructions['id'])
-        if b.stdout is None:
-            b.stdout = ''
 
         b.stdout += force_unicode(stdout)
         b.code = int(exit_code)

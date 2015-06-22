@@ -29,11 +29,11 @@ BUILD_STATUSES = [
 
 
 STATUS_MAP = {
-    'ready': 'active',
+    'ready': 'success',
     'succeeded': 'success',
     'failed': 'danger',
     'retrieving': 'info',
-    'running': 'active',
+    'running': 'warning',
     'scheduled': 'warning',
     'checking': 'info',
     'preparing': 'active',
@@ -114,6 +114,14 @@ class Builder(Model):
         pipeline.input.put(payload)
         logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
         return build
+
+    def clear_builds(self):
+        deleted_builds = []
+        for build in Build.objects.filter(builder_id=self.id):
+            deleted_builds.append(build)
+            build.delete()
+
+        return deleted_builds
 
     def get_last_build(self):
         results = Build.objects.filter(builder_id=self.id)

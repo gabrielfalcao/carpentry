@@ -22,7 +22,17 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
             });
     }
     $scope.refresh = refresh;
+    $scope.clearBuilds = function(builder){
+        $http
+            .delete('/api/builder/' + $rootScope.builder.id + '/builds')
+            .success(function(data, status, headers, config) {
+                notify(data.total + " builds deleted");
+            })
 
+            .error(function(data, status, headers, config) {
+                notify('failed to clear builds from ' + $rootScope.builder.name);
+            });
+    };
     var limit = 720;
     var counter = 0;
     var poller = setInterval(function(){
@@ -31,5 +41,5 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
             clearInterval(poller);
         }
         refresh();
-    }, 500);
+    }, 1000);
 });

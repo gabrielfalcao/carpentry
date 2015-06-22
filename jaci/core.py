@@ -75,7 +75,7 @@ class JaciHttpServer(Web):
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
-            response = self.github.authorize()
+            response = self.github.authorize(scope='repo_deployment,repo,user,gist,write:repo_hook')
             response.set_cookie('jaci_token', '', expires=0)
             return response
 

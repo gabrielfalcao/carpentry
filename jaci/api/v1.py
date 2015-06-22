@@ -8,7 +8,6 @@ import inspect
 from dateutil.parser import parse as parse_datetime
 from tumbler import tumbler
 from tumbler import json_response
-from os import chmod
 from Crypto.PublicKey import RSA
 
 web = tumbler.module(__name__)
@@ -18,7 +17,6 @@ from jaci.api.core import authenticated, ensure_json_request
 from cqlengine.models import Model
 
 from jaci import models
-from jaci.util import calculate_redis_key
 from ansi2html import Ansi2HTMLConverter
 
 conv = Ansi2HTMLConverter()
@@ -49,22 +47,6 @@ def generate_ssh_key_pair(length=2048):
     private_string = private_key.exportKey('PEM')
     public_string = public_key.exportKey('OpenSSH')
     return private_string, public_string
-
-
-@web.get('/api/build/<id>/output')
-@authenticated
-def get_build_output(user, id):
-    partial_instructions = {'id': id}
-    pipeline = models.get_pipeline()
-    backend = pipeline.get_backend()
-    out_key, err_key = calculate_redis_key(partial_instructions)
-
-    stdout = backend.redis.get(out_key) or 'waiting for workers...'
-    # stderr = backend.redis.get(err_key) or ''
-
-    return json_response({
-        'stdout': conv.convert(stdout, full=False),
-    })
 
 
 @web.get('/api/build/<id>')
@@ -122,6 +104,20 @@ def retrieve_builder(user, id):
     item = models.Builder.objects.get(id=id)
     logger.info('show builder: %s', item.name)
     return json_response(item.to_dict())
+
+
+@web.delete('/api/builder/<id>/builds')
+@authenticated
+def clear_builds(user, id):
+    builder = models.Builder.get(id=id)
+    deleted_builds = builder.clear_builds()
+    total = len(deleted_builds)
+    logging.info("Deleted {0} builds of commits {2}:\n{1}".format(
+        total,
+        "\n".join([b.commit for b in deleted_builds]),
+        builder.git_uri
+    ))
+    return json_response({'total': total})
 
 
 @web.get('/api/builder/<id>/builds')

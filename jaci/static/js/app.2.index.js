@@ -10,6 +10,6 @@ angular.module('JaciApp.Index', ['JaciApp.Common']).controller(
                 clearInterval(poller);
             }
             $rootScope.refresh();
-        }, 500);
+        }, 1000);
         $rootScope.refresh();
 });
