@@ -28,9 +28,6 @@
       shell: dpkg --configure -a
       ignore_errors: yes
 
-    - name: update apt cache
-      shell: apt-get update
-
     - name: install docker dependencies
       apt: pkg={{ item }} state=present
       with_items:
@@ -40,6 +37,7 @@
       apt:
         pkg: "{{ item }}"
         state: present
+        update_cache: yes
       with_items:
         - bash-completion
         - python-dev
@@ -87,8 +85,14 @@
     - name: start docker
       service: name=docker state=restarted
 
+    - name: stop jaci-web
+      service: name=jaci-web state=stopped
+
+    - name: stop jaci-workers
+      service: name=jaci-workers state=stopped
+
     - name: ensure docker is clean
-      shell: docker rm -f $(docker ps -qa)
+      shell: docker kill -s 9 $(docker ps -qa)
       ignore_errors: yes
 
     - name: install the cassandra upstart
