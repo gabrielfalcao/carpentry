@@ -132,17 +132,17 @@
         - cassandra
         - redis
 
-    - name: pull dependency docker images
-      shell: docker pull gabrielfalcao/jaci-web
-      when: production
+    # - name: pull dependency docker images
+    #   shell: docker pull gabrielfalcao/jaci-web
+    #   when: production
 
     - name: build jaci-base docker image
       shell: docker build -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
-      when: not production
+      # when: not production
 
     - name: build jaci-web docker image
       shell: docker build -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
-      when: not production
+      # when: not production
 
     - name: start redis
       service: name=redis state=restarted
