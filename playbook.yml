@@ -90,9 +90,11 @@
 
     - name: start docker
       service: name=docker state=restarted
+      ignore_errors: yes
 
     - name: stop jaci-web
       service: name=jaci-web state=stopped
+      ignore_errors: yes
 
     - name: stop jaci-workers
       service: name=jaci-workers state=stopped
@@ -143,10 +145,10 @@
         - redis
 
     - name: build jaci-base docker image
-      shell: docker build -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
+      shell: docker build --force-rm -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
 
     - name: build jaci-web docker image
-      shell: docker build -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
+      shell: docker build --force-rm -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
 
     - name: start redis
       service: name=redis state=restarted
