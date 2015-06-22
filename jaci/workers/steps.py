@@ -28,8 +28,8 @@ COMMIT_REGEX = re.compile(
     r'commit\s*(?P<commit>\w+)', re.I)
 
 
-def run_command(command, chdir, bufsize=64):
-    return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir)
+def run_command(command, chdir, bufsize=64, environment={}):
+    return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
 
 
 def force_unicode(string):
