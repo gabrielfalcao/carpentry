@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import os
 import re
 import json
+import traceback
 import logging
 import io
 import requests
@@ -13,7 +14,6 @@ import codecs
 import yaml
 from jaci import conf
 from datetime import datetime
-from gittle import Gittle, GittleAuth
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
 from jaci.util import render_string
@@ -29,7 +29,10 @@ COMMIT_REGEX = re.compile(
 
 
 def run_command(command, chdir, bufsize=64, environment={}):
-    return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
+    try:
+        return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
+    except Exception:
+        logging.exception("Failed to run {0}".format(command))
 
 
 def force_unicode(string):
@@ -179,21 +182,26 @@ class LocalRetrieve(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'retrieving')
         b = Build.objects.get(id=instructions['id'])
-        b.stdout = b.stdout or 'retrieving repo...\n'
+        b.stdout += 'retrieving repo...\n'
         b.save()
 
         slug = instructions['slug']
         workdir = conf.workdir_node.join(slug)
         build_dir = conf.build_node.join(slug)
+        if not os.path.exists(build_dir):
+            os.makedirs(build_dir)
 
         instructions['workdir'] = workdir
         instructions['build_dir'] = build_dir
 
         if os.path.exists(build_dir):
             shutil.rmtree(build_dir)
+
+        os.makedirs(build_dir)
+        chdir = build_dir
+
         # else:
         git = render_string('/usr/bin/env git clone -b {branch} {git_uri} ' + build_dir, instructions)
-        chdir = conf.workdir_node.path
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
@@ -228,9 +236,12 @@ class LocalRetrieve(Step):
 
         git_show = '/usr/bin/env git show HEAD'
         git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
+        b.stdout += force_unicode(stdout)
+        b.save()
 
         author = AUTHOR_REGEX.search(git_show_stdout)
         commit = COMMIT_REGEX.search(git_show_stdout)
+
         meta = {}
 
         if commit:
@@ -251,18 +262,27 @@ class LocalRetrieve(Step):
 class CheckAndLoadBuildFile(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'checking')
+        b = Build.objects.get(id=instructions['id'])
+        b.stdout += 'checking .jaci.yml...\n'
+        b.save()
 
         build_dir = instructions['build_dir']
         yml_path = os.path.join(build_dir, '.jaci.yml')
 
         if not os.path.exists(yml_path):
             instructions['build'] = {'shell': instructions['shell_script']}
+            b.stdout += '.jaci.yml not found, using provided shell_script\n'
+            b.save()
+
             return self.produce(instructions)
 
         with codecs.open(yml_path, 'r', 'utf-8') as fd:
             raw_yml = fd.read()
 
         self.log("Successfully loaded {0}".format(yml_path))
+        b.stdout += '.jaci.yml successfully loaded\n'
+        b.save()
+
         build = yaml.load(raw_yml)
         instructions['build'] = build
 
@@ -282,12 +302,24 @@ class PrepareShellScript(Step):
         shell_script_path = os.path.join(build_dir, render_string('.{slug}.shell.sh', instructions))
         instructions['shell_script_path'] = shell_script_path
 
+        b = Build.objects.get(id=instructions['id'])
+        b.stdout += 'wrote {0}...\n'.format(shell_script_path)
+        b.save()
+
         self.log(render_string('writing {shell_script_path}', instructions))
 
         with io.open(shell_script_path, 'wb') as fd:
             self.write_script_to_fd(fd, "#!/bin/bash", instructions)
             self.write_script_to_fd(fd, "set -e", instructions)
             self.write_script_to_fd(fd, instructions['build']['shell'], instructions)
+
+        b.stdout += '---------------------------\n'
+        b.stdout += 'build script:\n'
+        b.stdout += '---------------------------\n\n'
+        b.stdout += instructions['build']['shell']
+        b.stdout += '\n\n'
+        b.stdout += '---------------------------\n'
+        b.save()
 
         os.chmod(shell_script_path, 0755)
 
@@ -305,6 +337,8 @@ class LocalBuild(Step):
         process = run_command(cmd, chdir=instructions['build_dir'])
 
         b = Build.get(id=instructions['id'])
+        b.stdout += 'running {0}...\n'.format(cmd)
+        b.save()
 
         stdout, exit_code = stream_output(self, process, b)
         instructions['shell'] = {

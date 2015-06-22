@@ -20,7 +20,7 @@ def read_ssh_file(name):
 
 
 PYTHON = """
-set -e
+pip install -U pip
 pip install virtualenv
 virtualenv .venv
 source .venv/bin/activate
