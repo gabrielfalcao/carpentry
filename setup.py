@@ -44,14 +44,14 @@ requirements = [
     'python-dateutil==2.4.2',
     'redis==2.8.0',
     'requests==2.5.1',
-    'tumbler==0.0.19',
+    'tumbler==0.0.20',
     'coloredlogs==1.0.1',
     'cqlengine==0.21.0'
 ]
 
 setup(
     name='jaci',
-    version='0.0.19',
+    version='0.0.20',
     description='continuous integration for the people',
     entry_points={
         'console_scripts': ['jaci = jaci.cli:main'],
