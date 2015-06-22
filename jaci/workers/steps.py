@@ -87,7 +87,7 @@ class PrepareSSHKey(Step):
         slug = instructions['slug']
         workdir = conf.build_node.join('builds/{0}'.format(slug))
 
-        ssh_dir = conf.workdir_node.join('ssh-keys/{0}'.format(slug))
+        ssh_dir = workdir
 
         private_key = instructions['id_rsa_private']
         public_key = instructions['id_rsa_public']
