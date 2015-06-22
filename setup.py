@@ -44,7 +44,7 @@ requirements = [
     'python-dateutil==2.4.2',
     'redis==2.8.0',
     'requests==2.5.1',
-    'tumbler==0.0.20',
+    'tumbler==0.0.18',
     'coloredlogs==1.0.1',
     'cqlengine==0.21.0'
 ]
