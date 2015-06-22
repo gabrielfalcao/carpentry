@@ -10,6 +10,7 @@ MAINTAINER gabriel@nacaolivre.org
 
 USER root
 
+RUN add-apt-repository ppa:git-core
 RUN apt-get update
 RUN apt-get --yes --no-install-recommends install \
     gcc \
