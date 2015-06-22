@@ -43,7 +43,7 @@ clean:
 	git clean -Xdf
 	make assets
 
-release: test assets
+release: assets
 	./.release
 
 deploy:

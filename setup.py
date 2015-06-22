@@ -45,6 +45,7 @@ requirements = [
     'redis==2.8.0',
     'requests==2.5.1',
     'tumbler==0.0.18',
+    'gittle==0.5.0',
     'coloredlogs==1.0.1',
     'cqlengine==0.21.0'
 ]

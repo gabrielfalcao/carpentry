@@ -13,8 +13,7 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
     }
     var build =  $rootScope.buildCache[builderId][$scope.build_id];
 
-    $scope.html_output = $sce.trustAsHtml(build.stdout || "");
-
+    $scope.html_output = null;
     function get_build() {
         var url = '/api/build/'+$stateParams.build_id;
         $http.get(url).success(function (data, status, headers, config) {
@@ -22,11 +21,11 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
             $scope.html_output = $sce.trustAsHtml(data.stdout);
             console.log(data);
         }).error(function (data, status, headers, config) {
+            notify('failed to retrieve build: '+ data)
             console.log('failed ' + url, status);
             clearInterval(poller);
-            $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
-            $rootScope.defaultErrorHandler(data, status, headers, config);
-
+            $scope.html_output = null;
+            $rootScope.go("/")
         });
 
     }
