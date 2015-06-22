@@ -33,7 +33,7 @@ def test_create_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         u'branch': u'master',
-         u'css_status': u'active',
+         u'css_status': u'success',
          u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
          u'id_rsa_private': u'the private key',
          u'id_rsa_public': u'the public key',
@@ -170,7 +170,7 @@ def test_edit_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         'branch': u'master',
-        'css_status': u'active',
+        'css_status': u'success',
         'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
         'id_rsa_private': u'the private key',
         'id_rsa_public': u'the public key',
@@ -224,7 +224,7 @@ def test_delete_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         u'branch': u'master',
-        u'css_status': u'active',
+        u'css_status': u'success',
         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
         u'id_rsa_private': None,
         u'id_rsa_public': None,
@@ -280,7 +280,7 @@ def test_create_build_instance_from_builder(context):
         u'branch': u'master',
         u'code': None,
         u'commit': None,
-        u'css_status': u'active',
+        u'css_status': u'success',
         u'date_finished': None,
         u'status': u'ready',
         u'stderr': None,
