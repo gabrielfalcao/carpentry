@@ -47,4 +47,4 @@ release: assets
 	./.release
 
 deploy:
-	ansible-playbook -i ansible/inventory.ini -u ubuntu --vault-password-file=~/.ansible-vault.jaci --extra-vars "production=true" playbook.yml
+	ansible-playbook -vvvv -i ansible/inventory.ini -u ubuntu --vault-password-file=~/.ansible-vault.jaci --extra-vars "production=true" playbook.yml
