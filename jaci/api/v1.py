@@ -114,7 +114,7 @@ def clear_builds(user, id):
     total = len(deleted_builds)
     logging.info("Deleted {0} builds of commits {2}:\n{1}".format(
         total,
-        "\n".join([b.commit for b in deleted_builds]),
+        "\n".join([b.commit for b in deleted_builds if b]),
         builder.git_uri
     ))
     return json_response({'total': total})
@@ -152,6 +152,7 @@ def edit_builder(user, id):
 @authenticated
 def remove_builder(user, id):
     item = models.Builder.objects.get(id=id)
+    item.clear_builds()
     item.delete()
     logger.info('deleting builder: %s', item.name)
     return json_response(item.to_dict())

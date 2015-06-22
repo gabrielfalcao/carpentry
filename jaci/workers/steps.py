@@ -69,10 +69,12 @@ def set_build_status(instructions, status):
 
 class PrepareSSHKey(Step):
     def write_file(self, path, filename, contents, mode=0755):
-        if not os.path.exists(path):
-            os.makedirs(path)
-
         destination = os.path.join(path, filename)
+
+        destination_dir = os.path.split(destination)[0]
+        if not os.path.exists(destination_dir):
+            os.makedirs(destination_dir)
+
         with io.open(destination, 'wb') as fd:
             fd.write(contents)
 
@@ -85,9 +87,9 @@ class PrepareSSHKey(Step):
 
         set_build_status(instructions, 'running')
         slug = instructions['slug']
-        workdir = conf.build_node.join('builds/{0}'.format(slug))
+        workdir = conf.build_node.join(slug)
 
-        ssh_dir = workdir
+        ssh_dir = conf.ssh_keys_node.join(slug)
 
         private_key = instructions['id_rsa_private']
         public_key = instructions['id_rsa_public']
@@ -194,8 +196,8 @@ class LocalRetrieve(Step):
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
-            'GIT_SSH_COMMAND': render_string("ssh -i {id_rsa_private_key_path}", instructions),
-            'GIT_SSH': render_string("ssh -i {id_rsa_private_key_path}", instructions),
+            # http://stackoverflow.com/questions/14220929/git-clone-with-custom-ssh-using-git-ssh-error/27607760#27607760
+            'GIT_SSH_COMMAND': render_string("/usr/bin/ssh -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
         })
 
         b = Build.get(id=instructions['id'])
