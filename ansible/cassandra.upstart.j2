@@ -8,4 +8,14 @@ respawn limit 5 60
 
 pre-stop exec docker rm -f jacicassandra
 
-exec docker run --rm --name jacicassandra -e CASSANDRA_LISTEN_ADDRESS=localhost --net=host -p 9160 -p 9042 -u root -v /srv/jaci/data:/var/lib/cassandra/data -v /var/log cassandra
+exec docker run \
+        --rm \
+        --name jacicassandra \
+        -e CASSANDRA_LISTEN_ADDRESS=localhost \
+        --net=host \
+        -p 9160 \
+        -p 9042 \
+        -u root \
+        -v /srv/jaci/data:/var/lib/cassandra/data \
+        -v /var/log \
+        cassandra
