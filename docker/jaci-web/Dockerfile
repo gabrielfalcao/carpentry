@@ -16,7 +16,7 @@ ENV JACI_GITHUB_CLIENT_SECRET yourgithubsecret
 
 ENV JACI_CONFIG_PATH /etc/jaci.yml
 ENV JACI_WORKDIR /srv/jaci/builds
-ENV JACI_LOG_PATH /srv/jaci-web.log
+ENV JACI_LOG_PATH /var/log/jaci-web.log
 
 ADD jaci-set-config.sh /usr/bin/jaci-set-config.sh
 ADD jaci-web-run.sh /usr/bin/jaci-web-run.sh
@@ -27,7 +27,7 @@ RUN chmod +x /usr/bin/jaci-web-run.sh
 RUN chmod +x /usr/bin/jaci-web-boot.sh
 
 RUN pip install gunicorn
-RUN pip install jaci==0.0.15
+RUN pip install jaci==0.0.16
 RUN mkdir -p $JACI_WORKDIR
 
 # ENTRYPOINT jaci-web-run.sh --bind $JACI_HTTP_HOST:$JACI_HTTP_PORT --log-level debug --workers=$JACI_TOTAL_WORKERS

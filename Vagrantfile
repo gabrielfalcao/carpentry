@@ -20,6 +20,7 @@ Vagrant.configure("2") do |config|
             ansible_ssh_user: 'vagrant',
             ansible_connection: 'ssh',
             ansible_ssh_args: '-o ForwardAgent=yes',
+            build_images: true
         }
     end
   end

@@ -45,3 +45,6 @@ clean:
 
 release: test assets
 	./.release
+
+deploy:
+	ansible-playbook -i ansible/inventory.ini -u ubuntu playbook.yml

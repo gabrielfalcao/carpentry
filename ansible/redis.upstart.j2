@@ -5,4 +5,6 @@ start on (started networking)
 respawn
 respawn limit 5 60
 
-exec docker run --rm --net=host --name jaciredis redis
+pre-stop exec docker rm -f jaciredis
+
+exec docker run -v /var/log --rm --net=host --name jaciredis redis

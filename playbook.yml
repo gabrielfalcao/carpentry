@@ -1,10 +1,13 @@
 ---
 - hosts: all
   sudo: yes
-  remote_user: root
+  remote_user: ubuntu
+  include_vars: ansible/vars-vault.yml
+
   vars:
-    full_server_url: http://localhost:9000
-    jaci_http_hostname: 0.0.0.0
+    build_images: false
+    full_server_url: http://jaci.io
+    jaci_http_hostname: jaci.io
     jaci_http_port: 5000
     jaci_web_processes: 2
     jaci_github_client_id: 1c061315e9b34dc153aa
@@ -14,8 +17,11 @@
     docker_opts:
       - "--iptables=false"
 
-
   tasks:
+    - name: ensure apt is ok
+      shell: dpkg --configure -a
+      ignore_errors: yes
+
     - name: update apt cache
       shell: apt-get update
 
@@ -59,6 +65,12 @@
     - name: ensuring that the assets dir exists
       file: path=/srv/jaci/assets state=directory
 
+    - name: ensuring that the log dirs exist
+      file: path={{ item }} state=directory
+      with_items:
+        - /var/log/jaci-web
+        - /var/log/jaci-workers
+
     - name: update docker defaults file
       template: src=ansible/docker.default.j2 dest=/etc/default/docker
 
@@ -77,27 +89,36 @@
       template: src=ansible/cassandra.upstart.j2
         dest=/etc/init/cassandra.conf
         owner=root group=root mode=644
+      tags:
+        - upstart
 
     - name: install the redis upstart
       template: src=ansible/redis.upstart.j2
         dest=/etc/init/redis.conf
         owner=root group=root mode=644
+      tags:
+        - upstart
 
     - name: install the jaci-web upstart
       template: src=ansible/jaci-web.upstart.j2
         dest=/etc/init/jaci-web.conf
         owner=root group=root mode=644
+      tags:
+        - upstart
 
     - name: install the jaci-workers upstart
       template: src=ansible/jaci-workers.upstart.j2
         dest=/etc/init/jaci-workers.conf
         owner=root group=root mode=644
+      tags:
+        - upstart
 
-    - name: build jaci-base docker image
-      shell: docker build -t gabrielfalcao/jaci-base /vagrant/docker/jaci-base
-
-    - name: build jaci-web docker image
-      shell: docker build -t gabrielfalcao/jaci-web /vagrant/docker/jaci-web
+    - name: ensure we have the most updated version of the software from git
+      git: repo=git://github.com/gabrielfalcao/jaci.git
+        dest=/srv/jaci/src
+        accept_hostkey=yes
+      tags:
+        - upstart
 
     - name: pull dependency docker images
       shell: docker pull {{ item }}
@@ -105,30 +126,47 @@
         - cassandra
         - redis
 
+    - name: pull dependency docker images
+      shell: docker pull gabrielfalcao/jaci-web
+      when: not build_images
+
+    - name: build jaci-base docker image
+      shell: docker build -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
+      when: build_images
+
+    - name: build jaci-web docker image
+      shell: docker build -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
+      when: build_images
+
     - name: start redis
       service: name=redis state=restarted
+      tags:
+        - upstart
 
     - name: copy assets from inside of the jaci-web docker image
       shell: docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web jaci-web-boot.sh
 
     - name: restart jaci-web
       service: name=jaci-web state=restarted
+      tags:
+        - upstart
 
     - name: restart jaci-workers
       service: name=jaci-workers state=restarted
+      tags:
+        - upstart
 
     - name: ensuring that default nginx config is not present
       shell: rm -f /etc/nginx/sites-enabled/*
+      tags:
+        - upstart
 
     - name: place nginx configuration
       template: src=ansible/jaci-web.nginx.j2 dest=/etc/nginx/sites-enabled/jaci-web
+      tags:
+        - upstart
 
     - name: restart nginx
       service: name=nginx state=restarted
-
-    # - name: pull jaci-workers docker image
-    #   shell: docker pull gabrielfalcao/jaci-workers
-
-    # - name: build docker image
-    #   shell: docker build -t gabrielfalcao/jaci /vagrant
-      #rm -rf /var/lib/docker if you want to cleanup docker
+      tags:
+        - upstart

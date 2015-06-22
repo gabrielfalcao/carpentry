@@ -1,4 +1,4 @@
-description     "JACI Web"
+description     "JACI WEB"
 
 start on starting cassandra
 stop on stopped cassandra
@@ -6,13 +6,26 @@ stop on stopped cassandra
 respawn
 respawn limit 5 60
 
-exec docker run --name jaci-web \
-    -p {{ jaci_http_port }} \
-    --rm --net=host \
-    -v /srv/jaci \
-    -e JACI_CASSANDRA_HOST=localhost \
-    -e JACI_REDIS_HOST=localhost \
-    -e JACI_SERVER_URL={{ full_server_url }} \
-    -e JACI_GITHUB_CLIEND_ID={{ jaci_github_client_id }} \
-    -e JACI_GITHUB_CLIENT_SECRET={{ jaci_github_client_secret }} \
-    gabrielfalcao/jaci-web jaci-web-run.sh --bind {{ jaci_http_hostname }}:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}
+pre-stop exec docker rm -f jaci-web
+
+script
+    until nc -z localhost 9042; do
+            echo "Waiting for cassandra to listen on localhost:9042"
+            sleep 1
+    done
+
+    exec docker run \
+        --name jaci-web \
+        -p {{ jaci_http_port }} \
+        --rm --net=host \
+        -v /srv/jaci \
+        -v /var/log/jaci-web:/var/log \
+        -e JACI_HTTP_HOST=0.0.0.0 \
+        -e JACI_CASSANDRA_HOST=localhost \
+        -e JACI_REDIS_HOST=localhost \
+        -e JACI_SERVER_URL={{ full_server_url }} \
+        -e JACI_GITHUB_CLIEND_ID={{ jaci_github_client_id }} \
+        -e JACI_GITHUB_CLIENT_SECRET={{ jaci_github_client_secret }} \
+        gabrielfalcao/jaci-web jaci-web-run.sh --bind 0.0.0.0:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}
+
+end script

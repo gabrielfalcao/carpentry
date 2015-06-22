@@ -3,9 +3,9 @@ upstream jaci {
 }
 
 server {
-    listen 9000 default;
+    listen 80 default;
 
-    server_name localhost;
+    server_name {{ jaci_http_hostname }};
     root /srv/jaci/static;
 
     access_log /var/log/nginx/jaci-access.log;
@@ -22,7 +22,6 @@ server {
         proxy_pass                 http://jaci;
     }
     location /assets {
-       alias /srv/jaci/static
+       alias /srv/jaci/static;
     }
-
 }
