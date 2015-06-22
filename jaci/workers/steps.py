@@ -158,6 +158,7 @@ class PushKeyToGithub(Step):
             b.save()
         else:
             instructions['github_deploy_key'] = response.json()
+            self.log("Keys pushed to github successfully!!!!!")
 
         self.produce(instructions)
 

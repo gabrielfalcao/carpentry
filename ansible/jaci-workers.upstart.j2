@@ -17,7 +17,8 @@ script
     exec docker run \
         --name jaci-workers \
         --rm --net=host \
-        -v /srv/jaci \
+        -v /srv/jaci/builds \
+        -v /srv/jaci/ssh-keys \
         -v /var/log/jaci-workers:/var/log \
         -e JACI_CASSANDRA_HOST=localhost \
         -e JACI_REDIS_HOST=localhost \

@@ -63,6 +63,12 @@
         pkg=lxc-docker-{{ docker_version }}
         state=latest update_cache=yes cache_valid_time=3600
 
+    - name: ensuring that the jaci-workers builds dir is present
+      file: path=/srv/jaci/builds state=directory
+
+    - name: ensuring that the jaci-workers ssh-keys dir is present
+      file: path=/srv/jaci/ssh-keys state=directory
+
     - name: ensuring that the cassandra data dir is present
       file: path=/srv/jaci/data state=directory
 
