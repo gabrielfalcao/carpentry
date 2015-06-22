@@ -12,7 +12,7 @@
     jaci_web_processes: 2
     jaci_github_client_id: 1c061315e9b34dc153aa
     jaci_github_client_secret: 5c9909556b60f3e6c618f278230620415cc15da8
-    docker_version: 1.6.1
+    docker_version: 1.7.0
     docker_admin_users: []
     docker_opts:
       - "--iptables=false"
