@@ -165,8 +165,13 @@ class LocalRetrieve(Step):
             'stdout': stdout,
             'exit_code': exit_code,
         }
-
         b = Build.objects.get(id=instructions['id'])
+        if int(exit_code) != 0:
+            self.log('Git clone failed {0}'.format(stdout))
+            b.status = 'failed'
+            b.save()
+            raise RuntimeError('Failed to git clone')
+
         if b.stdout is None:
             b.stdout = u''
 

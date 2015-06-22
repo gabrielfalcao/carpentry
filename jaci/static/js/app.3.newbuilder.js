@@ -6,7 +6,7 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
     $scope.builder = {
         'generate_ssh_keys': true,
         'name': $rootScope.user.name + "'s Project",
-        'git_uri': 'git@github.com:'+$rootScope.user.username+'/yourrepo.git',
+        'git_uri': 'git@github.com:'+$rootScope.user.login+'/yourrepo.git',
         'shell_script':[
             '#!/bin/bash',
             'set -e',
