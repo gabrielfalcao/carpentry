@@ -15,12 +15,20 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
 
     $scope.html_output = null;
     function get_build() {
+        if (!$stateParams.build_id) {
+            console.log("Invalid build id:", $stateParams);
+            return;
+        }
         var url = '/api/build/'+$stateParams.build_id;
         $http.get(url).success(function (data, status, headers, config) {
             $scope.build = data;
             $scope.html_output = $sce.trustAsHtml(data.stdout);
             console.log(data);
         }).error(function (data, status, headers, config) {
+            if (!status) {
+                console.log("server did not respond to" + url);
+                return;
+            }
             notify('failed to retrieve build: '+ status)
             console.log('failed ' + url, status);
             clearInterval(poller);

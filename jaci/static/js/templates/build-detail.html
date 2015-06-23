@@ -4,7 +4,9 @@
   <div class="page-header">
     <div class="row">
       <div class="col-lg-12">
-        <h1>{{ builder.name }}</h1>
+        <h1>
+          <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a>
+        </h1>
       </div>
     </div>
   </div>
@@ -30,8 +32,14 @@
           <pre hljs scroll-glue style="overflow-y: auto;max-height: 640px; background: #222; color: white;"  ng-bind-html="html_output"></pre>
         </div>
       </div>
-      <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">back to builder</button>
-      <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">edit builder</button>
+      <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">
+        <i class="fa fa-arrow-left"></i> back to builder</button>
+        <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">
+        <i class="fa fa-pencil"></i> edit builder</button>
     </div>
   </div>
+  <br />
+  <br />
+  <br />
+  <br />
 </div>

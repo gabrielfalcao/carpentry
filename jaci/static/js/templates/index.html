@@ -26,11 +26,11 @@
         <tbody ng-repeat="builder in builders">
           <tr ng-class="builder.css_status">
             <td><strong>
-              <a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></strong></td>
+              <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a></strong></td>
               <th class="ng-cloak" ng-hide="!builder.last_build" scope="row">{{ builder.last_build.number }}</th>
               <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.author_name }} &lt;{{ builder.last_build.author_email }}&gt;</td>
               <td class="ng-cloak" ng-hide="!builder.last_build">
-                <a ng-href="#builder/{{builder.id}}/build/{{builder.last_build.id}}">{{ builder.last_build.commit }}</a>
+                <a ng-href="#/builder/{{builder.id}}/build/{{builder.last_build.id}}">{{ builder.last_build.commit }}</a>
               </td>
               <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.branch }}</td>
               <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.status }}</td>

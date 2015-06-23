@@ -7,8 +7,9 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
     }
 
     function refresh() {
+        var url = '/api/builder/' + $rootScope.builder.id + '/builds';
         $http
-            .get('/api/builder/' + $rootScope.builder.id + '/builds')
+            .get(url)
 
             .success(function(data, status, headers, config) {
                 $rootScope.buildCache[builderId] = data;
@@ -16,6 +17,10 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
             })
 
             .error(function(data, status, headers, config) {
+                if (!status) {
+                    console.log("Server did not respond to " + url);
+                    return;
+                }
                 notify('failed to retreve builder info');
                 console.log("failed to retreve builder info", data);
                 clearInterval(poller);
@@ -30,6 +35,8 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
             })
 
             .error(function(data, status, headers, config) {
+                console.log('failed to clear builds from ' + $rootScope.builder.name);
+                return;
                 notify('failed to clear builds from ' + $rootScope.builder.name);
             });
     };
