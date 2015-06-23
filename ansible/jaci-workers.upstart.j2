@@ -1,4 +1,4 @@
-description     "JACI Workers"
+description     "JACI Workers {{ item }}"
 
 start on starting jaci-web
 stop on stopped jaci-web
@@ -6,7 +6,9 @@ stop on stopped jaci-web
 respawn
 respawn limit 5 60
 
-pre-stop exec docker rm -f jaci-workers
+instance {{ item }}
+
+pre-stop exec docker rm -f jaci-workers-{{ item }}
 
 script
     until nc -z localhost 9042; do
@@ -15,7 +17,7 @@ script
     done
 
     exec docker run \
-        --name jaci-workers \
+        --name jaci-workers-{{ item }} \
         --rm --net=host \
         -v /srv/jaci/builds \
         -v /srv/jaci/ssh-keys \
