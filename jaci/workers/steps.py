@@ -41,16 +41,22 @@ def force_unicode(string):
     return string
 
 
-def stream_output(step, process, build):
+def stream_output(step, process, build, stdout_chunk_size=512):
     stdout = []
     build.stdout = build.stdout or ''
     build.stderr = build.stderr or ''
+
+    current_transfered_bytes = 0
+
     for out in iter(lambda: process.stdout.readline(), ''):
         out = force_unicode(out)
+        current_transfered_bytes += len(out)
         build.stdout += out
         build.stderr += out
-        build.save()
         stdout.append(out)
+        if current_transfered_bytes >= stdout_chunk_size:
+            build.save()
+            current_transfered_bytes = 0
 
     exit_code = process.wait()
     try:
