@@ -58,4 +58,7 @@ deploy-from-scratch:
 deploy-all:
 	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci deployment/jaci-io.yml
 
+deploy-nginx:
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci -t nginx deployment/jaci-io.yml
+
 deploy: deploy-all

@@ -29,9 +29,15 @@
 
     - name: ensuring that default nginx config is not present
       shell: rm -f /etc/nginx/sites-enabled/*
+      tags:
+        - nginx
 
     - name: place nginx configuration
       template: src=templates/jaci-web.nginx.j2 dest=/etc/nginx/sites-enabled/jaci-web
+      tags:
+        - nginx
 
     - name: restart nginx
       service: name=nginx state=restarted
+      tags:
+        - nginx
