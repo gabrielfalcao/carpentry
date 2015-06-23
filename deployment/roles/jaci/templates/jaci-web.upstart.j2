@@ -1,7 +1,6 @@
 description     "JACI WEB"
 
-start on starting cassandra
-stop on stopped cassandra
+start on (started networking)
 
 respawn
 respawn limit 5 60

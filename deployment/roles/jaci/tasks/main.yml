@@ -20,6 +20,7 @@
   apt_repository: repo='ppa:git-core'
   tags:
     - jaci
+    - update-code
 
 - name: install jaci dependencies
   apt:

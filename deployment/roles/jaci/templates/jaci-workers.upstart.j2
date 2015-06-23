@@ -1,7 +1,6 @@
 description     "JACI Workers {{ item }}"
 
-start on starting jaci-web
-stop on stopped jaci-web
+start on (started networking)
 
 respawn
 respawn limit 5 60
