@@ -1,7 +1,6 @@
 description     "Cassandra Master"
 
-start on starting redis
-stop on stopped redis
+start on (started networking)
 
 respawn
 respawn limit 5 60

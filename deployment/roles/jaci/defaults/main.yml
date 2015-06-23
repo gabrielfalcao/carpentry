@@ -1,0 +1,10 @@
+production: false
+full_server_url: http://localhost:9000
+jaci_http_hostname: localhost
+jaci_http_port: 5000
+jaci_web_processes: 1
+jaci_worker_processes: 2
+docker_version: 1.7.0
+docker_admin_users: []
+docker_opts:
+  - "--iptables=false"

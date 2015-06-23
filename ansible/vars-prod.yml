@@ -1,5 +1,0 @@
-production: true
-full_server_url: http://jaci.io
-jaci_http_hostname: jaci.io
-jaci_http_port: 5000
-jaci_web_processes: 4

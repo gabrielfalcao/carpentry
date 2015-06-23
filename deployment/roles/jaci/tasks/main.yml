@@ -1,0 +1,198 @@
+- name: ensure apt is ok
+  shell: dpkg --configure -a
+  ignore_errors: yes
+  tags:
+    - jaci
+
+- name: update cache
+  shell: apt-get update
+  tags:
+    - jaci
+
+- name: install docker dependencies
+  apt: pkg={{ item }} state=present
+  with_items:
+    - linux-image-extra-virtual
+  tags:
+    - jaci
+
+- name: add git core ppa
+  apt_repository: repo='ppa:git-core'
+  tags:
+    - jaci
+
+- name: install jaci dependencies
+  apt:
+    pkg: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - bash-completion
+    - python-dev
+    - libffi-dev
+    - libssl-dev
+    - libgnutls-dev
+    - libsqlite3-dev
+    - python-pip
+    - python-virtualenv
+    - git-core
+  tags:
+    - jaci
+
+- name: add docker repository key
+  apt_key: url=https://get.docker.io/gpg state=present
+  tags:
+    - jaci
+
+- name: add docker repository
+  apt_repository: >-
+    repo="deb http://get.docker.io/ubuntu docker main" state=present
+  tags:
+    - jaci
+
+- name: install docker
+  apt: >-
+    pkg=lxc-docker-{{ docker_version }}
+    state=latest update_cache=yes cache_valid_time=3600
+  tags:
+    - jaci
+
+- name: ensuring that the data and log dirs exist
+  file: path={{ item }} state=directory
+  with_items:
+    - /srv/jaci/builds
+    - /srv/jaci/ssh-keys
+    - /srv/jaci/data
+    - /var/log/jaci-web
+    - /var/log/jaci-workers
+  tags:
+    - jaci
+
+- name: update docker defaults file
+  template: src=docker.default.j2 dest=/etc/default/docker
+  tags:
+    - jaci
+
+- name: add admin users to docker group
+  user: name={{ item }} groups=docker append=yes
+  with_items: docker_admin_users
+  tags:
+    - jaci
+
+- name: start docker
+  service: name=docker state=restarted
+  ignore_errors: yes
+  tags:
+    - jaci
+
+- name: ensure docker is clean
+  shell: docker kill -s 9 $(docker ps -qa)
+  ignore_errors: yes
+  tags:
+    - jaci
+    - docker
+
+- name: install the cassandra upstart
+  template: src=cassandra.upstart.j2
+    dest=/etc/init/cassandra.conf
+    owner=root group=root mode=644
+  tags:
+    - jaci
+    - cassandra
+    - upstart
+
+- name: install the jaci-web upstart
+  template: src=jaci-web.upstart.j2
+    dest=/etc/init/jaci-web.conf
+    owner=root group=root mode=644
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart
+
+- name: install the jaci-workers upstart
+  template: src=jaci-workers.upstart.j2
+    dest=/etc/init/jaci-workers-{{ item }}.conf
+    owner=root group=root mode=644
+  with_sequence: count="{{ jaci_worker_processes }}"
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart
+
+- name: ensure we have the most updated version of the software from git
+  git: repo=git://github.com/gabrielfalcao/jaci.git
+    dest=/srv/jaci/src
+    accept_hostkey=yes
+  tags:
+    - jaci
+    - jaci-web
+    - jaci-workers
+    - docker
+    - upstart
+
+- name: pull dependency docker images
+  shell: docker pull {{ item }}
+  with_items:
+    - cassandra
+    - redis
+    - gabrielfalcao/jaci-base
+    - gabrielfalcao/jaci-web
+  tags:
+    - jaci
+    - jaci-web
+    - jaci-workers
+    - docker
+
+
+- name: pull cassandra image
+  shell: docker pull cassandra
+  tags:
+    - jaci
+    - cassandra
+    - docker
+
+- name: pull dependency docker images
+  shell: docker pull {{ item }}
+  when: not jaci_build_images
+  with_items:
+    - gabrielfalcao/jaci-base
+    - gabrielfalcao/jaci-web
+  tags:
+    - jaci
+    - jaci-web
+    - jaci-workers
+    - docker
+
+
+- name: build base jaci image
+  shell: docker build --force-rm -t gabrielfalcao/jaci-base .
+  when: jaci_build_images
+  args:
+    chdir: /vagrant/deployment/docker/jaci-base
+
+- name: build web jaci image
+  shell: docker build --force-rm -t gabrielfalcao/jaci-web .
+  when: jaci_build_images
+  args:
+    chdir: /vagrant/deployment/docker/jaci-web
+
+
+- name: prepare cassandra keyspace for JACI
+  shell: docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web jaci-web-boot.sh
+  when: jaci_recreate_keyspace
+
+- name: restart jaci-web
+  service: name=jaci-web state=restarted
+  tags:
+    - jaci
+    - jaci-web
+    - upstart
+
+- name: restart jaci-workers
+  service: name="jaci-workers-{{ item }}" state=restarted
+  with_sequence: count="{{ jaci_worker_processes }}"
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart

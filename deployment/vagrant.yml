@@ -1,0 +1,19 @@
+---
+- hosts: all
+  sudo: yes
+  remote_user: vagrant
+
+  vars:
+    production: false
+    jaci_build_images: true
+    jaci_recreate_keyspace: true
+    full_server_url: http://localhost:9000
+    jaci_http_hostname: localhost
+    jaci_http_port: 5000
+    jaci_web_processes: 1
+    jaci_worker_processes: 1
+    jaci_github_client_id: 1c061315e9b34dc153aa
+    jaci_github_client_secret: 5c9909556b60f3e6c618f278230620415cc15da8
+
+  roles:
+    - jaci
