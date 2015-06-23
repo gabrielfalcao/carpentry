@@ -4,9 +4,9 @@
   remote_user: ubuntu
 
   vars:
-    production: true
-    jaci_build_images: false
-    jaci_recreate_keyspace: true
+    production: yes
+    jaci_build_images: no
+    jaci_recreate_keyspace: no
     full_server_url: http://jaci.io
     jaci_http_hostname: jaci.io
     jaci_http_port: 5000

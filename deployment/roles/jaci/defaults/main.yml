@@ -6,5 +6,6 @@ jaci_web_processes: 1
 jaci_worker_processes: 2
 docker_version: 1.7.0
 docker_admin_users: []
+jaci_version: 0.0.30
 docker_opts:
   - "--iptables=false"

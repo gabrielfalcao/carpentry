@@ -26,5 +26,5 @@ script
         -e JACI_REDIS_HOST=localhost \
         -e JACI_GITHUB_CLIEND_ID={{ jaci_github_client_id }} \
         -e JACI_GITHUB_CLIENT_SECRET={{ jaci_github_client_secret }} \
-        gabrielfalcao/jaci-web jaci workers
+        gabrielfalcao/jaci-web:{{ jaci_version }} jaci workers
 end script

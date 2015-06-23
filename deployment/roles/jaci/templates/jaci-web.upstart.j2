@@ -26,6 +26,6 @@ script
         -e JACI_SERVER_URL={{ full_server_url }} \
         -e JACI_GITHUB_CLIEND_ID={{ jaci_github_client_id }} \
         -e JACI_GITHUB_CLIENT_SECRET={{ jaci_github_client_secret }} \
-        gabrielfalcao/jaci-web jaci-web-run.sh --bind 0.0.0.0:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}
+        gabrielfalcao/jaci-web:{{ jaci_version }} jaci-web-run.sh --bind 0.0.0.0:{{ jaci_http_port }} --log-level debug --workers={{ jaci_web_processes }}
 
 end script

@@ -90,6 +90,23 @@
   tags:
     - jaci
 
+- name: stop jaci-web
+  service: name=jaci-web state=stopped
+  tags:
+    - jaci
+    - jaci-web
+    - upstart
+  ignore_errors: yes
+
+- name: stop jaci-workers
+  service: name="jaci-workers-{{ item }}" state=stopped
+  with_sequence: count="{{ jaci_worker_processes }}"
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart
+  ignore_errors: yes
+
 - name: ensure docker is clean
   shell: docker kill -s 9 $(docker ps -qa)
   ignore_errors: yes
@@ -137,20 +154,6 @@
     - docker
     - upstart
 
-- name: pull dependency docker images
-  shell: docker pull {{ item }}
-  with_items:
-    - cassandra
-    - redis
-    - gabrielfalcao/jaci-base
-    - gabrielfalcao/jaci-web
-  tags:
-    - jaci
-    - jaci-web
-    - jaci-workers
-    - docker
-
-
 - name: pull cassandra image
   shell: docker pull cassandra
   tags:
@@ -162,30 +165,28 @@
   shell: docker pull {{ item }}
   when: not jaci_build_images
   with_items:
-    - gabrielfalcao/jaci-base
-    - gabrielfalcao/jaci-web
+    - "gabrielfalcao/jaci-base:{{ jaci_version }}"
+    - "gabrielfalcao/jaci-web:{{ jaci_version }}"
   tags:
     - jaci
     - jaci-web
     - jaci-workers
     - docker
 
-
-- name: build base jaci image
-  shell: docker build --force-rm -t gabrielfalcao/jaci-base .
+- name: docker build -t gabrielfalcao/jaci-base
+  shell: "docker build --force-rm -t gabrielfalcao/jaci-base:{{ jaci_version }} ."
   when: jaci_build_images
   args:
     chdir: /vagrant/deployment/docker/jaci-base
 
 - name: build web jaci image
-  shell: docker build --force-rm -t gabrielfalcao/jaci-web .
+  shell: "docker build --force-rm -t gabrielfalcao/jaci-web:{{ jaci_version }} ."
   when: jaci_build_images
   args:
     chdir: /vagrant/deployment/docker/jaci-web
 
-
 - name: prepare cassandra keyspace for JACI
-  shell: docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web jaci-web-boot.sh
+  shell: "docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web:{{ jaci_version }} jaci-web-boot.sh"
   when: jaci_recreate_keyspace
 
 - name: restart jaci-web

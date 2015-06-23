@@ -4,9 +4,9 @@
   remote_user: vagrant
 
   vars:
-    production: false
-    jaci_build_images: true
-    jaci_recreate_keyspace: true
+    production: no
+    jaci_build_images: yes
+    jaci_recreate_keyspace: yes
     full_server_url: http://localhost:9000
     jaci_http_hostname: localhost
     jaci_http_port: 5000
