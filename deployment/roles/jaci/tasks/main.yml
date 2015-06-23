@@ -119,9 +119,7 @@
   template: src=jaci-workers.upstart.j2
     dest=/etc/init/jaci-workers-{{ item }}.conf
     owner=root group=root mode=644
-  # with_sequence: count="{{ jaci_worker_processes }}"
-  with_items:
-    - staq
+  with_sequence: count="{{ jaci_worker_processes }}"
 
   tags:
     - jaci
@@ -199,9 +197,7 @@
 
 - name: restart jaci-workers
   service: name="jaci-workers-{{ item }}" state=restarted
-  # with_sequence: count="{{ jaci_worker_processes }}"
-  with_items:
-    - staq
+  with_sequence: count="{{ jaci_worker_processes }}"
 
   tags:
     - jaci
