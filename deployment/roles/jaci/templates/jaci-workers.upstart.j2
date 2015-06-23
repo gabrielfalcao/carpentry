@@ -11,9 +11,9 @@ instance {{ item }}
 pre-stop exec docker rm -f jaci-workers-{{ item }}
 
 script
-    until nc -z localhost 9042; do
-            echo "Waiting for cassandra to listen on localhost:9042"
-            sleep 1
+    until nc -z localhost 5000; do
+            echo "Waiting for jaci-web to listen on localhost:5000"
+            sleep 10
     done
 
     exec docker run \

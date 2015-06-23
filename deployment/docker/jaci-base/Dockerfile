@@ -27,6 +27,9 @@ RUN apt-get --yes --no-install-recommends install \
     software-properties-common \
     python-software-properties \
     build-essential \
+    time \
+    libxml2-dev \
+    libxslt1-dev \
     libevent-dev \
     libffi-dev \
   && rm -rf /var/lib/apt/lists/*
