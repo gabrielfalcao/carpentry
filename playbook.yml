@@ -3,7 +3,6 @@
   sudo: yes
   remote_user: ubuntu
 
-
   vars:
     production: false
     full_server_url: http://localhost:9000
@@ -27,6 +26,9 @@
     - name: ensure apt is ok
       shell: dpkg --configure -a
       ignore_errors: yes
+
+    - name: update cache
+      shell: apt-get update
 
     - name: install docker dependencies
       apt: pkg={{ item }} state=present
@@ -52,7 +54,6 @@
         - python-virtualenv
         - git-core
         - nginx
-
 
     - name: add docker repository key
       apt_key: url=https://get.docker.io/gpg state=present
@@ -94,13 +95,6 @@
     - name: start docker
       service: name=docker state=restarted
       ignore_errors: yes
-
-    - name: stop jaci-web
-      service: name=jaci-web state=stopped
-      ignore_errors: yes
-
-    - name: stop jaci-workers
-      service: name=jaci-workers state=stopped
 
     - name: ensure docker is clean
       shell: docker kill -s 9 $(docker ps -qa)
@@ -147,16 +141,18 @@
       with_items:
         - cassandra
         - redis
+        - gabrielfalcao/jaci-base
+        - gabrielfalcao/jaci-web
 
-    - name: build jaci-base docker image
-      shell: docker build --force-rm -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
-      tags:
-        - docker
+    # - name: build jaci-base docker image
+    #   shell: docker build --force-rm -t gabrielfalcao/jaci-base /srv/jaci/src/docker/jaci-base
+    #   tags:
+    #     - docker
 
-    - name: build jaci-web docker image
-      shell: docker build --force-rm -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
-      tags:
-        - docker
+    # - name: build jaci-web docker image
+    #   shell: docker build --force-rm -t gabrielfalcao/jaci-web /srv/jaci/src/docker/jaci-web
+    #   tags:
+    #     - docker
 
     - name: start redis
       service: name=redis state=restarted
