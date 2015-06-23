@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 import os
 import re
 import json
-import traceback
 import logging
 import io
 import requests
@@ -28,7 +27,7 @@ COMMIT_REGEX = re.compile(
     r'commit\s*(?P<commit>\w+)', re.I)
 
 
-def run_command(command, chdir, bufsize=64, environment={}):
+def run_command(command, chdir, environment={}):
     try:
         return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
     except Exception:
@@ -46,7 +45,7 @@ def stream_output(step, process, build):
     stdout = []
     build.stdout = build.stdout or ''
     build.stderr = build.stderr or ''
-    for out in iter(lambda: process.stdout.read(1), ''):
+    for out in iter(lambda: process.stdout.readline(), ''):
         out = force_unicode(out)
         build.stdout += out
         build.stderr += out
