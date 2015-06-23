@@ -5,6 +5,10 @@ start on (started networking)
 respawn
 respawn limit 5 60
 
+pre-stop exec docker stop jacicassandra
+pre-stop exec sleep 2
+pre-stop exec docker kill -s 9 jacicassandra
+pre-stop exec sleep 3
 pre-stop exec docker rm -f jacicassandra
 
 exec docker run \

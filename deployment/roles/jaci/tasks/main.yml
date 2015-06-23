@@ -185,6 +185,13 @@
   args:
     chdir: /vagrant/deployment/docker/jaci-web
 
+- name: start cassandra
+  service: name=cassandra state=started
+  tags:
+    - jaci
+    - cassandra
+    - upstart
+
 - name: prepare cassandra keyspace for JACI
   shell: "docker run --rm --net=host -v /srv/jaci/static:/srv/jaci/static -e JACI_CASSANDRA_HOST=localhost -e JACI_REDIS_HOST=localhost gabrielfalcao/jaci-web:{{ jaci_version }} jaci-web-boot.sh"
   when: jaci_recreate_keyspace
