@@ -46,5 +46,16 @@ clean:
 release: assets
 	./.release
 
-deploy:
+deploy-web:
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci -t upstart -t jaci-workers deployment/jaci-io.yml
+
+deploy-workers:
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci -t upstart -t jaci-web deployment/jaci-io.yml
+
+deploy-from-scratch:
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci --extra-vars="jaci_recreate_keyspace=yes" deployment/jaci-io.yml
+
+deploy-all:
 	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.jaci deployment/jaci-io.yml
+
+deploy: deploy-all

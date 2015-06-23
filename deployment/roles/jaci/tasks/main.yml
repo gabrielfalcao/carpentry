@@ -165,7 +165,6 @@
   shell: docker pull {{ item }}
   when: not jaci_build_images
   with_items:
-    - "gabrielfalcao/jaci-base:{{ jaci_version }}"
     - "gabrielfalcao/jaci-web:{{ jaci_version }}"
   tags:
     - jaci

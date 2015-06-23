@@ -6,6 +6,7 @@ stop on stopped cassandra
 respawn
 respawn limit 5 60
 
+pre-stop exec docker kill -s 9 jaci-web
 pre-stop exec docker rm -f jaci-web
 
 script
