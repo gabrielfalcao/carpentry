@@ -7,6 +7,7 @@
     production: yes
     docker_based_deploy: yes
     jaci_build_images: no
+    jaci_docker_deployment: no
     jaci_recreate_keyspace: no
     full_server_url: http://jaci.io
     jaci_http_hostname: jaci.io

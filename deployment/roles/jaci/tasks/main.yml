@@ -11,6 +11,7 @@
 
 - name: install docker dependencies
   apt: pkg={{ item }} state=present
+  when: jaci_docker_deployment
   with_items:
     - linux-image-extra-virtual
   tags:
@@ -112,9 +113,20 @@
 - name: ensure docker is clean
   shell: docker kill -s 9 $(docker ps -qa)
   ignore_errors: yes
+  when: jaci_docker_deployment
   tags:
     - jaci
     - docker
+
+- name: place jaci configuration file
+  template: src=jaci-etc.yml
+    dest=/etc/jaci.yml
+    owner=root group=root mode=644
+  when: not jaci_docker_deployment
+  tags:
+    - jaci
+    - cassandra
+    - upstart
 
 - name: install the cassandra upstart
   template: src=cassandra.upstart.j2
@@ -125,25 +137,54 @@
     - cassandra
     - upstart
 
-- name: install the jaci-web upstart
-  template: src=jaci-web.upstart.j2
+- name: install the gunicorn-based jaci-web upstart
+  template: src=jaci-web-native.upstart.j2
     dest=/etc/init/jaci-web.conf
     owner=root group=root mode=644
+  when: jaci_docker_deployment
   tags:
     - jaci
     - jaci-workers
     - upstart
 
-- name: install the jaci-workers upstart
-  template: src=jaci-workers.upstart.j2
+- name: install the native python jaci-workers upstart
+  template: src=jaci-workers-native.upstart.j2
     dest=/etc/init/jaci-workers-{{ item }}.conf
     owner=root group=root mode=644
+  when: jaci_docker_deployment
   with_sequence: count="{{ jaci_worker_processes }}"
 
   tags:
     - jaci
     - jaci-workers
     - upstart
+
+- name: install the docker-based jaci-web upstart
+  template: src=jaci-web-docker.upstart.j2
+    dest=/etc/init/jaci-web.conf
+    owner=root group=root mode=644
+  when: jaci_docker_deployment
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart
+
+- name: install the docker-based jaci-workers upstart
+  template: src=jaci-workers-docker.upstart.j2
+    dest=/etc/init/jaci-workers-{{ item }}.conf
+    owner=root group=root mode=644
+  when: jaci_docker_deployment
+  with_sequence: count="{{ jaci_worker_processes }}"
+
+  tags:
+    - jaci
+    - jaci-workers
+    - upstart
+
+- name: update docker defaults file
+  template: src=docker.default.j2 dest=/etc/default/docker
+  tags:
+    - jaci
 
 - name: ensure we have the most updated version of the software from git
   git: repo=git://github.com/gabrielfalcao/jaci.git
@@ -165,7 +206,7 @@
 
 - name: pull dependency docker images
   shell: docker pull {{ item }}
-  when: not jaci_build_images
+  when: jaci_build_images
   with_items:
     - "gabrielfalcao/jaci-web:{{ jaci_version }}"
   tags:
