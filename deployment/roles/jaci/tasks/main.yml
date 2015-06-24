@@ -76,6 +76,22 @@
   tags:
     - jaci
 
+
+- name: prepare native virtual env
+  pip: requirements=/srv/jaci/src/requirements.txt
+       virtualenv=/srv/jaci/venv
+  when: not jaci_docker_deployment
+
+- name: install gunicorn
+  pip: name=gunicorn
+       virtualenv=/srv/jaci/venv
+  when: not jaci_docker_deployment
+
+- name: install jaci from pypi
+  pip: name=jaci version="{{ jaci_version }}"
+       virtualenv=/srv/jaci/venv
+  when: not jaci_docker_deployment
+
 - name: update docker defaults file
   template: src=docker.default.j2 dest=/etc/default/docker
   tags:
