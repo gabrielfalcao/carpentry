@@ -5,6 +5,7 @@ start on (started networking)
 respawn
 respawn limit 5 60
 
+env CARPENTRY_CONFIG_PATH=/etc/carpentry.yml
 env CARPENTRY_HTTP_HOST=0.0.0.0
 env CARPENTRY_CASSANDRA_HOST=localhost
 env CARPENTRY_REDIS_HOST=localhost

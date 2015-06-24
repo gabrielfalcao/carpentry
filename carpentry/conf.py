@@ -45,5 +45,5 @@ def setup_from_config_path(self, path):
     set_things(self, env)
 
 
-carpentry_config_path = os.getenv('CARPENTRY_CONFIG_PATH') or '/etc/carpentry.cfg'
+carpentry_config_path = os.getenv('CARPENTRY_CONFIG_PATH') or '/etc/carpentry.yml'
 setup_from_config_path(self, carpentry_config_path)

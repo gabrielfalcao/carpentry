@@ -1,4 +1,4 @@
 {
-  "directory": "jaci/static/vendor",
+  "directory": "carpentry/static/vendor",
   "json": "bower.json"
 }
