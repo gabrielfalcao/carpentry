@@ -46,7 +46,7 @@ requirements = [
     'python-dateutil>=2.4.2',
     'redis>=2.10.3',
     'requests>=2.5.1',
-    'tumbler>=0.0.19',
+    'tumbler>=0.0.20',
 ]
 
 
