@@ -16,4 +16,11 @@ env PYTHONPATH=/srv/carpentry/venv/lib/python2.7/site-packages:PYTHONPATH
 env VIRTUAL_ENV=/srv/carpentry/venv
 
 
-exec /srv/carpentry/venv/bin/carpentry workers
+script
+    until nc -z 127.0.0.1 9042; do
+            echo "Waiting for cassandra to listen on 127.0.0.1:9042"
+            sleep 5
+    done
+
+    exec /srv/carpentry/venv/bin/carpentry workers
+end script
