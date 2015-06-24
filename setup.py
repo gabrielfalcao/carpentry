@@ -35,7 +35,7 @@ requirements = [
     'bcrypt==1.1.1',
     'blist==1.3.6',
     'cffi==1.1.2',
-    'pycrypto==2.6.1',
+    'pycrypto==2.6',
     'GitHub-Flask==2.0.1',
     'lineup==0.1.4',
     'milieu==0.1.5',
@@ -44,7 +44,7 @@ requirements = [
     'python-dateutil==2.4.2',
     'redis==2.8.0',
     'requests==2.5.1',
-    'tumbler==0.0.18',
+    'tumbler==0.0.19',
     'gittle==0.5.0',
     'coloredlogs==1.0.1',
     'cqlengine==0.21.0'
