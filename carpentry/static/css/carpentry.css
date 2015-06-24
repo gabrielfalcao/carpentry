@@ -1,0 +1,33 @@
+.carpentry-icon-animate {
+    -animation: spin .7s infinite linear;
+    -webkit-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(-360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(-360deg);}
+}
+
+
+
+#loading-bar .bar {
+  background: #333;
+  margin-top: 48px;
+  height: 16px;
+}
+
+#loading-bar-spinner .spinner-icon {
+  width: 32px;
+  height: 32px;
+
+  margin-top: 48px;
+
+  border:  solid 2px transparent;
+  border-top-color:  #333;
+  border-left-color: #444;
+}

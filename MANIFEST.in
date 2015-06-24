@@ -1,2 +1,2 @@
-recursive-include jaci/templates *
-recursive-include jaci/static *
+recursive-include carpentry/templates *
+recursive-include carpentry/static *

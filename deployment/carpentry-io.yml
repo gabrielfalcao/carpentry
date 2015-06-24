@@ -1,0 +1,44 @@
+---
+- hosts: carpentry.io
+  sudo: yes
+  remote_user: ubuntu
+
+  vars:
+    production: yes
+    docker_based_deploy: yes
+    carpentry_build_images: no
+    carpentry_recreate_keyspace: no
+    full_server_url: http://carpentry.io
+    carpentry_http_hostname: carpentry.io
+    carpentry_http_port: 5000
+    carpentry_web_processes: 2
+    carpentry_worker_processes: 10
+
+  roles:
+    - carpentry
+
+  tasks:
+    - name: install redis and nginx
+      apt:
+        pkg: "{{ item }}"
+        state: present
+        update_cache: yes
+      with_items:
+        - nginx
+        - redis-server
+
+
+    - name: ensuring that default nginx config is not present
+      shell: rm -f /etc/nginx/sites-enabled/*
+      tags:
+        - nginx
+
+    - name: place nginx configuration
+      template: src=templates/carpentry-web.nginx.j2 dest=/etc/nginx/sites-enabled/carpentry-web
+      tags:
+        - nginx
+
+    - name: restart nginx
+      service: name=nginx state=restarted
+      tags:
+        - nginx

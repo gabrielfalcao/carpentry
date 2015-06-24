@@ -1,0 +1,23 @@
+description     "CARPENTRY WEB"
+
+start on (started networking)
+
+respawn
+respawn limit 5 60
+
+env CARPENTRY_HTTP_HOST=0.0.0.0
+env CARPENTRY_CASSANDRA_HOST=localhost
+env CARPENTRY_REDIS_HOST=localhost
+env CARPENTRY_SERVER_URL={{ full_server_url }}
+env CARPENTRY_GITHUB_CLIEND_ID={{ carpentry_github_client_id }}
+env CARPENTRY_GITHUB_CLIENT_SECRET={{ carpentry_github_client_secret }}
+
+script
+    until nc -z 127.0.0.1 9042; do
+            echo "Waiting for cassandra to listen on 127.0.0.1:9042"
+            sleep 5
+    done
+
+    gunicorn carpentry.wsgi:application --bind 0.0.0.0:{{ carpentry_http_port }} --log-level debug --workers={{ carpentry_web_processes }}
+
+end script

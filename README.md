@@ -1,4 +1,4 @@
-# JACI
+# CARPENTRY
 
 Yet another continuous integration server
 
@@ -16,7 +16,7 @@ Yet another continuous integration server
 
 ## ethymology
 
-jaci is the tupi guarani (native brazilian) goddess of the moon
+carpentry is the tupi guarani (native brazilian) goddess of the moon
 
 
 ## icon
@@ -28,8 +28,8 @@ sleep by Gustav Salomonsson from the Noun Project
 
 # License
 
-    <JACI - Continous Integration For People>
-    Copyright (C) <2015>  Gabriel Falcão <gabriel@jaci.io>
+    <CARPENTRY - Continous Integration For People>
+    Copyright (C) <2015>  Gabriel Falcão <gabriel@carpentry.io>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

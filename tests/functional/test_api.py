@@ -3,7 +3,7 @@
 #
 import uuid
 import json
-from jaci.models import Builder, JaciPreference, Build
+from carpentry.models import Builder, CarpentryPreference, Build
 
 from .helpers import api
 
@@ -89,7 +89,7 @@ def test_set_preferences(context):
     })
 
     # And it should be in the list of preferences
-    results = list(JaciPreference.all())
+    results = list(CarpentryPreference.all())
 
     # Then it should have one result
     results.should.have.length_of(3)

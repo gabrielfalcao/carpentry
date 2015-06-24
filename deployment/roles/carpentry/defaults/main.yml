@@ -1,0 +1,11 @@
+production: false
+full_server_url: http://localhost:9000
+carpentry_http_hostname: localhost
+carpentry_http_port: 5000
+carpentry_web_processes: 1
+carpentry_worker_processes: 2
+docker_version: 1.7.0
+docker_admin_users: []
+carpentry_version: 0.0.31
+docker_opts:
+  - "--iptables=false"

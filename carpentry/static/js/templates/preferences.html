@@ -1,0 +1,45 @@
+<navbar />
+<div class="container">
+  <div class="page-header">
+    <div class="row">
+      <div class="col-lg-12">
+        <h3 id="buttons">Preferences</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="well bs-component">
+        <form class="form-horizontal">
+          <fieldset>
+            <div class="form-group">
+              <label for="docker_registry_url" class="col-lg-2 control-label">docker registry url</label>
+              <div class="col-lg-10">
+                <input type="text" id="docker_registry_url" class="form-control" ng-model="carpentry_settings.docker_registry_url" placeholder="https://hub.docker.com"  />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="global_private_id_rsa_key" class="col-lg-2 control-label">default private <strong>id_rsa</strong> key</label>
+              <div class="col-lg-10">
+                <textarea id="global_private_id_rsa_key" class="form-control" ng-model="carpentry_settings.global_private_id_rsa_key" rows="10" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="global_public_id_rsa_key" class="col-lg-2 control-label">default public <strong>id_rsa</strong> key</label>
+              <div class="col-lg-10">
+                <textarea id="global_public_id_rsa_key" class="form-control" ng-model="carpentry_settings.global_public_id_rsa_key" rows="10" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-lg-10 col-lg-offset-2">
+                <button type="button" ng-click="savePreferences(carpentry_settings)" class="btn btn-primary">save</button>
+              </div>
+            </div>
+          </fieldset>
+
+        </form>
+        <div id="source-button" class="btn btn-primary btn-xs" style="display: none;">&lt; &gt;</div></div>
+    </div>
+  </div>
