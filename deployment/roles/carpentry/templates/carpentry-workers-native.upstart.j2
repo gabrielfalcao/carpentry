@@ -17,9 +17,9 @@ env VIRTUAL_ENV=/srv/carpentry/venv
 
 
 script
-    until nc -z 127.0.0.1 9042; do
+    until /bin/nc -z 127.0.0.1 9042; do
             echo "Waiting for cassandra to listen on 127.0.0.1:9042"
-            sleep 5
+            exec /bin/sleep 5
     done
 
     exec /srv/carpentry/venv/bin/carpentry workers

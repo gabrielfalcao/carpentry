@@ -12,9 +12,9 @@ respawn limit 5 60
 # pre-stop exec docker rm -f carpentry-workers-{{ item }}
 
 script
-    until nc -z 127.0.0.1 9042; do
+    until /bin/nc -z 127.0.0.1 9042; do
             echo "Waiting for cassandra to listen on 127.0.0.1:9042"
-            sleep 10
+            exec /bin/sleep 5
     done
 
     exec docker run \
