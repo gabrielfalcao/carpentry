@@ -21,7 +21,9 @@ angular.module('CarpentryApp.ShowBuilder', ['CarpentryApp.Common']).controller('
                     console.log("Server did not respond to " + url);
                     return;
                 }
-                notify('failed to retreve builder info');
+                if (status !== 502) {
+                    notify('failed to retreve builder info');
+                }
                 console.log("failed to retreve builder info", data);
                 clearInterval(poller);
             });

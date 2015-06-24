@@ -14,7 +14,10 @@ angular.module('CarpentryApp.EditBuilder', ['CarpentryApp.Common']).controller('
             })
 
             .error(function(data, status, headers, config) {
-                notify('Failed to load builder for editing');
+                if (status !== 502) {
+                    notify('Failed to load builder for editing');
+                }
+
 
                 console.log("Failed to load builder for editing", data);
                 $rootScope.go("/");
@@ -29,7 +32,9 @@ angular.module('CarpentryApp.EditBuilder', ['CarpentryApp.Common']).controller('
             })
 
             .error(function(data, status, headers, config) {
-                notify('Failed to edit builder');
+                if (status !== 502) {
+                    notify('Failed to edit builder');
+                }
                 console.log("Failed to edit builder", builder, data, status);
             });
     };

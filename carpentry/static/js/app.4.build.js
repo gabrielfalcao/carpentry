@@ -29,7 +29,9 @@ angular.module('CarpentryApp.Build', ['CarpentryApp.Common']).controller('BuildC
                 console.log("server did not respond to" + url);
                 return;
             }
-            notify('failed to retrieve build: '+ status)
+            if (status !== 502) {
+                notify('failed to retrieve build: '+ status);
+            }
             console.log('failed ' + url, status);
             clearInterval(poller);
             $scope.html_output = null;
@@ -37,24 +39,6 @@ angular.module('CarpentryApp.Build', ['CarpentryApp.Common']).controller('BuildC
         });
 
     }
-    // function get_output() {
-    //     var url = '/api/build/'+$stateParams.build_id+'/output'
-    //     $http.get(url).success(function (data, status, headers, config) {
-    //         $scope.html_output = $sce.trustAsHtml(data.stdout);
-    //     }).error(function (data, status, headers, config) {
-    //         console.log('failed ' + url, status);
-    //         $scope.html_output = $sce.trustAsHtml(url + ' failed: ' + status);
-    //         clearInterval(poller);
-    //         $rootScope.defaultErrorHandler(data, status, headers, config);
-    //     });
-    // }
-
-    // function refresh(){
-    //     get_build();
-    //     get_output();
-    // }
-
-    // $scope.refresh = refresh;
     var limit = 720;
     var counter = 0;
 

@@ -26,7 +26,9 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
                 console.log("/api/builder OK");
                 $rootScope.go('/');
             }).error(function(data, status){
-                notify('Failed to create builder');
+                if (status !== 502) {
+                    notify('Failed to create builder');
+                }
                 console.log('Failed to create builder', status, data);
             });
     };
