@@ -141,7 +141,7 @@
   template: src=jaci-web-native.upstart.j2
     dest=/etc/init/jaci-web.conf
     owner=root group=root mode=644
-  when: jaci_docker_deployment
+  when: not jaci_docker_deployment
   tags:
     - jaci
     - jaci-workers
@@ -151,7 +151,7 @@
   template: src=jaci-workers-native.upstart.j2
     dest=/etc/init/jaci-workers-{{ item }}.conf
     owner=root group=root mode=644
-  when: jaci_docker_deployment
+  when: not jaci_docker_deployment
   with_sequence: count="{{ jaci_worker_processes }}"
 
   tags:
