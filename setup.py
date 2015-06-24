@@ -37,7 +37,7 @@ requirements = [
     'cffi==1.1.2',
     'pycrypto==2.6',
     'GitHub-Flask==2.0.1',
-    'lineup==0.1.5',
+    'lineup==0.1.6',
     'milieu==0.1.5',
     'plant==0.1.1',
     'pyOpenSSL==0.15.1',
