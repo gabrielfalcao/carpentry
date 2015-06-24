@@ -39,6 +39,7 @@ requirements = [
     'cqlengine>=0.21.0',
     'GitHub-Flask>=2.0.1',
     'lineup>=0.1.7',
+    'docker-py>=1.2.3',
     'milieu>=0.1.7',
     'plant>=0.1.1',
     'pycrypto>=2.6',
