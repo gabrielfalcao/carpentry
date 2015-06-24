@@ -207,12 +207,12 @@ class LocalRetrieve(Step):
         chdir = build_dir
 
         # else:
-        git = render_string('/usr/bin/env git clone -b {branch} {git_uri} ' + build_dir, instructions)
+        git = render_string(conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
             # http://stackoverflow.com/questions/14220929/git-clone-with-custom-ssh-using-git-ssh-error/27607760#27607760
-            'GIT_SSH_COMMAND': render_string("/usr/bin/ssh -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
+            'GIT_SSH_COMMAND': render_string(conf.ssh_executable_path + " -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
         })
 
         b = Build.get(id=instructions['id'])
@@ -240,7 +240,7 @@ class LocalRetrieve(Step):
         b.code = int(exit_code)
         b.save()
 
-        git_show = '/usr/bin/env git show HEAD'
+        git_show = conf.git_executable_path + ' show HEAD'
         try:
             git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
             b.stdout += force_unicode(git_show_stdout)
@@ -312,7 +312,7 @@ class PrepareShellScript(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'preparing')
         build_dir = instructions['build_dir']
-        shell_script_path = os.path.join(build_dir, render_string('.{slug}.shell.sh', instructions))
+        shell_script_path = os.path.join(build_dir, render_string('.carpentry.{slug}.shell.sh', instructions))
         instructions['shell_script_path'] = shell_script_path
 
         b = Build.objects.get(id=instructions['id'])
