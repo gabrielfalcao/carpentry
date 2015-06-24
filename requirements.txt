@@ -12,7 +12,7 @@ python-dateutil==2.4.2
 redis==2.8.0
 requests==2.5.1
 tumbler==0.0.19
-coloredlogs==1.0.1
+coloredlogs==1.0
 cqlengine==0.21.0
 pycrypto==2.6
 gittle==0.5.0
