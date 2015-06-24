@@ -9,14 +9,6 @@
   tags:
     - carpentry
 
-- name: install docker dependencies
-  apt: pkg={{ item }} state=present
-  when: carpentry_docker_deployment
-  with_items:
-    - linux-image-extra-virtual
-  tags:
-    - carpentry
-
 - name: add git core ppa
   apt_repository: repo='ppa:git-core'
   tags:
@@ -77,20 +69,16 @@
     - carpentry
 
 
-- name: prepare native virtual env
-  pip: requirements=/srv/carpentry/src/requirements.txt
-       virtualenv=/srv/carpentry/venv
-  when: not carpentry_docker_deployment
-
-- name: install gunicorn
-  pip: name=gunicorn
-       virtualenv=/srv/carpentry/venv
-  when: not carpentry_docker_deployment
-
-- name: install carpentry from pypi
-  pip: name=carpentry version="{{ carpentry_version }}"
-       virtualenv=/srv/carpentry/venv
-  when: not carpentry_docker_deployment
+- name: ensure we have the most updated version of the software from git
+  git: repo=git://github.com/gabrielfalcao/carpentry.git
+    dest=/srv/carpentry/src
+    accept_hostkey=yes
+  tags:
+    - carpentry
+    - carpentry-web
+    - carpentry-workers
+    - docker
+    - upstart
 
 - name: update docker defaults file
   template: src=docker.default.j2 dest=/etc/default/docker
@@ -102,6 +90,12 @@
   with_items: docker_admin_users
   tags:
     - carpentry
+
+- include: docker-based.yml
+  when: carpentry_docker_deployment
+
+- include: native-based.yml
+  when: not carpentry_docker_deployment
 
 - name: start docker
   service: name=docker state=restarted
@@ -126,24 +120,6 @@
     - upstart
   ignore_errors: yes
 
-- name: ensure docker is clean
-  shell: docker kill -s 9 $(docker ps -qa)
-  ignore_errors: yes
-  when: carpentry_docker_deployment
-  tags:
-    - carpentry
-    - docker
-
-- name: place carpentry configuration file
-  template: src=carpentry-etc.yml
-    dest=/etc/carpentry.yml
-    owner=root group=root mode=644
-  when: not carpentry_docker_deployment
-  tags:
-    - carpentry
-    - cassandra
-    - upstart
-
 - name: install the cassandra upstart
   template: src=cassandra.upstart.j2
     dest=/etc/init/cassandra.conf
@@ -153,65 +129,10 @@
     - cassandra
     - upstart
 
-- name: install the gunicorn-based carpentry-web upstart
-  template: src=carpentry-web-native.upstart.j2
-    dest=/etc/init/carpentry-web.conf
-    owner=root group=root mode=644
-  when: not carpentry_docker_deployment
-  tags:
-    - carpentry
-    - carpentry-workers
-    - upstart
-
-- name: install the native python carpentry-workers upstart
-  template: src=carpentry-workers-native.upstart.j2
-    dest=/etc/init/carpentry-workers-{{ item }}.conf
-    owner=root group=root mode=644
-  when: not carpentry_docker_deployment
-  with_sequence: count="{{ carpentry_worker_processes }}"
-
-  tags:
-    - carpentry
-    - carpentry-workers
-    - upstart
-
-- name: install the docker-based carpentry-web upstart
-  template: src=carpentry-web-docker.upstart.j2
-    dest=/etc/init/carpentry-web.conf
-    owner=root group=root mode=644
-  when: carpentry_docker_deployment
-  tags:
-    - carpentry
-    - carpentry-workers
-    - upstart
-
-- name: install the docker-based carpentry-workers upstart
-  template: src=carpentry-workers-docker.upstart.j2
-    dest=/etc/init/carpentry-workers-{{ item }}.conf
-    owner=root group=root mode=644
-  when: carpentry_docker_deployment
-  with_sequence: count="{{ carpentry_worker_processes }}"
-
-  tags:
-    - carpentry
-    - carpentry-workers
-    - upstart
-
 - name: update docker defaults file
   template: src=docker.default.j2 dest=/etc/default/docker
   tags:
     - carpentry
-
-- name: ensure we have the most updated version of the software from git
-  git: repo=git://github.com/gabrielfalcao/carpentry.git
-    dest=/srv/carpentry/src
-    accept_hostkey=yes
-  tags:
-    - carpentry
-    - carpentry-web
-    - carpentry-workers
-    - docker
-    - upstart
 
 - name: pull cassandra image
   shell: docker pull cassandra
@@ -219,40 +140,6 @@
     - carpentry
     - cassandra
     - docker
-
-- name: pull dependency docker images
-  shell: docker pull {{ item }}
-  when: carpentry_build_images
-  with_items:
-    - "gabrielfalcao/carpentry-web:{{ carpentry_version }}"
-  tags:
-    - carpentry
-    - carpentry-web
-    - carpentry-workers
-    - docker
-
-- name: docker build -t gabrielfalcao/carpentry-base
-  shell: "docker build --force-rm -t gabrielfalcao/carpentry-base:{{ carpentry_version }} ."
-  when: carpentry_build_images
-  args:
-    chdir: /vagrant/deployment/docker/carpentry-base
-
-- name: build web carpentry image
-  shell: "docker build --force-rm -t gabrielfalcao/carpentry-web:{{ carpentry_version }} ."
-  when: carpentry_build_images
-  args:
-    chdir: /vagrant/deployment/docker/carpentry-web
-
-- name: start cassandra
-  service: name=cassandra state=started
-  tags:
-    - carpentry
-    - cassandra
-    - upstart
-
-- name: prepare cassandra keyspace for CARPENTRY
-  shell: "docker run --rm --net=host -v /srv/carpentry/static:/srv/carpentry/static -e CARPENTRY_CASSANDRA_HOST=localhost -e CARPENTRY_REDIS_HOST=localhost gabrielfalcao/carpentry-web:{{ carpentry_version }} carpentry-web-boot.sh"
-  when: carpentry_recreate_keyspace
 
 - name: restart carpentry-web
   service: name=carpentry-web state=restarted

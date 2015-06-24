@@ -1,0 +1,72 @@
+- name: install docker dependencies
+  apt: pkg={{ item }} state=present
+  when: carpentry_docker_deployment
+  with_items:
+    - linux-image-extra-virtual
+  tags:
+    - carpentry
+
+- name: ensure docker is clean
+  shell: docker kill -s 9 $(docker ps -qa)
+  ignore_errors: yes
+  when: carpentry_docker_deployment
+  tags:
+    - carpentry
+    - docker
+
+
+- name: install the docker-based carpentry-web upstart
+  template: src=carpentry-web-docker.upstart.j2
+    dest=/etc/init/carpentry-web.conf
+    owner=root group=root mode=644
+  when: carpentry_docker_deployment
+  tags:
+    - carpentry
+    - carpentry-workers
+    - upstart
+
+- name: install the docker-based carpentry-workers upstart
+  template: src=carpentry-workers-docker.upstart.j2
+    dest=/etc/init/carpentry-workers-{{ item }}.conf
+    owner=root group=root mode=644
+  when: carpentry_docker_deployment
+  with_sequence: count="{{ carpentry_worker_processes }}"
+
+  tags:
+    - carpentry
+    - carpentry-workers
+    - upstart
+
+- name: pull dependency docker images
+  shell: docker pull {{ item }}
+  when: carpentry_build_images
+  with_items:
+    - "gabrielfalcao/carpentry-web:{{ carpentry_version }}"
+  tags:
+    - carpentry
+    - carpentry-web
+    - carpentry-workers
+    - docker
+
+- name: docker build -t gabrielfalcao/carpentry-base
+  shell: "docker build --force-rm -t gabrielfalcao/carpentry-base:{{ carpentry_version }} ."
+  when: carpentry_build_images
+  args:
+    chdir: /vagrant/deployment/docker/carpentry-base
+
+- name: build web carpentry image
+  shell: "docker build --force-rm -t gabrielfalcao/carpentry-web:{{ carpentry_version }} ."
+  when: carpentry_build_images
+  args:
+    chdir: /vagrant/deployment/docker/carpentry-web
+
+- name: start cassandra
+  service: name=cassandra state=started
+  tags:
+    - carpentry
+    - cassandra
+    - upstart
+
+- name: prepare cassandra keyspace for CARPENTRY
+  shell: "docker run --rm --net=host -v /srv/carpentry/static:/srv/carpentry/static -e CARPENTRY_CASSANDRA_HOST=localhost -e CARPENTRY_REDIS_HOST=localhost gabrielfalcao/carpentry-web:{{ carpentry_version }} carpentry-web-boot.sh"
+  when: carpentry_recreate_keyspace

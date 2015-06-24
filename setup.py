@@ -51,7 +51,7 @@ requirements = [
 ]
 
 setup(
-    name='carpentry',
+    name='carpentry-ci',
     version='0.0.31',
     description='continuous integration for the people',
     entry_points={

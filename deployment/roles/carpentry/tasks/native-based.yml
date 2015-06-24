@@ -1,0 +1,46 @@
+- name: prepare native virtual env
+  pip: requirements=/srv/carpentry/src/requirements.txt
+       virtualenv=/srv/carpentry/venv
+  when: not carpentry_docker_deployment
+
+- name: install gunicorn
+  pip: name=gunicorn
+       virtualenv=/srv/carpentry/venv
+  when: not carpentry_docker_deployment
+
+- name: install carpentry from pypi
+  pip: name=carpentry-ci version="{{ carpentry_version }}"
+       virtualenv=/srv/carpentry/venv
+  when: not carpentry_docker_deployment
+
+- name: place carpentry configuration file
+  template: src=carpentry-etc.yml
+    dest=/etc/carpentry.yml
+    owner=root group=root mode=644
+  when: not carpentry_docker_deployment
+  tags:
+    - carpentry
+    - cassandra
+    - upstart
+
+- name: install the gunicorn-based carpentry-web upstart
+  template: src=carpentry-web-native.upstart.j2
+    dest=/etc/init/carpentry-web.conf
+    owner=root group=root mode=644
+  when: not carpentry_docker_deployment
+  tags:
+    - carpentry
+    - carpentry-workers
+    - upstart
+
+- name: install the native python carpentry-workers upstart
+  template: src=carpentry-workers-native.upstart.j2
+    dest=/etc/init/carpentry-workers-{{ item }}.conf
+    owner=root group=root mode=644
+  when: not carpentry_docker_deployment
+  with_sequence: count="{{ carpentry_worker_processes }}"
+
+  tags:
+    - carpentry
+    - carpentry-workers
+    - upstart
