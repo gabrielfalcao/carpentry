@@ -26,4 +26,8 @@ if [ "$current_version" == "$newversion" ] || [ $sure == "yes" ]; then
         git commit -am "New release: $newversion"
     fi;
     python setup.py sdist register upload
+    git commit -am "Release $newversion"
+    git tag $newversion
+    echo "Please remember to git push --tags"
+
 fi;
