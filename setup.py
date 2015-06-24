@@ -30,23 +30,23 @@ def read_version():
 
 
 requirements = [
-    'ansi2html==1.1.0',
-    'ansiconv==1.0.0',
-    'bcrypt==1.1.1',
-    'blist==1.3.6',
-    'cffi==1.1.2',
-    'pycrypto==2.6',
-    'GitHub-Flask==2.0.1',
-    'lineup==0.1.6',
-    'milieu==0.1.5',
-    'plant==0.1.1',
-    'pyOpenSSL==0.15.1',
-    'python-dateutil==2.4.2',
-    'redis==2.8.0',
-    'requests==2.5.1',
-    'tumbler==0.0.19',
-    'coloredlogs',
-    'cqlengine==0.21.0'
+    'ansi2html>=1.1.0',
+    'ansiconv>=1.0.0',
+    'bcrypt>=1.1.1',
+    'blist>=1.3.6',
+    'cffi>=1.1.2',
+    'coloredlogs>=1.0.1',
+    'cqlengine>=0.21.0',
+    'GitHub-Flask>=2.0.1',
+    'lineup>=0.1.4',
+    'milieu>=0.1.5',
+    'plant>=0.1.1',
+    'pycrypto>=2.6',
+    'pyOpenSSL>=0.15.1',
+    'python-dateutil>=2.4.2',
+    'redis>=2.10.3',
+    'requests>=2.5.1',
+    'tumbler>=0.0.19',
 ]
 
 
