@@ -5,15 +5,18 @@
 from __future__ import unicode_literals
 
 import io
+import time
 import mimetypes
 import logging
 
 from plant import Node
-
-from jaci.api.v1 import web
-from jaci import conf
-
 from flask import Response, render_template, request
+
+from jaci import conf
+from jaci.api.v1 import web
+from jaci.version import version as jaci_version
+
+
 this_node = Node(__file__).dir
 mimedb = mimetypes.MimeTypes()
 
@@ -22,6 +25,7 @@ mimedb = mimetypes.MimeTypes()
 def index():
     logging.info("serving index")
     return render_template("index.html", **{
+        'cache_flag': '-'.join([jaci_version, str(time.time())]),
         'absolute_url': conf.get_full_url,
         'user_token': request.cookies.get('jaci_token') or ''
     })

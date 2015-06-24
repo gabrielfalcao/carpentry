@@ -4,6 +4,7 @@ angular.module('JaciApp', [
     'hljs',
     'cfp.hotkeys',
     'cgNotify',
+    'angular-loading-bar',
     'luegg.directives',
     'JaciApp.Common',
     'JaciApp.Index',
@@ -15,7 +16,9 @@ angular.module('JaciApp', [
     'JaciApp.ShowBuilder',
     'JaciApp.UserProfile',
     'JaciApp.Splash'
-]).config(function ($stateProvider, $urlRouterProvider) {
+]).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
+    cfpLoadingBarProvider.includeBar = false;
+    cfpLoadingBarProvider.latencyThreshold = 10;
     $stateProvider.state('index', {
         url: '/',
         templateUrl: '/assets/js/templates/index.html',
@@ -57,7 +60,28 @@ angular.module('JaciApp', [
         templateUrl: '/assets/js/templates/404.html'
     });
     $urlRouterProvider.otherwise('/splash');
-}).run(function ($rootScope, $state, $templateCache, $http, notify, hotkeys) {
+}).run(function ($rootScope, $state, $templateCache, $http, notify, $location, hotkeys) {
+    $rootScope.resetPollers = function(){
+        clearInterval($rootScope.indexPoller);
+        clearInterval($rootScope.builderPoller);
+        clearInterval($rootScope.buildPoller);
+
+        $rootScope.indexPoller = 0;
+        $rootScope.builderPoller = 0;
+        $rootScope.buildPoller = 0;
+    };
+    $rootScope.go = function (path) {
+        $location.path(path);
+    };
+    $rootScope.$on('$routeChangeStart', function(event, next, current) {
+        if (typeof(current) !== 'undefined'){
+            $templateCache.remove(current.templateUrl);
+        }
+    });
+    $rootScope.$on('$viewContentLoaded', function() {
+        $templateCache.removeAll();
+    });
+
     $http.defaults.headers.common.Authorization = 'Bearer: ' + window.JACI_TOKEN;
     $rootScope.hasToken = ((window.JACI_TOKEN + "").length > 0);
     $rootScope.isAuthenticated = $rootScope.hasToken;
@@ -120,6 +144,17 @@ angular.module('JaciApp', [
 
     };
 
+    $rootScope.logout = function(){
+        function do_logout() {
+            location.href='/logout';
+        }
+        $http.get("/logout").success(do_logout).error(do_logout);
+        do_logout();
+    }
+
+    $rootScope.mainPage = function(){
+        location.href='/';
+    }
 
     $rootScope.refresh = function(){
         $http.get("/api/builders").
@@ -130,10 +165,6 @@ angular.module('JaciApp', [
     };
 
     $rootScope.refresh();
-
-    $rootScope.go = function (path) {
-        $location.path(path);
-    };
     hotkeys.add({
         combo: 'n',
         description: 'create a new builder',
@@ -163,6 +194,20 @@ angular.module('JaciApp', [
         }
     });
     hotkeys.add({
+        combo: 'r',
+        description: 'stop http requests',
+        callback: function () {
+            $rootScope.resetPollers();
+        }
+    });
+    hotkeys.add({
+        combo: 'R',
+        description: 'refresh browser',
+        callback: function () {
+            location.href = "/?refresh=" + (new Date()).getTime();
+        }
+    });
+    hotkeys.add({
         combo: 'esc',
         description: 'previous screen',
         callback: function () {
@@ -171,7 +216,7 @@ angular.module('JaciApp', [
                 $rootScope.go(name);
                 $rootScope.stateStack.pop();
             } else {
-                $rootScope.go('index');
+                $rootScope.go('/');
             }
             // console.log('state stack', $rootScope.stateStack);
         }

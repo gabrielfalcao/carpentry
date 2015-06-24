@@ -161,7 +161,7 @@ class Build(Model):
     stdout = columns.Text()
     stderr = columns.Text()
     author_name = columns.Text()
-    author_email = columns.Text()
+    author_email = columns.Text(index=True)
     commit = columns.Text()
     code = columns.Integer()
     status = columns.Text(default='ready')

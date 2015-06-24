@@ -2,6 +2,7 @@ angular.module('JaciApp.EditBuilder', ['JaciApp.Common']).controller('EditBuilde
 
     var builderId = $stateParams.builder_id;
     $scope.builder = $rootScope.builders[builderId];
+    $rootScope.resetPollers();
 
     $scope.loadBuilder = function(){
         $http.get('/api/builder/' + builderId)

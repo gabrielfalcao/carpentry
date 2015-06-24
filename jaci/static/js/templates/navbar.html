@@ -2,31 +2,29 @@
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#jaci-navbar">
         <span class="sr-only">Toggle navigation</span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#/">
+      <a class="navbar-brand" href="/">
+        <strong style="font-size: 24px">JACI</strong>.io
 
-
-        <strong style="font-size: 24px">JACI </strong>
-        <i class="fa fa-lg fa-cogs"></i>
-        <span>Continuous Integration for the people</span></a>
+      </a>
     </div>
 
     <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+    <div class="collapse navbar-collapse" id="jaci-navbar">
       <ul class="nav navbar-nav navbar-right">
         <li><a ng-href="#/">Dashboard</a></li>
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Builders <span class="caret"></span></a>
           <ul class="dropdown-menu" role="menu">
-            <li ng-repeat="builder in builders"><a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></li>
             <li><a ng-href="#new-builder">
-
-New Builder</a></li>
+              <i class="fa fa-file-o"></i> New Builder</a>
+            </li>
+            <li ng-repeat="builder in builders"><a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></li>
           </ul>
         </li>
 

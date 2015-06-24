@@ -42,10 +42,11 @@ angular.module('JaciApp.ShowBuilder', ['JaciApp.Common']).controller('ShowBuilde
     };
     var limit = 720;
     var counter = 0;
-    var poller = setInterval(function(){
+    $rootScope.resetPollers();
+    $rootScope.builderPoller = setInterval(function(){
         counter++;
         if (counter > 720) {
-            clearInterval(poller);
+            clearInterval($rootScope.builderPoller);
         }
         refresh();
     }, 1000);

@@ -57,10 +57,12 @@ angular.module('JaciApp.Build', ['JaciApp.Common']).controller('BuildController'
     // $scope.refresh = refresh;
     var limit = 720;
     var counter = 0;
-    var poller = setInterval(function(){
+
+    $rootScope.resetPollers();
+    $rootScope.buildPoller = setInterval(function(){
         counter++;
         if (counter > 720) {
-            clearInterval(poller);
+            clearInterval($rootScope.buildPoller);
         }
         get_build();
     }, 500);

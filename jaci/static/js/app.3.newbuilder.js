@@ -2,6 +2,7 @@ angular.module('JaciApp.NewBuilder', ['JaciApp.Common']).controller('NewBuilderC
     // 'name': 'Device Management [unit tests]',
     // 'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
     // 'build_instructions': 'make test',
+    $rootScope.resetPollers();
 
     $scope.builder = {
         'generate_ssh_keys': true,
