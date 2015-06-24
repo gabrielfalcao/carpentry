@@ -21,6 +21,7 @@ RUN apt-get --yes --no-install-recommends install \
     libffi-dev \
     libssl-dev \
     openssh-client \
+    libssh-dev \
     libgnutls-dev \
     libsqlite3-dev \
     python-pip \

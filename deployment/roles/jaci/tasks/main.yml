@@ -33,6 +33,7 @@
     - libffi-dev
     - libssl-dev
     - libssh-dev
+    - openssh-client
     - libgnutls-dev
     - libsqlite3-dev
     - python-pip
