@@ -1,45 +1,69 @@
-# CARPENTRY
+# Carpentry.io
 
-Yet another continuous integration server
-
-
-## about
-
-* written in python with gevent
-* Tests run inside of docker containers
-* link containers to get mysql, redis, rabbitmq support
-* sleek ui based on bootstrap + angularjs
-* socket.io based live build output
-* github integration
+Continuous Integration for the People
 
 
+## Introduction
 
-## ethymology
+In 2015 humanity has achieved great advances in technology, the tools
+for building software are becoming easier to use.  Projects like
+[python requests](http://python-requests.org), grunt, gulp, flask,
+they are all open source and easy to use.
 
-carpentry is the tupi guarani (native brazilian) goddess of the moon
+Carpentry was born out of the motivation of creating a stable
+continuous integration server, and that it made very easy to set up a
+build within minutes. It should also automate its own deployment and
+help anyone in the world have a simple and functional CI server with
+almost no effort.
 
 
-## icon
+## Project status
 
-https://thenounproject.com/term/no/27042/
+The project is in alpha phase, currently deployed to carpentry.io for
+private test only.
 
-sleep by Gustav Salomonsson from the Noun Project
+More information and documentation coming soon.
 
 
-# License
+## Running it locally
 
-    <CARPENTRY - Continous Integration For People>
-    Copyright (C) <2015>  Gabriel Falcão <gabriel@carpentry.io>
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+1. You will need a cassandra instance or cluster running
+2. Also a redis instance available for the workers :+1:
+3. Have bower installed
+4. create a virtual env
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+### 1. run the functional tests to ensure that the system meets all the dependencies
+
+```bash
+make dependencies
+pip install agile
+make test
+```
+
+### 2. clear the db, create a local keyspace
+
+```bash
+make db
+```
+
+### 3. install assets for the web frontend
+
+```bash
+make clean
+bower install
+```
+
+### 4. run the web server
+
+```bash
+make run
+```
+
+### 5. run an instance of workers
+
+*(pro tip: if you run multiple workers in your machine your builds will run faster)*
+```bash
+make workers
+```
