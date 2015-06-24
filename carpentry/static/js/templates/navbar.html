@@ -1,0 +1,45 @@
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#carpentry-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="/">
+        <strong style="font-size: 24px">CARPENTRY</strong>.io
+
+      </a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="carpentry-navbar">
+      <ul class="nav navbar-nav navbar-right">
+        <li><a ng-href="#/">Dashboard</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Builders <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a ng-href="#new-builder">
+              <i class="fa fa-file-o"></i> New Builder</a>
+            </li>
+            <li ng-repeat="builder in builders"><a ng-href="#builder/{{builder.id}}">{{ builder.name }}</a></li>
+          </ul>
+        </li>
+
+        <li><a ng-href="#preferences">Preferences</a></li>
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ user.name }}
+            <img ng-src="{{ user.avatar_url }}" class="ng-cloak" width="24" height="24"/>
+            <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a ng-href="#profile">Profile</a></li>
+            <li class="divider"></li>
+            <li><a href="/logout">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>

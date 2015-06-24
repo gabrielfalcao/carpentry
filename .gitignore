@@ -9,6 +9,6 @@ pip-delete-this-directory.txt
 .*.#*
 builds.db
 .vagrant/
-jaci.log
+carpentry.log
 ./sandbox
-jaci.egg*
+carpentry.egg*

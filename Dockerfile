@@ -30,16 +30,16 @@ RUN pip install virtualenv \
 ENV WORKERS 1
 
 RUN adduser --quiet --system --uid 1000 --group --disabled-login \
-  --home /srv/jaci jaci
+  --home /srv/carpentry carpentry
 
-WORKDIR /srv/jaci
+WORKDIR /srv/carpentry
 
 RUN apt-get update \
   && apt-get --yes --no-install-recommends install \
   build-essential libevent-dev libffi-dev openjdk-7-jre openjdk-7-jdk nginx \
   && rm -rf /var/lib/apt/lists/*
 
-ENV PYTHONPATH /srv/jaci
+ENV PYTHONPATH /srv/carpentry
 ADD requirements.txt /tmp/
 
 # development.txt includes requirements.txt
@@ -48,6 +48,6 @@ RUN pip install -r /tmp/requirements.txt
 # uwsgi
 RUN pip install uwsgi
 
-ADD . /srv/jaci
+ADD . /srv/carpentry
 
-USER jaci
+USER carpentry

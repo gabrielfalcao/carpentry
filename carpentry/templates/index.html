@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html ng-app="CarpentryApp" ng-controller="CarpentryMainCtrl">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Continuous integration for the people">
+    <meta name="author" content="Gabriel Falcao">
+
+    <title>Carpentry</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.4/yeti/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link href="{{ absolute_url('assets/vendor/angular-notify/angular-notify.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <link href="{{ absolute_url('assets/vendor/angular-hotkeys/build/hotkeys.min.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <link href="{{ absolute_url('assets/vendor/angular-loading-bar/build/loading-bar.min.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <link href="{{ absolute_url('assets/css/fullscreen.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <link href="{{ absolute_url('assets/css/carpentry.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <link href="{{ absolute_url('assets/css/ansi.css') }}?_carpentry_asset_cache={{ cache_flag }}" rel="stylesheet">
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/jquery/dist/jquery.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/bootstrap/dist/js/bootstrap.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/highlightjs/highlight.pack.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular/angular.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-ui-router/release/angular-ui-router.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-cookies/angular-cookies.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-hotkeys/build/hotkeys.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-notify/angular-notify.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-scroll-glue/src/scrollglue.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-highlightjs/build/angular-highlightjs.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript" src="{{ absolute_url('assets/vendor/angular-loading-bar/build/loading-bar.min.js') }}?_carpentry_asset_cache={{ cache_flag }}"></script>
+    <script type="text/javascript">
+    (function(container){
+      hljs.initHighlightingOnLoad();
+      container.CARPENTRY_TOKEN = "{{ user_token }}";
+    })(window);
+    </script>
+  </head>
+{% block body %}
+  <body>
+    <div ui-view></div>
+    <script src="/app.js"></script>
+  </body>
+{% endblock %}
+</html>

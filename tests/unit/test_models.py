@@ -2,10 +2,10 @@
 # # -*- coding: utf-8 -*-
 # #
 # from mock import patch
-# from jaci.models import User
+# from carpentry.models import User
 
 
-# @patch('jaci.models.Post')
+# @patch('carpentry.models.Post')
 # def test_create_post(Post):
 #     ("User.create_post should create a post with the correct user id")
 

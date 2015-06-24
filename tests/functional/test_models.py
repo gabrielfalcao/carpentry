@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 import uuid
-from jaci.models import Builder
+from carpentry.models import Builder
 
 from .helpers import safe_db
 

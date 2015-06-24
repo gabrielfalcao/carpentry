@@ -25,7 +25,7 @@ class VersionFinder(ast.NodeVisitor):
 
 def read_version():
     finder = VersionFinder()
-    finder.visit(ast.parse(local_file('jaci', 'version.py')))
+    finder.visit(ast.parse(local_file('carpentry', 'version.py')))
     return finder.version
 
 
@@ -51,19 +51,19 @@ requirements = [
 ]
 
 setup(
-    name='jaci',
+    name='carpentry',
     version='0.0.31',
     description='continuous integration for the people',
     entry_points={
-        'console_scripts': ['jaci = jaci.cli:main'],
+        'console_scripts': ['carpentry = carpentry.cli:main'],
     },
     author='Gabriel Falcao',
     author_email='gabriel@nacaolivre.org',
-    url='http://falcao.it/jaci',
+    url='http://falcao.it/carpentry',
     packages=find_packages(exclude=['*tests*']),
-    # package_data={'jaci': [
-    #     'recursive-include jaci/templates *'
-    #     'recursive-include jaci/static *'
+    # package_data={'carpentry': [
+    #     'recursive-include carpentry/templates *'
+    #     'recursive-include carpentry/static *'
     # ]},
     include_package_data=True,
     install_requires=requirements,

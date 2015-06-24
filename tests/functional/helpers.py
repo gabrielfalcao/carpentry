@@ -8,17 +8,17 @@ from sure import scenario
 from tumbler.core import Web
 from cqlengine import connection
 from cqlengine.management import sync_table, drop_table, create_keyspace
-from jaci.api.v1 import get_models
-from jaci.models import User
-from jaci import conf
+from carpentry.api.v1 import get_models
+from carpentry.models import User
+from carpentry import conf
 
 
 def prepare_db(context):
-    # CREATE KEYSPACE jaci
+    # CREATE KEYSPACE carpentry
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-    connection.setup(conf.cassandra_hosts, default_keyspace='jaci')
-    create_keyspace('jaci', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
+    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
+    create_keyspace('carpentry', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
 
     for t in get_models():
         try:
@@ -31,11 +31,11 @@ def prepare_db(context):
 def prepare_http_client(context):
     context.web = Web()
     context.http = context.web.flask_app.test_client()
-    context.user = User(id=uuid.uuid1(), jaci_token=uuid.uuid4())
+    context.user = User(id=uuid.uuid1(), carpentry_token=uuid.uuid4())
     context.user.save()
     context.headers = {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer: {0}'.format(context.user.jaci_token)
+        'Authorization': 'Bearer: {0}'.format(context.user.carpentry_token)
     }
 
 

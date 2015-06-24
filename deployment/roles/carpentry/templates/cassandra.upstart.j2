@@ -1,0 +1,24 @@
+description     "Cassandra Master"
+
+start on (started networking)
+
+respawn
+respawn limit 5 60
+
+pre-stop exec docker stop carpentrycassandra
+pre-stop exec sleep 2
+pre-stop exec docker kill -s 9 carpentrycassandra
+pre-stop exec sleep 3
+pre-stop exec docker rm -f carpentrycassandra
+
+exec docker run \
+        --rm \
+        --name carpentrycassandra \
+        -e CASSANDRA_LISTEN_ADDRESS=localhost \
+        --net=host \
+        -p 9160 \
+        -p 9042 \
+        -u root \
+        -v /srv/carpentry/data:/var/lib/cassandra/data \
+        -v /var/log \
+        cassandra

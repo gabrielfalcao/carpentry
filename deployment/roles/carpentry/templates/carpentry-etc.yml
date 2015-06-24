@@ -1,0 +1,12 @@
+full_server_url: "{{ full_server_url }}"
+http_host: "{{ carpentry_http_hostname }}"
+http_port: {{ carpentry_http_port }}
+redis_host: 'localhost'
+redis_port: 6379
+redis_db: 0
+workdir: /srv/carpentry/
+github_client_id: "{{ carpentry_github_client_id }}"
+github_client_secret: "{{ carpentry_github_client_secret }}"
+cassandra_hosts:
+  - 127.0.0.1
+  - 0.0.0.0
