@@ -1,7 +1,6 @@
 angular.module('CarpentryApp', [
     'ngCookies',
     'ui.router',
-    'hljs',
     'cfp.hotkeys',
     'cgNotify',
     'angular-loading-bar',
@@ -235,7 +234,4 @@ angular.module('CarpentryApp', [
     $rootScope.$on('$viewContentLoaded', function () {
         $templateCache.removeAll();
     });
-    $('pre code').each(function (i, block) {
-        hljs.highlightBlock(block);
-     });
 });
