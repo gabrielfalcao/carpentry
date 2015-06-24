@@ -6,6 +6,7 @@ import os
 import re
 import json
 import logging
+import traceback
 import io
 import requests
 import shutil
@@ -240,8 +241,15 @@ class LocalRetrieve(Step):
         b.save()
 
         git_show = '/usr/bin/env git show HEAD'
-        git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
-        b.stdout += force_unicode(stdout)
+        try:
+            git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
+            b.stdout += force_unicode(git_show_stdout)
+
+        except CalledProcessError as e:
+            b.stdout += b'Failed to retrieve commit information\n'
+            b.stdout += b'-----------------\n'
+            b.stdout += force_unicode(traceback.format_exc(e))
+
         b.save()
 
         author = AUTHOR_REGEX.search(git_show_stdout)
