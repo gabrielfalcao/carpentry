@@ -141,13 +141,6 @@
   tags:
     - carpentry
 
-- name: pull cassandra image
-  shell: docker pull cassandra
-  tags:
-    - carpentry
-    - cassandra
-    - docker
-
 - name: restart carpentry-web
   service: name=carpentry-web state=restarted
   tags:

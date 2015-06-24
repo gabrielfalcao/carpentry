@@ -43,3 +43,8 @@
     - carpentry
     - carpentry-workers
     - upstart
+
+
+- name: prepare cassandra keyspace for CARPENTRY
+  shell: /srv/carpentry/venv/bin/carpentry setup
+  when: carpentry_recreate_keyspace

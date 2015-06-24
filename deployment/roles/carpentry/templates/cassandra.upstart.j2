@@ -13,9 +13,8 @@ pre-stop script
          docker rm -f carpentrycassandra
 end script
 
-exec docker run \
+exec docker pull && docker run \
         --rm \
-        --name carpentrycassandra \
         -e CASSANDRA_LISTEN_ADDRESS=localhost \
         --net=host \
         -p 9160 \
