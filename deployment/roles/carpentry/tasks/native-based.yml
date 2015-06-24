@@ -27,7 +27,6 @@
   template: src=carpentry-web-native.upstart.j2
     dest=/etc/init/carpentry-web.conf
     owner=root group=root mode=644
-  when: not carpentry_docker_deployment
   tags:
     - carpentry
     - carpentry-workers

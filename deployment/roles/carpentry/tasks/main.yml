@@ -129,6 +129,13 @@
     - cassandra
     - upstart
 
+- name: ensure cassandra is running
+  service: name=cassandra state=started
+  tags:
+    - carpentry
+    - cassandra
+    - upstart
+
 - name: update docker defaults file
   template: src=docker.default.j2 dest=/etc/default/docker
   tags:
