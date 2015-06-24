@@ -5,11 +5,13 @@ start on (started networking)
 respawn
 respawn limit 5 60
 
-pre-stop exec docker stop carpentrycassandra
-pre-stop exec sleep 2
-pre-stop exec docker kill -s 9 carpentrycassandra
-pre-stop exec sleep 3
-pre-stop exec docker rm -f carpentrycassandra
+pre-stop script
+         exec docker stop carpentrycassandra && \
+         sleep 2 && \
+         docker kill -s 9 carpentrycassandra && \
+         sleep 3 && \
+         docker rm -f carpentrycassandra
+end script
 
 exec docker run \
         --rm \
