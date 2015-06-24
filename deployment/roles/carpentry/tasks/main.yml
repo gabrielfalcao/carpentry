@@ -26,12 +26,20 @@
     - libffi-dev
     - libssl-dev
     - libssh-dev
+    - software-properties-common
+    - python-software-properties
+    - build-essential
+    - time
+    - libxml2-dev
+    - libxslt1-dev
+    - libevent-dev
     - openssh-client
     - libgnutls-dev
     - libsqlite3-dev
     - python-pip
     - python-virtualenv
     - time
+    - build-essential
     - libxml2-dev
     - libxslt1-dev
     - git-core
