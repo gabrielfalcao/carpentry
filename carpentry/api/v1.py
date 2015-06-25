@@ -228,11 +228,11 @@ def trigger_builder_hook(id):
     user = models.User.get(id=item.creator_user_id)
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}
-    head_commit = request_data['head_commit']
-    commit_id = head_commit['id']
-    commiter = head_commit['commiter']
-    author_name = commiter['name']
-    author_email = commiter['email']
+    head_commit = request_data.get('head_commit', {})
+    commit_id = head_commit.get('id', 'master')
+    commiter = head_commit.get('commiter', {})
+    author_name = commiter.get('name', user.name)
+    author_email = commiter.get('email', user.email)
 
     build = item.trigger(
         user,

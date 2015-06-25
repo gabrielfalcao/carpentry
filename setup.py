@@ -46,7 +46,7 @@ requirements = [
     'pyOpenSSL>=0.15.1',
     'python-dateutil>=2.4.2',
     'redis>=2.10.3',
-    'requests>=2.5.1',
+    'requests>=2.7.0',
     'tumbler>=0.0.20',
 ]
 
