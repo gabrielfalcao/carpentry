@@ -60,6 +60,12 @@ angular.module('CarpentryApp', [
     });
     $urlRouterProvider.otherwise('/splash');
 }).run(function ($rootScope, $state, $templateCache, $http, notify, $location, hotkeys) {
+    var appLocation = /[#](.*)/.exec(location.href);
+    if (appLocation) {
+        $rootScope.originalUrl = appLocation[1];
+    } else {
+        $rootScope.originalUrl = "/";
+    }
     $rootScope.resetPollers = function(){
         clearInterval($rootScope.indexPoller);
         clearInterval($rootScope.builderPoller);
@@ -96,7 +102,7 @@ angular.module('CarpentryApp', [
             $rootScope.user = data;
             $rootScope.isAuthenticated = true;
             console.log("GitHub Metadata", data);
-            $rootScope.go('/');
+            $rootScope.go($rootScope.originalUrl);
         }).error(function(data, status){
             location.href = "/logout";
         });
