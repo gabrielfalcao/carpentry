@@ -229,14 +229,18 @@ def trigger_builder_hook(id):
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}
     head_commit = request_data.get('head_commit', {})
-    commit_id = head_commit.get('id', 'master')
+    commit_id = head_commit.get('id', None)
     commiter = head_commit.get('commiter', {})
     author_name = commiter.get('name', user.name)
     author_email = commiter.get('email', user.email)
 
+    repo = request_data.get('repository', {})
+    branch = repo.get('default_branch', None)
+
     build = item.trigger(
         user,
-        branch=commit_id,
+        branch=branch or 'master',
+        commit=commit_id,
         author_name=author_name,
         author_email=author_email,
         github_webhook_data=request.data
