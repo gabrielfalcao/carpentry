@@ -9,7 +9,7 @@ from tumbler.core import Web
 from cqlengine import connection
 from cqlengine.management import sync_table, drop_table, create_keyspace
 from carpentry.api.v1 import get_models
-from carpentry.models import User
+from carpentry.models import User, get_pipeline
 from carpentry import conf
 
 
@@ -40,6 +40,8 @@ def prepare_http_client(context):
 
 
 def clean_db(context):
+    redis = get_pipeline().get_backend().redis
+    redis.flushall()
     for t in get_models():
         sync_table(t)
 

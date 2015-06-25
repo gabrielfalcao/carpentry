@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 import re
+import json
 import redis
 import uuid
 import requests
@@ -12,6 +13,7 @@ from lineup import JSONRedisBackend
 
 from cqlengine import columns
 from cqlengine.models import Model
+from carpentry.util import render_string
 from carpentry import conf
 
 logger = logging.getLogger('carpentry')
@@ -39,6 +41,14 @@ STATUS_MAP = {
     'preparing': 'active',
 }
 
+GITHUB_STATUS_MAP = {
+    'running': 'pending',
+    'failed': 'failure',
+    'succeeded': 'success',
+}
+
+
+GITHUB_URI_REGEX = re.compile(r'github.com[:/](?P<owner>[\w_-]+)[/](?P<name>[\w_-]+)([.]git)?')
 
 redis_pool = redis.ConnectionPool(
     host=conf.redis_host,
@@ -96,8 +106,58 @@ class Builder(Model):
     status = columns.Text(default='ready')
     branch = columns.Text(default='master')
     branch = columns.Text(default='master')
+    creator_user_id = columns.UUID()
+    github_hook_data = columns.Text()
 
-    def trigger(self, user, branch=None, author_name=None, author_email=None):
+    @classmethod
+    def determine_github_repo_from_git_uri(self, git_uri):
+        found = GITHUB_URI_REGEX.search('github.com:gabrielfalcao/sure')
+        if found:
+            return found.groupdict()
+
+        return {}
+
+    @property
+    def github_info(self):
+        return Builder.determine_github_repo_from_git_uri(self.git_uri)
+
+    def determine_github_hook_url(self):
+        path = '/api/hooks/{0}'.format(self.id)
+        return conf.get_full_url(path)
+
+    def set_github_hook(self, github_access_token):
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+        request_payload = json.dumps({
+            "name": "web",
+            "active": True,
+            "events": [
+                "push",
+                "pull_request"
+            ],
+            "config": {
+                "url": self.determine_github_hook_url(),
+                "content_type": "json"
+            }
+        })
+        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_info)
+        response = requests.post(url, data=request_payload, headers=headers)
+        self.github_hook_data = response.text
+        self.save()
+        logging.warning("when setting github hook %s %s", url, response)
+        return response.json()
+
+    @property
+    def github_hook_info(self):
+        if not self.github_hook_data:
+            msg = "Attempted to retrieve github_hook_info for builder {0}"
+            logger.warning(msg.format(self.id))
+            return {}
+
+        return json.loads(self.github_hook_data)
+
+    def trigger(self, user, branch=None, author_name=None, author_email=None, github_webhook_data=None):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
@@ -105,6 +165,8 @@ class Builder(Model):
             branch=branch or self.branch,
             author_name=author_name,
             author_email=author_email,
+            git_uri=self.git_uri,
+            github_webhook_data=github_webhook_data
         )
         pipeline = get_pipeline()
         payload = self.to_dict()
@@ -157,6 +219,7 @@ class CarpentryPreference(Model):
 class Build(Model):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     builder_id = columns.TimeUUID(required=True, index=True)
+    git_uri = columns.Text()
     branch = columns.Text(required=True)
     stdout = columns.Text()
     stderr = columns.Text()
@@ -167,6 +230,52 @@ class Build(Model):
     status = columns.Text(default='ready')
     date_created = columns.DateTime()
     date_finished = columns.DateTime()
+    github_status_data = columns.Text()
+    github_webhook_data = columns.Text()
+
+    @property
+    def url(self):
+        path = render_string('/#/builder/{builder_id}/build/{id}', model_to_dict(self))
+        return conf.get_full_url(path)
+
+    @property
+    def github_info(self):
+        return Builder.determine_github_repo_from_git_uri(self.git_uri)
+
+    @property
+    def github_status_info(self):
+        if not self.github_status_data:
+            return {}
+
+        return json.loads(self.github_status_data)
+
+    def set_github_status(self, github_access_token, status, description):
+        # options: pending, success, error, or failure
+        options = ['pending', 'success', 'error', 'failure']
+        if status not in options:
+            raise ValueError('Build.set_github_status got an invalid status: {0} our of the options {1}'.format(
+                status, '. '.join(options)
+            ))
+
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+        template_url = 'https://api.github.com/repos/{{owner}}/{{name}}/statuses/{0}'.format(self.commit)
+        url = render_string(template_url, self.github_info)
+
+        request_payload = json.dumps({
+            "state": "success",
+            "target_url": self.url,
+            "description": description,
+            "context": "continuous-integration/carpentry"
+        })
+
+        logger.info("setting github hook %s:\n%s", url, request_payload)
+        response = requests.post(url, data=request_payload, headers=headers)
+        self.github_status_data = response.text
+        self.save()
+
+        return response.json()
 
     @property
     def builder(self):
@@ -174,8 +283,12 @@ class Build(Model):
 
     def save(self):
         builder = Builder.objects.get(id=self.builder_id)
-        builder.status = self.status
-        builder.save()
+        last_builders_build = builder.get_last_build()
+
+        if last_builders_build and last_builders_build.id == self.id:
+            builder.status = self.status
+            builder.save()
+
         return super(Build, self).save()
 
     def to_dict(self):

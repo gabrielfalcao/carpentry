@@ -27,7 +27,7 @@ dependencies:
 
 db:
 	python carpentry/cli.py setup --drop --flush-redis
-	python tests/load-fixtures.py
+
 
 workers:
 	python carpentry/cli.py workers

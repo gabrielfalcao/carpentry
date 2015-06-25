@@ -6,6 +6,7 @@ import uuid
 import logging
 import inspect
 from dateutil.parser import parse as parse_datetime
+from flask import request
 from tumbler import tumbler
 from tumbler import json_response
 from Crypto.PublicKey import RSA
@@ -37,7 +38,7 @@ def get_models():
 def autodatetime(s):
     return s and parse_datetime(s) or None
 
-logger = logging.getLogger('werkzeug')
+logger = logging.getLogger('carpentry')
 
 
 def generate_ssh_key_pair(length=2048):
@@ -78,6 +79,7 @@ def create_builder(user):
         'status': any,
     })
     data['id'] = uuid.uuid1()
+    data['creator_user_id'] = user.id
     should_generate_ssh_keys = data.pop('generate_ssh_keys')
 
     if should_generate_ssh_keys:
@@ -88,6 +90,9 @@ def create_builder(user):
     try:
         builder = models.Builder.create(**data)
         logger.info('creating new builder: %s', builder.name)
+
+        hook = builder.set_github_hook(user.github_access_token)
+        logger.info('setting github hook: %s', hook)
 
         payload = builder.to_dict()
         return json_response(payload, status=200)
@@ -215,3 +220,25 @@ def create_build(user, id):
 @authenticated
 def get_user(user):
     return json_response(user.get_github_metadata(), status=200)
+
+
+@web.post('/api/hooks/<id>')
+def trigger_builder_hook(id):
+    item = models.Builder.objects.get(id=id)
+    user = models.User.get(id=item.creator_user_id)
+    logger.info('triggering build for: %s', item.git_uri)
+    request_data = request.get_json(silent=True) or {}
+    head_commit = request_data['head_commit']
+    commit_id = head_commit['id']
+    commiter = head_commit['commiter']
+    author_name = commiter['name']
+    author_email = commiter['email']
+
+    build = item.trigger(
+        user,
+        branch=commit_id,
+        author_name=author_name,
+        author_email=author_email,
+        github_webhook_data=request.data
+    )
+    return json_response(build.to_dict())

@@ -16,8 +16,11 @@ from carpentry import conf
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
+from docker.client import Client
+from docker.utils import kwargs_from_env
+
 from carpentry.util import render_string
-from carpentry.models import Build
+from carpentry.models import Build, GITHUB_STATUS_MAP
 # import unicodedata
 
 
@@ -70,10 +73,18 @@ def get_build_from_instructions(instructions):
     return Build.objects.get(id=instructions['id'])
 
 
-def set_build_status(instructions, status):
+def set_build_status(instructions, status, description=None):
     build = get_build_from_instructions(instructions)
     build.status = status
     build.save()
+
+    github_status = GITHUB_STATUS_MAP.get(status, None)
+    if not github_status:
+        logging.info("Skipping set github build status to %s", status)
+        return
+
+    github_access_token = instructions['user']['github_access_token']
+    build.set_github_status(github_access_token, github_status, description)
 
 
 class PrepareSSHKey(Step):
@@ -94,8 +105,8 @@ class PrepareSSHKey(Step):
         b = Build.objects.get(id=instructions['id'])
         b.stdout = b.stdout or 'preparing ssh key...\n'
         b.save()
-
-        set_build_status(instructions, 'running')
+        now = datetime.utcnow()
+        set_build_status(instructions, 'running', 'carpentry build started at {0} UTC'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
         slug = instructions['slug']
         workdir = conf.build_node.join(slug)
 
@@ -363,6 +374,7 @@ class LocalBuild(Step):
         b.code = int(exit_code)
         b.date_finished = datetime.utcnow()
         b.save()
+        now = datetime.utcnow()
 
         if b.code == 0:
             status = 'succeeded'
@@ -372,5 +384,18 @@ class LocalBuild(Step):
         instructions['status'] = status
         self.log(render_string("build of {name} {status}", instructions))
 
-        set_build_status(instructions, status)
+        msg = 'carpentry build {0} at {1} UTC'.format(
+            status,
+            now.strftime('%Y/%m/%d %H:%M:%S')
+        )
+        set_build_status(instructions, status, msg)
+
+        self.produce(instructions)
+
+
+class CreateDockerImage(Step):
+    def consume(self, instructions):
+        kwargs = kwargs_from_env()
+        kwargs['tls'].assert_hostname = False
+        docker = Client(**kwargs)
         self.produce(instructions)

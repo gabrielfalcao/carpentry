@@ -33,15 +33,17 @@ def test_create_builder(context):
     builder_id = data.pop('id', None)
     data.should.equal({
         u'branch': u'master',
-         u'css_status': u'success',
-         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
-         u'id_rsa_private': u'the private key',
-         u'id_rsa_public': u'the public key',
-         u'last_build': None,
-         u'name': u'Device Management [unit tests]',
-         u'shell_script': u'make test',
-         u'slug': u'devicemanagementunittests',
-         u'status': u'ready'
+        u'css_status': u'success',
+        u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
+        u'id_rsa_private': u'the private key',
+        u'id_rsa_public': u'the public key',
+        u'last_build': None,
+        u'name': u'Device Management [unit tests]',
+        u'shell_script': u'make test',
+        u'slug': u'devicemanagementunittests',
+        u'status': u'ready',
+        u'github_hook_data': None,
+        u'creator_user_id': unicode(context.user.id),
     })
     builder_id.should_not.be.none
 
@@ -150,7 +152,6 @@ def test_edit_builder(context):
         shell_script='make test',
     )
 
-
     # And I PUT on /api/builders
     response = context.http.put(
         '/api/builder/{0}'.format(bd1.id),
@@ -178,7 +179,9 @@ def test_edit_builder(context):
         'name': u'Device Management [unit tests]',
         'shell_script': u'make test',
         'slug': u'devicemanagementunittests',
-        'status': u'ready'
+        'status': u'ready',
+        'github_hook_data': None,
+        'creator_user_id': None
     })
     builder_id.should_not.be.none
 
@@ -208,6 +211,7 @@ def test_delete_builder(context):
         name='Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         shell_script='make test',
+        creator_user_id=context.user.id
     )
 
     # And I DELETE to /api/builders
@@ -232,7 +236,9 @@ def test_delete_builder(context):
         u'name': u'Device Management [unit tests]',
         u'shell_script': u'make test',
         u'slug': u'devicemanagementunittests',
-        u'status': u'ready'
+        u'status': u'ready',
+        'github_hook_data': None,
+        'creator_user_id': unicode(context.user.id)
     })
     builder_id.should_not.be.none
 
@@ -284,7 +290,8 @@ def test_create_build_instance_from_builder(context):
         u'date_finished': None,
         u'status': u'ready',
         u'stderr': None,
-        u'stdout': None
+        u'stdout': None,
+        u'github_status_data': None
     })
     build_id.should_not.be.none
     date_created.should_not.be.none
