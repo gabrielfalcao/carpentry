@@ -45,7 +45,7 @@ def force_unicode(string):
     return string
 
 
-def stream_output(step, process, build, stdout_chunk_size=512):
+def stream_output(step, process, build, stdout_chunk_size=1024):
     stdout = []
     build.stdout = build.stdout or ''
     build.stderr = build.stderr or ''
@@ -218,7 +218,7 @@ class LocalRetrieve(Step):
         chdir = build_dir
 
         # else:
-        git = render_string(conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
+        git = render_string(conf.git_executable_path + ' clone --recursive -b {branch} {git_uri} ' + build_dir, instructions)
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
@@ -228,7 +228,7 @@ class LocalRetrieve(Step):
 
         b = Build.get(id=instructions['id'])
         stdout, exit_code = stream_output(self, process, b)
-        instructions['git'] = {
+        instructions['git-clone'] = {
             'stdout': stdout,
             'exit_code': exit_code,
         }
@@ -239,17 +239,33 @@ class LocalRetrieve(Step):
             b.status = 'failed'
 
             b.stdout += "Failed to {0}\n".format(git)
-            b.stdout += stdout
+            b.stdout += force_unicode(stdout)
             b.stdout += "\n"
             b.save()
             raise RuntimeError('git clone failed:\n{0}'.format(stdout))
 
-        if b.stdout is None:
-            b.stdout = u''
+        # checking out a specific commit
+        if instructions.get('commit', False):
+            checkout = render_string(conf.git_executable_path + ' checkout {commit}', instructions)
+            process = run_command(checkout, chdir=chdir)
 
-        b.stdout += force_unicode(stdout)
-        b.code = int(exit_code)
-        b.save()
+            b = Build.get(id=instructions['id'])
+            stdout, exit_code = stream_output(self, process, b)
+            instructions['git-checkout'] = {
+                'stdout': stdout,
+                'exit_code': exit_code,
+            }
+
+            if int(exit_code) != 0:
+                self.log('git checkout failed {0}'.format(stdout))
+                b.stdout = b.stdout or ''
+                b.status = 'failed'
+
+                b.stdout += "Failed to {0}\n".format(git)
+                b.stdout += force_unicode(stdout)
+                b.stdout += "\n"
+                b.save()
+                raise RuntimeError('git clone failed:\n{0}'.format(stdout))
 
         git_show = conf.git_executable_path + ' show HEAD'
         try:
@@ -279,7 +295,7 @@ class LocalRetrieve(Step):
 
         b.save()
         self.log("meta: %s", meta)
-        instructions['git'].update(meta)
+        instructions['git'] = meta
         self.produce(instructions)
 
 

@@ -157,22 +157,24 @@ class Builder(Model):
 
         return json.loads(self.github_hook_data)
 
-    def trigger(self, user, branch=None, author_name=None, author_email=None, github_webhook_data=None):
+    def trigger(self, user, branch=None, commit=None, author_name=None, author_email=None, github_webhook_data=None):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
             builder_id=self.id,
-            branch=branch or self.branch,
+            branch=branch or self.branch or 'master',
             author_name=author_name,
             author_email=author_email,
             git_uri=self.git_uri,
-            github_webhook_data=github_webhook_data
+            github_webhook_data=github_webhook_data,
+            commit=commit
         )
         pipeline = get_pipeline()
         payload = self.to_dict()
         payload.pop('last_build')
         payload.update(build.to_dict())
         payload['user'] = user.to_dict()
+
         pipeline.input.put(payload)
         logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
         return build
