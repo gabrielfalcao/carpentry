@@ -41,7 +41,7 @@ requirements = [
     'lineup>=0.1.7',
     'docker-py>=1.2.3',
     'milieu>=0.1.7',
-    'plant>=0.1.2',
+    'plant>=0.1.3',
     'pycrypto>=2.6',
     'pyOpenSSL>=0.15.1',
     'python-dateutil>=2.4.2',
@@ -53,7 +53,7 @@ requirements = [
 
 setup(
     name='carpentry-ci',
-    version='0.1.2',
+    version='0.1.3',
     description='continuous integration for the people',
     entry_points={
         'console_scripts': ['carpentry = carpentry.cli:main'],
