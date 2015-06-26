@@ -1,3 +1,21 @@
+- name: install the cassandra upstart
+  template: src=cassandra.upstart.j2
+    dest=/etc/init/cassandra.conf
+    owner=root group=root mode=644
+  tags:
+    - carpentry
+    - cassandra
+    - docker
+    - upstart
+
+- name: ensure cassandra is running
+  service: name=cassandra state=started
+  tags:
+    - carpentry
+    - cassandra
+    - docker
+    - upstart
+
 - name: install docker dependencies
   apt: pkg={{ item }} state=present
   when: carpentry_docker_deployment
@@ -22,6 +40,7 @@
   when: carpentry_docker_deployment
   tags:
     - carpentry
+    - docker
     - carpentry-workers
     - upstart
 
@@ -34,6 +53,7 @@
 
   tags:
     - carpentry
+    - docker
     - carpentry-workers
     - upstart
 
@@ -44,6 +64,7 @@
     - "gabrielfalcao/carpentry-web:{{ carpentry_version }}"
   tags:
     - carpentry
+    - docker
     - carpentry-web
     - carpentry-workers
     - docker
@@ -53,16 +74,21 @@
   when: carpentry_build_images
   args:
     chdir: /vagrant/deployment/docker/carpentry-base
+  tags:
+    - docker
 
 - name: build web carpentry image
   shell: "docker build --force-rm -t gabrielfalcao/carpentry-web:{{ carpentry_version }} ."
   when: carpentry_build_images
   args:
     chdir: /vagrant/deployment/docker/carpentry-web
+  tags:
+    - docker
 
 - name: start cassandra
   service: name=cassandra state=started
   tags:
+    - docker
     - carpentry
     - cassandra
     - upstart
@@ -70,3 +96,5 @@
 - name: prepare cassandra keyspace for CARPENTRY
   shell: "docker run --rm --net=host -v /srv/carpentry/static:/srv/carpentry/static -e CARPENTRY_CASSANDRA_HOST=localhost -e CARPENTRY_REDIS_HOST=localhost gabrielfalcao/carpentry-web:{{ carpentry_version }} carpentry-web-boot.sh"
   when: carpentry_recreate_keyspace
+  tags:
+    - docker

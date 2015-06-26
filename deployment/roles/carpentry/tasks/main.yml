@@ -128,21 +128,6 @@
     - upstart
   ignore_errors: yes
 
-- name: install the cassandra upstart
-  template: src=cassandra.upstart.j2
-    dest=/etc/init/cassandra.conf
-    owner=root group=root mode=644
-  tags:
-    - carpentry
-    - cassandra
-    - upstart
-
-- name: ensure cassandra is running
-  service: name=cassandra state=started
-  tags:
-    - carpentry
-    - cassandra
-    - upstart
 
 - name: update docker defaults file
   template: src=docker.default.j2 dest=/etc/default/docker
