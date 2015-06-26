@@ -7,12 +7,10 @@
 
 - name: Install Cassandra config file
   template: src=cassandra-{{cassandra.version_branch}}.yaml dest=/etc/cassandra/cassandra.yaml
-  notify: restart cassandra
   tags:
     - configuration
 
 - name: Install log4j config file
   template: src=log4j-server.properties dest=/etc/cassandra/log4j-server.properties
-  notify: restart cassandra
   tags:
     - configuration
