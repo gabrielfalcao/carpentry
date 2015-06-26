@@ -218,7 +218,7 @@ class LocalRetrieve(Step):
         chdir = build_dir
 
         # else:
-        git = render_string(conf.git_executable_path + ' clone --recursive -b {branch} {git_uri} ' + build_dir, instructions)
+        git = render_string(conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
 
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
