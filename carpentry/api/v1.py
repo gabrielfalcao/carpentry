@@ -235,7 +235,7 @@ def trigger_builder_hook(id):
     author_email = commiter.get('email', user.email)
 
     repo = request_data.get('repository', {})
-    branch = repo.get('default_branch', None)
+    branch = repo.get('master_branch', None)
 
     build = item.trigger(
         user,
