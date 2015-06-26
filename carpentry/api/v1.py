@@ -224,7 +224,12 @@ def get_user(user):
 
 @web.post('/api/hooks/<id>')
 def trigger_builder_hook(id):
-    item = models.Builder.objects.get(id=id)
+    try:
+        item = models.Builder.objects.get(id=id)
+    except Exception:
+        logger.exception("Failed to retrieve builder of id: %s", id)
+        return json_response({}, status=404)
+
     user = models.User.get(id=item.creator_user_id)
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}

@@ -126,6 +126,10 @@ class Builder(Model):
         return conf.get_full_url(path)
 
     def set_github_hook(self, github_access_token):
+        if self.github_hook_data:
+            logging.warning('github hook already set for %s', self.name)
+            return json.loads(self.github_hook_data)
+
         headers = {
             'Authorization': 'token {0}'.format(github_access_token)
         }
