@@ -38,9 +38,9 @@ requirements = [
     'coloredlogs>=1.0.1',
     'cqlengine>=0.21.0',
     'GitHub-Flask>=2.0.1',
-    'lineup>=0.1.7',
+    'lineup>=0.1.8',
     'docker-py>=1.2.3',
-    'milieu>=0.1.7',
+    'milieu>=0.1.8',
     'plant>=0.1.2',
     'pycrypto>=2.6',
     'pyOpenSSL>=0.15.1',
@@ -53,7 +53,7 @@ requirements = [
 
 setup(
     name='carpentry-ci',
-    version='0.1.7',
+    version='0.1.8',
     description='continuous integration for the people',
     entry_points={
         'console_scripts': ['carpentry = carpentry.cli:main'],
