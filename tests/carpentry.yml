@@ -10,3 +10,6 @@ github_client_secret: "ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de"
 cassandra_hosts:
   - 127.0.0.1
   - 0.0.0.0
+
+allowed_github_organizations:
+  - cnry

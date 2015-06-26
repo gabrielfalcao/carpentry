@@ -10,6 +10,7 @@ from flask import request, abort, g
 web = tumbler.module(__name__)
 
 from functools import wraps
+from carpentry import conf
 from carpentry.models import User
 
 
@@ -40,6 +41,19 @@ class Authenticator(object):
             return
 
         g.user = result = User.from_carpentry_token(token)
+        if not g.user:
+            return
+
+        user_organizations = [o['login'] for o in g.user.get_github_organization_names()]
+
+        allowed = False
+        for user_org in user_organizations:
+            if user_org in conf.allowed_github_organizations:
+                allowed = True
+
+        if not allowed:
+            return None
+
         return result
 
 

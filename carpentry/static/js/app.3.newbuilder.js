@@ -3,6 +3,7 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
     // 'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
     // 'build_instructions': 'make test',
     $rootScope.resetPollers();
+    $scope.saveInProcess = false;
 
     $scope.builder = {
         'generate_ssh_keys': true,
@@ -21,11 +22,16 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
     };
 
     $scope.createBuilder = function(builder) {
+        $scope.saveInProcess = true;
+
         $http.post('/api/builder', builder).
             success(function(data, status, headers, config) {
+                $scope.saveInProcess = false;
+
                 console.log("/api/builder OK");
                 $rootScope.go('/');
             }).error(function(data, status){
+                $scope.saveInProcess = false;
                 if (status !== 502) {
                     notify('Failed to create builder');
                 }

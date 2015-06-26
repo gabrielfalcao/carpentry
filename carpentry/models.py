@@ -320,17 +320,22 @@ class User(Model):
     name = columns.Text()
     email = columns.Text()
     carpentry_token = columns.UUID(required=True, index=True)
+    github_metadata = columns.Text()
 
     def to_dict(self):
         return model_to_dict(self)
 
     def get_github_metadata(self):
+        if self.github_metadata:
+            return json.loads(self.github_metadata)
+
         headers = {
             'Authorization': 'token {0}'.format(self.github_access_token)
         }
         response = requests.get('https://api.github.com/user', headers=headers)
         metadata = response.json()
-        logging.warning("GITHUB USER METADATA: %s", metadata)
+        self.github_metadata = response.text
+        self.save()
         return metadata
 
     def reset_token(self):
@@ -345,3 +350,20 @@ class User(Model):
         users = User.objects.filter(carpentry_token=carpentry_token)
         if len(users) > 0:
             return users[0]
+
+    def get_github_organization_names(self):
+        github = self.get_github_metadata()
+        organizations = github.get('organizations', None)
+        if organizations:
+            return organizations
+
+        headers = {
+            'Authorization': 'token {0}'.format(self.github_access_token)
+        }
+        url = render_string('https://api.github.com/user/orgs', github)
+        response = requests.get(url, headers=headers)
+        organizations = response.json()
+        github['organizations'] = organizations
+        self.github_metadata = json.dumps(github)
+        self.save()
+        return organizations

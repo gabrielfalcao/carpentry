@@ -6,6 +6,7 @@ angular.module('CarpentryApp.ShowBuilder', ['CarpentryApp.Common']).controller('
         $rootScope.buildCache[builderId] = {};
     }
 
+
     function refresh() {
         var url = '/api/builder/' + $rootScope.builder.id + '/builds';
         $http
