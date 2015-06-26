@@ -53,7 +53,7 @@ requirements = [
 
 setup(
     name='carpentry-ci',
-    version='0.1.20',
+    version='0.1.21',
     description='continuous integration for the people',
     entry_points={
         'console_scripts': ['carpentry = carpentry.cli:main'],
