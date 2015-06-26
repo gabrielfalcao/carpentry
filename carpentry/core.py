@@ -75,7 +75,7 @@ class CarpentryHttpServer(Web):
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
-            response = self.github.authorize(scope='repo_deployment,repo,user,gist,write:repo_hook,repo:status,write:org,write:repo_hook')
+            response = self.github.authorize(scope='repo_deployment,repo,user,gist,write:repo_hook,repo:status,org:admin,admin:org_hook')
             response.set_cookie('carpentry_token', '', expires=0)
             return response
 
@@ -95,4 +95,4 @@ def setup_logging(level):
 
     for name in LOGHANDLERS:
         logger = logging.getLogger(name)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(level)

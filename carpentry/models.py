@@ -5,7 +5,7 @@ import json
 import redis
 import uuid
 import requests
-# import bcrypt
+import hashlib
 import logging
 import datetime
 # from dateutil.parser import parse as parse_datetime
@@ -207,6 +207,7 @@ class Builder(Model):
             'slug': slugify(self.name).lower(),
             'css_status': STATUS_MAP.get(self.status, 'success'),
             'last_build': serialized_build,
+            'github_hook_url': self.determine_github_hook_url()
         })
         # result.pop('id_rsa_private', None)
         # result.pop('id_rsa_public', None)
@@ -232,12 +233,21 @@ class Build(Model):
     author_name = columns.Text()
     author_email = columns.Text(index=True)
     commit = columns.Text()
+    commit_message = columns.Text()
     code = columns.Integer()
     status = columns.Text(default='ready')
     date_created = columns.DateTime()
     date_finished = columns.DateTime()
     github_status_data = columns.Text()
     github_webhook_data = columns.Text()
+
+    @property
+    def author_gravatar_url(self):
+        email_md5 = hashlib.md5(self.author_email or '').hexdigest()
+        gravatar_url = 'https://s.gravatar.com/avatar/{0}'.format(
+            email_md5,
+        )
+        return gravatar_url
 
     @property
     def url(self):
@@ -300,6 +310,7 @@ class Build(Model):
     def to_dict(self):
         return model_to_dict(self, {
             'css_status': STATUS_MAP.get(self.status, 'warning'),
+            'author_gravatar_url': self.author_gravatar_url
         })
 
     @classmethod
@@ -327,7 +338,9 @@ class User(Model):
     github_metadata = columns.Text()
 
     def to_dict(self):
-        return model_to_dict(self)
+        return model_to_dict(self, extra={
+            'github': self.get_github_metadata()
+        })
 
     def get_github_metadata(self):
         if self.github_metadata:

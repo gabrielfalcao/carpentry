@@ -30,6 +30,9 @@ AUTHOR_REGEX = re.compile(
 COMMIT_REGEX = re.compile(
     r'commit\s*(?P<commit>\w+)', re.I)
 
+COMMIT_MESSAGE_REGEX = re.compile(
+    r'Date:.*?\n\s*(?P<commit_message>.*?)\s*^diff --git', re.M | re.S)
+
 
 def run_command(command, chdir, environment={}):
     try:
@@ -281,7 +284,7 @@ class LocalRetrieve(Step):
 
         author = AUTHOR_REGEX.search(git_show_stdout)
         commit = COMMIT_REGEX.search(git_show_stdout)
-
+        message = COMMIT_MESSAGE_REGEX.search(git_show_stdout)
         meta = {}
 
         if commit:
@@ -292,6 +295,10 @@ class LocalRetrieve(Step):
             b.author_name = author.group('name')
             b.author_email = author.group('email')
             meta.update(author.groupdict())
+
+        if message:
+            b.commit_message = message.group('commit_message')
+            meta.update(message.groupdict())
 
         b.save()
         self.log("meta: %s", meta)

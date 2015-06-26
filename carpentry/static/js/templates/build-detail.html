@@ -24,11 +24,12 @@
 
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!html_output">
         <div class="panel-heading">
-          <h3 class="panel-title ng-cloak" ng-show="build.commit" id="panel-title">commit {{ build.commit }}</h3>
+          <h3 class="panel-title ng-cloak" ng-show="build.commit" id="panel-title">{{ build.commit }}</h3>
           <h4 class="ng-cloak" ng-show="build.author_name">by {{ build.author_name }} ({{ build.author_email }})</h4>
-          <h5 class="ng-cloak" ng-show="build.commit">branch {{ build.branch }}</h5>
         </div>
         <div class="panel-body">
+          <code class="ng-cloak" ng-show="build.commit_message">{{ build.commit_message }}</code>
+
           <pre scroll-glue style="overflow-y: auto;max-height: 640px; background: #222; color: white;"  ng-bind-html="html_output"></pre>
         </div>
       </div>

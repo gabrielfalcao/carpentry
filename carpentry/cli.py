@@ -172,7 +172,7 @@ def carpentry_setup():
             logging.warning("redis: deleting key %s", key)
             backend.redis.delete(key)
 
-    for t in get_models():
+    for t in reversed(get_models()):
         try:
             if args.drop:
                 logging.warning("cassandra: dropping table %s", t)
