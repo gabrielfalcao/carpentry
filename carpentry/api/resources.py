@@ -298,8 +298,26 @@ def stop_container(user, container_id):
 def remove_container(user, container_id):
     docker = get_docker_client()
 
-    data = docker.remove(
+    data = docker.remove_container(
         container_id,
-        TIMEOUT_BEFORE_SIGKILL
+        v=True,
+    )
+    data = docker.remove_container(
+        container_id,
+        v=True,
+        force=True
+    )
+    return json_response(data)
+
+
+@web.post('/api/docker/image/<image_id>/remove')
+@authenticated
+def remove_image(user, image_id):
+    docker = get_docker_client()
+
+    data = docker.remove_image(
+        image_id,
+        force=True,
+        noprune=False
     )
     return json_response(data)

@@ -5,14 +5,13 @@
 from __future__ import unicode_literals
 
 import io
-import zlib
 import time
 import mimetypes
 import logging
 
 from plant import Node
 from flask import Response, render_template, request
-from jsmin import jsmin
+# from jsmin import jsmin
 
 from carpentry import conf
 from carpentry.api import web
@@ -41,6 +40,7 @@ def get_js_nodes():
 
 def get_all_js():
     parts = []
+    jsmin = lambda x: x
     for node in get_js_nodes():
         read = io.open(node.path).read()
         parts.append(jsmin(read))

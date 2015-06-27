@@ -4,9 +4,9 @@ angular.module('CarpentryApp.ListDockerContainers', ['CarpentryApp.Common']).con
     $rootScope.getDockerContainers();
 
     $scope.stopContainer = function(container){
-        var url = "/api/docker/container/" ++ "/stop";
+        var url = "/api/docker/container/" + container.Id + "/stop";
         $http.post(url).success(function (data, status, headers, config) {
-            notify('container successfully removed');
+            notify('container successfully stopped');
             $rootScope.getDockerContainers();
         }).error(function (data, status, headers, config) {
             notify('failed to remove container ' + container.Names[0]);
@@ -14,7 +14,7 @@ angular.module('CarpentryApp.ListDockerContainers', ['CarpentryApp.Common']).con
         });
     };
     $scope.removeContainer = function(container){
-        var url = "/api/docker/container/" ++ "/remove";
+        var url = "/api/docker/container/" + container.Id + "/remove";
         $http.post(url).success(function (data, status, headers, config) {
             notify('container successfully removed');
             $rootScope.getDockerContainers();

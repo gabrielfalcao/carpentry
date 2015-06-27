@@ -9,12 +9,26 @@
     </div>
   </div>
 
-  <div class="row" ng-repeat="image in dockerImages">
-    <div class="col-lg-12">
-      <h4>{{ image.name }}</h4>
-      <code>{{ image }}</code>
-    </div>
-  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>tag</th>
+        <th>id</th>
+        <th>parent id</th>
+        <th>actions</th>
+      </tr>
+    </thead>
+    <tbody ng-repeat="image in dockerImages">
+      <tr>
+        <td>{{ image.RepoTags[0] }}</td>
+        <td>{{ image.Id }}</td>
+        <td>{{ image.ParentId }}</td>
+        <td>
+          <button class="btn btn-danger" ng-click="removeImage(image)">Remove</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 <br />
 <br />
