@@ -122,7 +122,7 @@ class Builder(Model):
         url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_info)
         logger.info("Removing hook %s from repo %s", hook_id, self.github_info)
         response = requests.delete(url, headers=headers)
-        return response.json()
+        return response
 
     def cleanup_github_hooks(self, github_access_token=None):
         if not github_access_token:
@@ -141,9 +141,19 @@ class Builder(Model):
         logger.info("trying to match them with the address: %s", base_url)
 
         for hook in all_hooks:
-            if hook['url'].startswith(base_url):
+            hook_config = hook.get('config', {})
+            hook_url = hook_config.get('url', None)
+            hook_id = hook['id']
+
+            if not hook_url:
+                logger.info("could not find a url in the config of the hook %s", hook)
+                continue
+
+            logger.info("matching %s", hook_id)
+
+            if hook_url.startswith(base_url):
                 self.delete_single_github_hook(
-                    hook['id'],
+                    hook_id,
                     github_access_token
                 )
 
@@ -406,7 +416,7 @@ class User(Model):
         if len(users) > 0:
             return users[0]
 
-    def get_github_organization_names(self):
+    def get_github_organizations(self):
         github = self.get_github_metadata()
         organizations = github.get('organizations', None)
         if organizations:
