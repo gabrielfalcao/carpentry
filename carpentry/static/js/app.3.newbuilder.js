@@ -10,14 +10,12 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
         'name': $rootScope.user.name + "'s Project",
         'git_uri': 'git@github.com:'+$rootScope.user.login+'/yourrepo.git',
         'shell_script':[
-            '#!/bin/bash',
-            'set -e',
-            'pip install virtualenv',
-            'virtualenv .venv',
-            'source .venv/bin/activate',
-            'pip install -r requirements.txt || echo "skipped development.txt"',
-            'pip install -r development.txt || echo "skipped development.txt"',
-            'make'
+            "#!/bin/bash",
+            '',
+            "for x in `seq 100`; do",
+            "    date;",
+            "    sleep 0.1;",
+            "done"
         ].join('\n')
     };
 

@@ -108,8 +108,9 @@ class CarpentryHttpServer(Web):
 
 
 def setup_logging(level):
-    logging.getLogger('cqlengine.cql').setLevel(logging.WARNING)
-    logging.getLogger('werkzeug').setLevel(logging.WARNING)
+    WARNING_HANDLERS = ['cqlengine.cql', 'werkzeug', 'requests.packages.urllib3.connectionpool', 'cassandra.io.asyncorereactor']
+    for handler in WARNING_HANDLERS:
+        logging.getLogger(handler).setLevel(logging.WARNING)
 
     for name in LOGHANDLERS:
         logger = logging.getLogger(name)

@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import os
 import re
 import json
+import time
 import logging
 import traceback
 import io
@@ -48,15 +49,24 @@ def force_unicode(string):
     return string
 
 
-def stream_output(step, process, build, stdout_chunk_size=1024):
+def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_seconds=None):
     stdout = []
     build.stdout = build.stdout or ''
     build.stderr = build.stderr or ''
 
     current_transfered_bytes = 0
+    started_time = time.time()
+    difference = time.time() - started_time
 
-    for out in iter(lambda: process.stdout.readline(), ''):
-        out = force_unicode(out)
+    timeout_in_seconds = int(timeout_in_seconds or conf.default_subprocess_timeout_in_seconds)
+
+    while difference < timeout_in_seconds:
+        difference = (time.time() - started_time)
+        raw = process.stdout.readline()
+        if not raw:
+            break
+
+        out = force_unicode(raw)
         current_transfered_bytes += len(out)
         build.stdout += out
         build.stderr += out
@@ -65,7 +75,17 @@ def stream_output(step, process, build, stdout_chunk_size=1024):
             build.save()
             current_transfered_bytes = 0
 
-    exit_code = process.wait()
+    timed_out = difference > timeout_in_seconds
+    if timed_out:
+        out = "Build timed out by {0} seconds".format(difference)
+        build.stdout += out
+        build.stderr += out
+
+        process.terminate()
+        exit_code = 420
+    else:
+        exit_code = process.wait()
+
     try:
         return ''.join(stdout), exit_code
     except UnicodeDecodeError:
@@ -229,6 +249,7 @@ class LocalRetrieve(Step):
         # else:
         git = render_string(conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
 
+        timeout_in_seconds = instructions.get('git_clone_timeout_in_seconds')
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=chdir, environment={
             # http://stackoverflow.com/questions/14220929/git-clone-with-custom-ssh-using-git-ssh-error/27607760#27607760
@@ -236,7 +257,7 @@ class LocalRetrieve(Step):
         })
 
         b = Build.get(id=instructions['id'])
-        stdout, exit_code = stream_output(self, process, b)
+        stdout, exit_code = stream_output(self, process, b, timeout_in_seconds=timeout_in_seconds)
         instructions['git-clone'] = {
             'stdout': stdout,
             'exit_code': exit_code,
@@ -259,7 +280,7 @@ class LocalRetrieve(Step):
             process = run_command(checkout, chdir=chdir)
 
             b = Build.get(id=instructions['id'])
-            stdout, exit_code = stream_output(self, process, b)
+            stdout, exit_code = stream_output(self, process, b, timeout_in_seconds=timeout_in_seconds)
             instructions['git-checkout'] = {
                 'stdout': stdout,
                 'exit_code': exit_code,
@@ -393,7 +414,8 @@ class LocalBuild(Step):
         b.stdout += 'running {0}...\n'.format(cmd)
         b.save()
 
-        stdout, exit_code = stream_output(self, process, b)
+        timeout_in_seconds = instructions.get('build_timeout_in_seconds')
+        stdout, exit_code = stream_output(self, process, b, timeout_in_seconds=timeout_in_seconds)
         instructions['shell'] = {
             'stdout': stdout,
             'exit_code': exit_code,

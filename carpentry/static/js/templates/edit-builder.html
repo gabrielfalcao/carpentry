@@ -41,6 +41,9 @@
                   <i class="fa fa-floppy-o"></i> save</button>
                 <button type="submit" ng-click="deleteBuilder(builder)" class="btn btn-danger">
                   <i class="fa fa-recycle"></i> delete</button>
+                  <button ng-if="builder" class="btn btn-large btn-info" ng-click="triggerBuild(builder)">
+                    <i class="fa fa-play-circle"></i> build now
+
               </div>
             </div>
           </fieldset>

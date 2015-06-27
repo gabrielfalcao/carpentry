@@ -40,6 +40,8 @@ def set_things(self, env):
     self.allowed_github_organizations = env.get('allowed_github_organizations', ['cnry'])
     self.SECRET_KEY = env.get('secret_key')
 
+    self.default_subprocess_timeout_in_seconds = env.get('default_subprocess_timeout_in_seconds', 60 * 10)
+
     self.git_executable_path = env.get('git_executable_path', '/usr/bin/git')
     self.ssh_executable_path = env.get('ssh_executable_path', '/usr/bin/ssh')
 

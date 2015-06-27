@@ -36,7 +36,10 @@
       <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">
         <i class="fa fa-arrow-left"></i> back to builder</button>
         <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">
-        <i class="fa fa-pencil"></i> edit builder</button>
+          <i class="fa fa-pencil"></i> edit builder</button>
+          <button ng-if="builder" class="btn btn-large btn-info" ng-click="triggerBuild(builder)">
+            <i class="fa fa-play-circle"></i> rebuild now
+
     </div>
   </div>
   <br />

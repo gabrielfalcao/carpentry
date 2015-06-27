@@ -120,7 +120,6 @@ class Builder(Model):
         }
 
         url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_info)
-        logger.info("Removing hook %s from repo %s", hook_id, self.github_info)
         response = requests.delete(url, headers=headers)
         return response
 
@@ -149,9 +148,8 @@ class Builder(Model):
                 logger.info("could not find a url in the config of the hook %s", hook)
                 continue
 
-            logger.info("matching %s", hook_id)
-
             if hook_url.startswith(base_url):
+                logger.info("removing hook %s from repo %s", hook_config, self.github_info)
                 self.delete_single_github_hook(
                     hook_id,
                     github_access_token
