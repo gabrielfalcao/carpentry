@@ -26,8 +26,8 @@ class CarpentryHttpServer(Web):
         self.prepare_services_integration()
 
     def prepare_services_integration(self):
-        MODULES.clear()
         self.setup_github_authentication()
+        MODULES.clear()
         # self.collect_websocket_modules()
         self.collect_modules()
 
@@ -80,7 +80,7 @@ class CarpentryHttpServer(Web):
                 )
                 logging.info("created new user", g.user)
             else:
-                logging.info("User already exists with github_access_token %s %s", access_token, g.user)
+                logging.info("User already exists with github_access_token %s %s", access_token, g.user.to_dict())
                 g.user = users[0]
                 g.user.carpentry_token = uuid.uuid4()
                 g.user.github_access_token = access_token

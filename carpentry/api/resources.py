@@ -12,13 +12,18 @@ from Crypto.PublicKey import RSA
 from carpentry import conf
 from carpentry.api.core import authenticated, ensure_json_request
 from cqlengine.models import Model
+from docker.utils import create_host_config
+from carpentry.util import get_docker_client
 
 from carpentry import models
 
 from carpentry.api import web
 from ansi2html import Ansi2HTMLConverter
 
+
 conv = Ansi2HTMLConverter()
+
+TIMEOUT_BEFORE_SIGKILL = 5  # seconds
 
 
 def is_model(v):
@@ -258,3 +263,43 @@ def trigger_builder_hook(id):
         github_webhook_data=request.data
     )
     return json_response(build.to_dict())
+
+
+@web.get('/api/docker/images')
+@authenticated
+def list_images(user):
+    docker = get_docker_client()
+    data = docker.images()
+    return json_response(data)
+
+
+@web.get('/api/docker/containers')
+@authenticated
+def list_containers(user):
+    docker = get_docker_client()
+    data = docker.containers(all=True)
+    return json_response(data)
+
+
+@web.post('/api/docker/container/<container_id>/stop')
+@authenticated
+def stop_container(user, container_id):
+    docker = get_docker_client()
+
+    data = docker.stop(
+        container_id,
+        TIMEOUT_BEFORE_SIGKILL
+    )
+    return json_response(data)
+
+
+@web.post('/api/docker/container/<container_id>/remove')
+@authenticated
+def remove_container(user, container_id):
+    docker = get_docker_client()
+
+    data = docker.remove(
+        container_id,
+        TIMEOUT_BEFORE_SIGKILL
+    )
+    return json_response(data)

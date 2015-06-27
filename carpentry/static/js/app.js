@@ -3,7 +3,7 @@ angular.module('CarpentryApp', [
     'ui.router',
     'cfp.hotkeys',
     'cgNotify',
-    // 'btford.socket-io',
+    /* 'btford.socket-io', */
     'angular-loading-bar',
     'luegg.directives',
     'CarpentryApp.Common',
@@ -15,6 +15,8 @@ angular.module('CarpentryApp', [
     'CarpentryApp.Fullscreen',
     'CarpentryApp.ShowBuilder',
     'CarpentryApp.UserProfile',
+    'CarpentryApp.ListDockerContainers',
+    'CarpentryApp.ListDockerImages',
     'CarpentryApp.Splash'
 ]).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeBar = false;
@@ -51,6 +53,14 @@ angular.module('CarpentryApp', [
         url: '/splash',
         templateUrl: '/assets/js/templates/splash.html',
         controller: 'SplashController'
+    }).state('list-docker-images', {
+        url: '/docker/images',
+        templateUrl: '/assets/js/templates/list-docker-images.html',
+        controller: 'ListDockerImagesController'
+    }).state('list-docker-containers', {
+        url: '/docker/containers',
+        templateUrl: '/assets/js/templates/list-docker-containers.html',
+        controller: 'ListDockerContainersController'
     }).state('user-profile', {
         url: '/profile',
         templateUrl: '/assets/js/templates/profile.html',
@@ -108,6 +118,32 @@ angular.module('CarpentryApp', [
             location.href = "/logout";
         });
     }
+    $rootScope.getDockerImages = function(){
+        $http
+            .get('/api/docker/images')
+            .success(function(data, status, headers, config) {
+                $rootScope.dockerImages = data;
+                console.log(data);
+            })
+
+            .error(function(data, status, headers, config) {
+                console.log('failed to list docker images ');
+                notify('failed to list docker images');
+            });
+    };
+    $rootScope.getDockerContainers = function(){
+        $http
+            .get('/api/docker/containers')
+            .success(function(data, status, headers, config) {
+                $rootScope.dockerContainers = data;
+                console.log(data);
+            })
+
+            .error(function(data, status, headers, config) {
+                console.log('failed to list docker containers ');
+                notify('failed to list docker containers');
+            });
+    };
 
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
