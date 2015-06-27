@@ -33,7 +33,6 @@ requirements = [
     'ansi2html>=1.1.0',
     'ansiconv>=1.0.0',
     'bcrypt>=1.1.1',
-    'Flask-SocketIO==0.6.0',
     'blist>=1.3.6',
     'cffi>=1.1.2',
     'coloredlogs>=1.0.1',

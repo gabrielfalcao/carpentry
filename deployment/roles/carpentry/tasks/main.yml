@@ -33,6 +33,7 @@
     - libxml2-dev
     - libxslt1-dev
     - libevent-dev
+    - libev-dev
     - openssh-client
     - libgnutls-dev
     - libsqlite3-dev

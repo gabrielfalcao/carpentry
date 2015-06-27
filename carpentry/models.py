@@ -109,9 +109,47 @@ class Builder(Model):
     creator_user_id = columns.UUID()
     github_hook_data = columns.Text()
 
+    def get_fallback_github_access_token(self):
+        creator = User.get(id=self.creator_user_id)
+        return creator.github_access_token
+
+    def delete_single_github_hook(self, hook_id, github_access_token=None):
+        github_access_token = github_access_token or self.get_fallback_github_access_token()
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+
+        url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_info)
+        logger.info("Removing hook %s from repo %s", hook_id, self.github_info)
+        response = requests.delete(url, headers=headers)
+        return response.json()
+
+    def cleanup_github_hooks(self, github_access_token=None):
+        if not github_access_token:
+            creator = User.get(id=self.creator_user_id)
+            github_access_token = creator.github_access_token
+
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_info)
+
+        response = requests.get(url, headers=headers)
+        all_hooks = response.json()
+        base_url = conf.get_full_url('')
+        logger.info("%s hooks found for repo %s", len(all_hooks), self.github_info)
+        logger.info("trying to match them with the address: %s", base_url)
+
+        for hook in all_hooks:
+            if hook['url'].startswith(base_url):
+                self.delete_single_github_hook(
+                    hook['id'],
+                    github_access_token
+                )
+
     @classmethod
     def determine_github_repo_from_git_uri(self, git_uri):
-        found = GITHUB_URI_REGEX.search('github.com:gabrielfalcao/sure')
+        found = GITHUB_URI_REGEX.search(git_uri)
         if found:
             return found.groupdict()
 

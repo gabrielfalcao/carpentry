@@ -9,7 +9,7 @@ from dateutil.parser import parse as parse_datetime
 from flask import request
 from tumbler import json_response
 from Crypto.PublicKey import RSA
-
+from carpentry import conf
 from carpentry.api.core import authenticated, ensure_json_request
 from cqlengine.models import Model
 
@@ -92,6 +92,7 @@ def create_builder(user):
         hook = builder.set_github_hook(user.github_access_token)
         logger.info('setting github hook: %s', hook)
 
+        builder.cleanup_github_hooks()
         payload = builder.to_dict()
         return json_response(payload, status=200)
 
@@ -147,6 +148,7 @@ def edit_builder(user, id):
         setattr(item, attr, value)
 
     item.save()
+    item.cleanup_github_hooks(user.github_access_token)
     logger.info('edit builder: %s', item.name)
     return json_response(item.to_dict())
 
@@ -156,6 +158,7 @@ def edit_builder(user, id):
 def remove_builder(user, id):
     item = models.Builder.objects.get(id=id)
     item.clear_builds()
+    item.cleanup_github_hooks(user.github_access_token)
     item.delete()
     logger.info('deleting builder: %s', item.name)
     return json_response(item.to_dict())
@@ -192,6 +195,12 @@ def set_preferences(user):
         logger.info('setting preference %s: %s', key, value)
 
     return json_response(results)
+
+
+@web.get('/api/conf')
+@authenticated
+def get_conf(user):
+    return json_response(dict([(attr, getattr(conf, attr)) for attr in dir(conf)]))
 
 
 @web.post('/api/builder/<id>/build')
