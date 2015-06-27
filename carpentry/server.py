@@ -26,7 +26,6 @@ class CarpentryHttpServer(Web):
 
     def prepare_services_integration(self):
         MODULES.clear()
-
         self.setup_github_authentication()
         # self.collect_websocket_modules()
         self.collect_modules()
@@ -86,7 +85,7 @@ class CarpentryHttpServer(Web):
 
             g.user.save()
 
-            logging.warning("authorized: %s", g.user)
+            logging.warning("authorized: %s - token: %s", g.user, access_token)
 
             response = redirect(next_url)
             response.set_cookie('carpentry_token', bytes(g.user.carpentry_token))
