@@ -22,6 +22,7 @@ class CarpentryHttpServer(Web):
         setup_logging(log_level)
 
         self.flask_app.config.from_object('carpentry.conf')
+        self.github = GitHub(self.flask_app)
         self.prepare_services_integration()
 
     def prepare_services_integration(self):
@@ -42,7 +43,6 @@ class CarpentryHttpServer(Web):
         return self.websockets
 
     def setup_github_authentication(self):
-        self.github = GitHub(self.flask_app)
 
         @self.flask_app.before_request
         def prepare_user():
@@ -78,7 +78,9 @@ class CarpentryHttpServer(Web):
                     carpentry_token=uuid.uuid4(),
                     github_access_token=access_token
                 )
+                logging.info("created new user", g.user)
             else:
+                logging.info("User already exists with github_access_token %s %s", access_token, g.user)
                 g.user = users[0]
                 g.user.carpentry_token = uuid.uuid4()
                 g.user.github_access_token = access_token
