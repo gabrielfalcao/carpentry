@@ -7,17 +7,15 @@ import logging
 import inspect
 from dateutil.parser import parse as parse_datetime
 from flask import request
-from tumbler import tumbler
 from tumbler import json_response
 from Crypto.PublicKey import RSA
 
-web = tumbler.module(__name__)
-
-# from carpentry.models import Builder
 from carpentry.api.core import authenticated, ensure_json_request
 from cqlengine.models import Model
 
 from carpentry import models
+
+from carpentry.api import web
 from ansi2html import Ansi2HTMLConverter
 
 conv = Ansi2HTMLConverter()

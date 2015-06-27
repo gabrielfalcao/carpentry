@@ -38,6 +38,7 @@ def set_things(self, env):
     self.GITHUB_CLIENT_ID = env.get('github_client_id')
     self.GITHUB_CLIENT_SECRET = env.get('github_client_secret')
     self.allowed_github_organizations = env.get('allowed_github_organizations', ['cnry'])
+    self.SECRET_KEY = env.get('secret_key')
 
     self.git_executable_path = env.get('git_executable_path', '/usr/bin/git')
     self.ssh_executable_path = env.get('ssh_executable_path', '/usr/bin/ssh')

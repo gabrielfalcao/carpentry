@@ -123,6 +123,12 @@ class PrepareSSHKey(Step):
         instructions['id_rsa_private_key_path'] = os.path.join(ssh_dir, id_rsa_private_key_path)
         instructions['id_rsa_public_key_path'] = os.path.join(ssh_dir, id_rsa_public_key_path)
 
+        if not private_key:
+            raise RuntimeError(render_string('the builder {builder_id} does not have a private_key set', instructions))
+
+        if not public_key:
+            raise RuntimeError(render_string('the builder {builder_id} does not have a public_key set', instructions))
+
         self.write_file(ssh_dir, id_rsa_private_key_path, private_key, mode=0600)
         self.write_file(ssh_dir, id_rsa_public_key_path, public_key, mode=0644)
 

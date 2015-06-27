@@ -19,8 +19,8 @@ from lineup import JSONRedisBackend
 from carpentry.version import version
 from carpentry import routes
 from carpentry import conf
-from carpentry.core import CarpentryHttpServer, setup_logging
-from carpentry.api.v1 import get_models
+from carpentry.server import CarpentryHttpServer, setup_logging
+from carpentry.api.resources import get_models
 from carpentry.workers.pipelines import LocalBuilder
 
 this_node = Node(__file__).dir
@@ -99,7 +99,7 @@ def carpentry_run():
 
     print LOGO
     print "listening on http://{0}:{1}".format(args.host, args.port)
-    server.run(port=args.port, host=args.host)
+    server.run(host=args.host, port=args.port)
 
 
 class Spinner(object):

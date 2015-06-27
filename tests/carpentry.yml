@@ -5,6 +5,7 @@ redis_host: 'localhost'
 redis_port: 6379
 redis_db: 0
 workdir: sandbox
+carpentry_secret_key: accd12a8dbfc6e5ece6db7ad4e5fb16631ba6b07a3a91d3b06a2887eb5d9c17d
 github_client_id: "d4d5fd91b48e183de039"
 github_client_secret: "ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de"
 cassandra_hosts:

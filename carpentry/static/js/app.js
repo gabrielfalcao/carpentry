@@ -3,6 +3,7 @@ angular.module('CarpentryApp', [
     'ui.router',
     'cfp.hotkeys',
     'cgNotify',
+    // 'btford.socket-io',
     'angular-loading-bar',
     'luegg.directives',
     'CarpentryApp.Common',
@@ -240,4 +241,4 @@ angular.module('CarpentryApp', [
     $rootScope.$on('$viewContentLoaded', function () {
         $templateCache.removeAll();
     });
-});
+})

@@ -7,7 +7,7 @@ import logging
 from plant import Node
 from carpentry import routes
 
-from carpentry.core import CarpentryHttpServer
+from carpentry.server import CarpentryHttpServer
 
 log_path = os.getenv('CARPENTRY_LOG_PATH', '/var/log/carpentry.log')
 

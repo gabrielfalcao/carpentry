@@ -5,17 +5,19 @@
 from __future__ import unicode_literals
 
 import io
+import zlib
 import time
 import mimetypes
 import logging
 
 from plant import Node
 from flask import Response, render_template, request
+from jsmin import jsmin
 
 from carpentry import conf
-from carpentry.api.v1 import web
+from carpentry.api import web
 from carpentry.version import version as carpentry_version
-
+# from carpentry.websockets import *
 
 this_node = Node(__file__).dir
 mimedb = mimetypes.MimeTypes()
@@ -41,10 +43,10 @@ def get_all_js():
     parts = []
     for node in get_js_nodes():
         read = io.open(node.path).read()
-        parts.append(read)
+        parts.append(jsmin(read))
 
     joined = ';'.join(parts)
-    return joined
+    return jsmin(joined)
 
 
 @web.get('/app.js')
@@ -52,17 +54,5 @@ def app_js():
     joined = get_all_js()
     logging.info("serving app.js: %skb", len(joined) / 1000.0)
     return Response(joined, status=200, headers={
-        'Content-Type': 'text/javascript'
+        'Content-Type': 'application/javascript',
     })
-
-
-# @web.get('/assets/<path:path>')
-# def assets(path):
-#     local_path = this_node.cd('static').join(path)
-#     with io.open(local_path) as fd:
-#         joined = fd.read()
-
-#     logging.info("serving %s: %skb", path, len(joined) / 1000.0)
-#     return Response(joined, status=200, headers={
-#         'Content-Type': mimetypes.guess_type(path)
-#     })

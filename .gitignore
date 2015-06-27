@@ -10,5 +10,5 @@ pip-delete-this-directory.txt
 builds.db
 .vagrant/
 carpentry.log
-./sandbox
+sandbox
 carpentry.egg*
