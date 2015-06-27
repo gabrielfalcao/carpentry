@@ -108,6 +108,8 @@ class Builder(Model):
     branch = columns.Text(default='master')
     creator_user_id = columns.UUID()
     github_hook_data = columns.Text()
+    git_clone_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
+    build_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
 
     def get_fallback_github_access_token(self):
         creator = User.get(id=self.creator_user_id)
