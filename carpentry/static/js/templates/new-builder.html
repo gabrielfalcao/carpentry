@@ -7,47 +7,45 @@
       </div>
     </div>
   </div>
-
   <div class="row">
     <div class="col-lg-12">
       <div class="well bs-component">
         <form class="form-horizontal">
           <fieldset>
             <div class="form-group">
-              <label for="builder_name_input" class="col-lg-2 control-label"><strong>project name</strong></label>
+              <label for="builder_name_input" class="col-lg-2 control-label"><strong>PROJECT NAME</strong></label>
               <div class="col-lg-10">
                 <input type="text" id="builder_name_input" class="form-control" ng-model="builder.name" placeholder="Builder Name"  />
               </div>
             </div>
             <div class="form-group">
-              <label for="git_repository_input" class="col-lg-2 control-label"><strong>git uri</strong></label>
+              <label for="git_repository_input" class="col-lg-2 control-label"><strong>GIT URI</strong></label>
               <div class="col-lg-10">
                 <input type="text" id="git_repository_input" class="form-control" ng-model="builder.git_uri" placeholder="git@github.com/gabrielfalcao/sure.git"  />
               </div>
             </div>
             <div class="form-group">
-              <label for="shell_script" class="col-lg-2 control-label"><strong>shell script</strong></label>
+              <label for="shell_script" class="col-lg-2 control-label"><strong>SHELL SCRIPT</strong></label>
               <div class="col-lg-10">
                 <div class="well">
                   Examples:&nbsp;&nbsp;
-
                   <button ng-repeat="(language, script) in SHELL_SCRIPT_EXAMPLES" ng-click="doShellScriptExample(language)" class="btn btn-sm btn-primary">{{ language }}</button>
                 </div>
                 <textarea id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group ng-cloak" ng-hide="builder.generate_ssh_keys">
-              <label for="id_rsa_private" class="col-lg-2 control-label"><strong>id_rsa private key</strong></label>
+              <label for="id_rsa_private" class="col-lg-2 control-label"><strong>ID_RSA PRIVATE KEY</strong></label>
               <div class="col-lg-10">
                 <textarea id="id_rsa_private" class="form-control" ng-model="builder.id_rsa_private" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
-              <label for="id_rsa_public" class="col-lg-2 control-label"><strong>id_rsa public key</strong></label>
+              <label for="id_rsa_public" class="col-lg-2 control-label"><strong>ID_RSA PUBLIC KEY</strong></label>
               <div class="col-lg-10">
                 <textarea id="id_rsa_public" class="form-control" ng-model="builder.id_rsa_public" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group">
-              <label for="should-generate-keys" class="col-lg-2 control-label"><strong>generate ssh keys ?</strong></label>
+              <label for="should-generate-keys" class="col-lg-2 control-label"><strong>AUTO GENERATE KEYS ?</strong></label>
               <div class="col-lg-10">
                 <input id="should-generate-keys" type="checkbox" ng-model="builder.generate_ssh_keys" value="true" />
                 <quote>
@@ -55,13 +53,18 @@
                 </quote>
               </div>
             </div>
-            <div class="form-group" ng-hide="saveInProcess">
-              <div class="col-lg-10">
-                <button type="submit" ng-click="createBuilder(builder)" class="btn btn-primary">
-                  <i class="fa fa-floppy-o"></i> save</button>
+            <div class="form-group">
+              <div class="col-lg-2">
+              </div>
+              <div class="col-lg-10" ng-hide="saveInProcess">
+                <button type="submit" ng-click="createBuilder(builder)" class="btn btn-info">
+                  <i class="fa fa-floppy-o"></i> SAVE
+                </button>
               </div>
             </div>
           </fieldset>
         </form>
+      </div>
     </div>
   </div>
+</div>

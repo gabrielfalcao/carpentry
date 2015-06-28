@@ -5,6 +5,7 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
     $rootScope.resetPollers();
     $scope.saveInProcess = false;
     var DEFAULT_LANGUAGE = "python";
+    $scope.builderType = 'native';
     $scope.SHELL_SCRIPT_EXAMPLES = {
         "timeout test": [
             "#!/bin/bash",

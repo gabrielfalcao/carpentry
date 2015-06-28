@@ -107,7 +107,7 @@ angular.module('CarpentryApp', [
     });
 
     /* // github-based authentication confirmation by retrieving user data
-    $rootScope.isAuthenticated = false;
+       $rootScope.isAuthenticated = false;
     */
     if ($rootScope.hasToken) {
         $http.get("/api/user").success(function(data, status){
@@ -157,13 +157,22 @@ angular.module('CarpentryApp', [
             }
         }
     };
+}).directive('showtab', function () {
+    return {
+        link: function (scope, element, attrs) {
+            element.click(function(e) {
+                e.preventDefault();
+                jQuery(element).tab('show');
+            });
+        }
+    }
 }).directive('navbar', function ($rootScope, $state, $location) {
     return {
         restrict: 'E',
         templateUrl: '/assets/js/templates/navbar.html',
         link: function (scope, element, attrs) {
         }
-    };
+    }
 }).controller('CarpentryMainCtrl', function ($scope, $http, $location, $rootScope, hotkeys, $state, $templateCache) {
     $rootScope.buildCache = {};
 
@@ -176,14 +185,14 @@ angular.module('CarpentryApp', [
                 if (stay !== true) {
                     $rootScope.go('/builder/' + builder.id + '/build/' + data.id);
                 }
-        })
+            })
 
-        .error(function(data, status, headers, config) {
-            for (var x in data) {
-                var build = data[x];
-                $rootScope.buildCache[builderId][build.id] = build;
-            }
-        });
+            .error(function(data, status, headers, config) {
+                for (var x in data) {
+                    var build = data[x];
+                    $rootScope.buildCache[builderId][build.id] = build;
+                }
+            });
 
     };
 
@@ -285,4 +294,4 @@ angular.module('CarpentryApp', [
     $rootScope.$on('$viewContentLoaded', function () {
         $templateCache.removeAll();
     });
-})
+});
