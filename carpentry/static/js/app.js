@@ -19,7 +19,7 @@ angular.module('CarpentryApp', [
     'CarpentryApp.Splash'
 ]).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeBar = false;
-    cfpLoadingBarProvider.includeSpinner = true;
+    cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.latencyThreshold = 10;
     $stateProvider.state('index', {
         url: '/',
