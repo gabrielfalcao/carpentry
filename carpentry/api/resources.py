@@ -94,10 +94,11 @@ def create_builder(user):
         builder = models.Builder.create(**data)
         logger.info('creating new builder: %s', builder.name)
 
+        builder.cleanup_github_hooks()
+
         hook = builder.set_github_hook(user.github_access_token)
         logger.info('setting github hook: %s', hook)
 
-        builder.cleanup_github_hooks()
         payload = builder.to_dict()
         return json_response(payload, status=200)
 
@@ -154,6 +155,7 @@ def edit_builder(user, id):
 
     item.save()
     item.cleanup_github_hooks(user.github_access_token)
+    item.set_github_hook(user.github_access_token)
     logger.info('edit builder: %s', item.name)
     return json_response(item.to_dict())
 
