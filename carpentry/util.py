@@ -25,6 +25,7 @@ def get_docker_client():
     kwargs = kwargs_from_env()
     if 'tls' in kwargs:
         kwargs['tls'].verify = False
+
     kwargs['timeout'] = 60 * 5
 
     docker = Client(**kwargs)

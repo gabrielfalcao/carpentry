@@ -16,9 +16,9 @@
 
 
 #loading-bar .bar {
-  background: #333;
+  background: #43ac6a;
   margin-top: 48px;
-  height: 16px;
+  height: 4px;
 }
 
 #loading-bar-spinner .spinner-icon {
