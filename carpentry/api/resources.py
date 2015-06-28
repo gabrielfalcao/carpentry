@@ -321,3 +321,39 @@ def remove_image(user, image_id):
         noprune=False
     )
     return json_response(data)
+
+
+@web.post('/api/docker/pull')
+@authenticated
+def docker_pull(user):
+    docker = get_docker_client()
+    data = ensure_json_request({
+        'repository': unicode,
+        'tag': any,
+    })
+    repository = data['repository']
+    tag = data.get('tag', 'latest')
+    data = docker.pull(repository, tag)
+    return json_response(data)
+
+
+@web.post('/api/docker/run')
+@authenticated
+def docker_run(user, image_id):
+    docker = get_docker_client()
+    data = ensure_json_request({
+        'imageName': unicode,
+        'hostname': unicode,
+    })
+    image_name = data['imageName']
+    hostname = data['hostname']
+
+    container = docker.create_container(
+        image=image_name,
+        name=hostname,
+        detach=True,
+        hostname=hostname)
+
+    docker.start(container['Id'])
+
+    return json_response(dict(container))

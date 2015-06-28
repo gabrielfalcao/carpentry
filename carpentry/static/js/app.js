@@ -81,10 +81,14 @@ angular.module('CarpentryApp', [
         clearInterval($rootScope.indexPoller);
         clearInterval($rootScope.builderPoller);
         clearInterval($rootScope.buildPoller);
+        clearInterval($rootScope.refreshDockerImagesPoller);
+        clearInterval($rootScope.refreshDockerContainersPoller);
 
         $rootScope.indexPoller = 0;
         $rootScope.builderPoller = 0;
         $rootScope.buildPoller = 0;
+        $rootScope.refreshDockerImagesPoller = 0;
+        $rootScope.refreshDockerContainersPoller = 0;
     };
     $rootScope.go = function (path) {
         $location.path(path);

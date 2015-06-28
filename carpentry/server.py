@@ -13,11 +13,11 @@ from cqlengine import connection
 from flask_socketio import SocketIO
 from carpentry.registry import WEBSOCKET_HANDLERS
 
-LOGHANDLERS = ['lineup.steps', 'lineup', 'tumbler', 'carpentry']
+logger = logging.getLogger('carpentry')
 
 
 class CarpentryHttpServer(Web):
-    def __init__(self, log_level=logging.INFO, *args, **kw):
+    def __init__(self, log_level=logger.info, *args, **kw):
         super(CarpentryHttpServer, self).__init__(*args, **kw)
         setup_logging(log_level)
 
@@ -78,9 +78,9 @@ class CarpentryHttpServer(Web):
                     carpentry_token=uuid.uuid4(),
                     github_access_token=access_token
                 )
-                logging.info("created new user", g.user)
+                logger.info("created new user", g.user)
             else:
-                logging.info("User already exists with github_access_token %s %s", access_token, g.user.to_dict())
+                logger.info("User already exists with github_access_token %s %s", access_token, g.user.to_dict())
                 g.user = users[0]
                 g.user.carpentry_token = uuid.uuid4()
                 g.user.github_access_token = access_token
@@ -90,13 +90,15 @@ class CarpentryHttpServer(Web):
             logging.warning("authorized: %s - token: %s", g.user, access_token)
 
             response = redirect(next_url)
-            response.set_cookie('carpentry_token', bytes(g.user.carpentry_token))
+            response.set_cookie(
+                'carpentry_token',
+                bytes(g.user.carpentry_token),
+            )
             return response
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
             response = self.github.authorize(scope='repo_deployment,repo,user,gist,write:repo_hook,repo:status,org:admin,admin:org_hook')
-            response.set_cookie('carpentry_token', '', expires=0)
             return response
 
         @self.flask_app.route('/logout', methods=["GET"])
@@ -110,10 +112,24 @@ class CarpentryHttpServer(Web):
 
 
 def setup_logging(level):
-    WARNING_HANDLERS = ['cqlengine.cql', 'werkzeug', 'requests.packages.urllib3.connectionpool', 'cassandra.io.asyncorereactor']
-    for handler in WARNING_HANDLERS:
-        logging.getLogger(handler).setLevel(logging.WARNING)
+    LOG_HANDLERS = [
+        'lineup.steps',
+        'lineup',
+        'tumbler',
+        'carpentry',
+    ]
 
-    for name in LOGHANDLERS:
+    WARNING_ONLY_HANDLERS = [
+        'cqlengine.cql',
+        'werkzeug',
+        'requests.packages.urllib3.connectionpool',
+        'cassandra.io.asyncorereactor'
+    ]
+
+    for name in WARNING_ONLY_HANDLERS:
+        logger = logging.getLogger(name)
+        logger.setLevel(logging.WARNING)
+
+    for name in LOG_HANDLERS:
         logger = logging.getLogger(name)
         logger.setLevel(level)

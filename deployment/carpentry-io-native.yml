@@ -14,7 +14,6 @@
     carpentry_http_port: 5000
     carpentry_web_processes: 2
     carpentry_worker_processes: 10
-    carpentry_secret_key: accd12a8dbfc6e5ece6db7ad4e5fb16631ba6b07a3a91d3b06a2887eb5d9c17d
     cassandra:
       version: '2.0.1'
       version_branch: '2.0'

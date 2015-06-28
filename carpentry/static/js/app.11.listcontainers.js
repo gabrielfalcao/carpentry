@@ -3,24 +3,16 @@ angular.module('CarpentryApp.ListDockerContainers', ['CarpentryApp.Common']).con
 
     $rootScope.getDockerContainers();
 
-    $scope.stopContainer = function(container){
-        var url = "/api/docker/container/" + container.Id + "/stop";
-        $http.post(url).success(function (data, status, headers, config) {
-            notify('container successfully stopped');
-            $rootScope.getDockerContainers();
-        }).error(function (data, status, headers, config) {
-            notify('failed to remove container ' + container.Names[0]);
-            $rootScope.getDockerContainers();
-        });
-    };
-    $scope.removeContainer = function(container){
-        var url = "/api/docker/container/" + container.Id + "/remove";
-        $http.post(url).success(function (data, status, headers, config) {
-            notify('container successfully removed');
-            $rootScope.getDockerContainers();
-        }).error(function (data, status, headers, config) {
-            notify('failed to remove container ' + container.Names[0]);
-            $rootScope.getDockerContainers();
-        });
-    };
+
+    var limit = 720;
+    var counter = 0;
+    $rootScope.resetPollers();
+    $rootScope.refreshDockerContainersPoller = setInterval(function(){
+        counter++;
+        if (counter > 720) {
+            clearInterval($rootScope.refreshDockerContainersPoller);
+        }
+        $rootScope.getDockerContainers();
+    }, 1000);
+
 });

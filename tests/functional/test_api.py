@@ -12,6 +12,30 @@ from .helpers import api
 def test_create_builder(context):
     ('POST to /api/builder should create a builder')
 
+    context.github.on_post(
+        path='/repos/gabrielfalcao/lettuce/hooks',
+        body=json.dumps({
+            'hook_set': True
+        })
+    )
+
+    context.github.on_get(
+        path='/repos/gabrielfalcao/lettuce/hooks',
+        body=json.dumps([
+            {
+                'id': 'hookid1',
+                'config': {
+                    'url': 'https://carpentry.io/hookid1'
+                }
+            }
+        ])
+    )
+
+    context.github.on_delete(
+        path='/repos/gabrielfalcao/lettuce/hook/hookid1',
+        body=json.dumps({'msg': 'hook deleted successfully'})
+    )
+
     # Given that I POST to /api/builders
     response = context.http.post(
         '/api/builder',
@@ -252,6 +276,13 @@ def test_delete_builder(context):
 @api
 def test_create_build_instance_from_builder(context):
     ('POST to /api/builder/uuid/build should create a new build and scheduler it')
+
+    context.github.on_post(
+        path='/repos/gabrielfalcao/lettuce/hooks',
+        body=json.dumps({
+            'hook_set': True
+        })
+    )
 
     # Given a builder that there are 3 builders
     bd1 = Builder.create(
