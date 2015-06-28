@@ -14,7 +14,7 @@ from flask import Response, render_template, request
 # from jsmin import jsmin
 
 from carpentry import conf
-from carpentry.api import web
+from carpentry.api.resources import web
 from carpentry.version import version as carpentry_version
 # from carpentry.websockets import *
 
