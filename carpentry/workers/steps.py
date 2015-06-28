@@ -360,6 +360,10 @@ class CheckAndLoadBuildFile(Step):
         build = yaml.load(raw_yml)
         instructions['build'] = build
 
+        builder = b.builder
+        builder.shell_script = instructions['shell_script']
+        builder.save()
+
         self.produce(instructions)
 
 
