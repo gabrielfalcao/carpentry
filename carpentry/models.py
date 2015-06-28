@@ -141,9 +141,15 @@ class Builder(Model):
         base_url = conf.get_full_url('')
         logger.info("%s hooks found for repo %s", len(all_hooks), self.github_info)
         logger.info("trying to match them with the address: %s", base_url)
+        if response.status_code > 300:
+            logger.warning("github returned %s on %s:%s", response.status_code, url, response.text)
+            return
 
         for hook in all_hooks:
             hook_config = hook.get('config', {})
+            if not isinstance(hook_config, dict):
+                logger.error("Hook config is a %s %s", type(hook_config), hook_config)
+                hook_config = {}
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']
 

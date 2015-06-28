@@ -28,6 +28,11 @@
             <div class="form-group">
               <label for="shell_script" class="col-lg-2 control-label"><strong>shell script</strong></label>
               <div class="col-lg-10">
+                <div class="well">
+                  Examples:&nbsp;&nbsp;
+
+                  <button ng-repeat="(language, script) in SHELL_SCRIPT_EXAMPLES" ng-click="doShellScriptExample(language)" class="btn btn-sm btn-primary">{{ language }}</button>
+                </div>
                 <textarea id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
