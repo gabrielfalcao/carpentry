@@ -80,7 +80,7 @@ class CarpentryHttpServer(Web):
                 )
                 logger.info("created new user", g.user)
             else:
-                logger.info("User already exists with github_access_token %s %s", access_token, g.user.to_dict())
+                logger.info("User already exists with github_access_token %s %s", access_token, g.user)
                 g.user = users[0]
                 g.user.carpentry_token = uuid.uuid4()
                 g.user.github_access_token = access_token

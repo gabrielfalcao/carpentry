@@ -15,8 +15,7 @@ angular.module('CarpentryApp', [
     'CarpentryApp.Fullscreen',
     'CarpentryApp.ShowBuilder',
     'CarpentryApp.UserProfile',
-    'CarpentryApp.ListDockerContainers',
-    'CarpentryApp.ListDockerImages',
+    'CarpentryApp.Docker',
     'CarpentryApp.Splash'
 ]).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeBar = false;
@@ -53,14 +52,10 @@ angular.module('CarpentryApp', [
         url: '/splash',
         templateUrl: '/assets/js/templates/splash.html',
         controller: 'SplashController'
-    }).state('list-docker-images', {
-        url: '/docker/images',
-        templateUrl: '/assets/js/templates/list-docker-images.html',
-        controller: 'ListDockerImagesController'
-    }).state('list-docker-containers', {
-        url: '/docker/containers',
-        templateUrl: '/assets/js/templates/list-docker-containers.html',
-        controller: 'ListDockerContainersController'
+    }).state('docker', {
+        url: '/docker',
+        templateUrl: '/assets/js/templates/docker.html',
+        controller: 'DockerController'
     }).state('user-profile', {
         url: '/profile',
         templateUrl: '/assets/js/templates/profile.html',
