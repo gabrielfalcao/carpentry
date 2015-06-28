@@ -3,6 +3,41 @@ angular.module('CarpentryApp.Docker', ['CarpentryApp.Common']).controller('Docke
 
     $rootScope.getDockerImages();
 
+    $scope.dockerRunInfo = {
+        "newEnvironmentVariable": {"key": "", "value": ""}
+    };
+
+    $scope.dockerRunInfo.environmentVariables = [
+        {
+            "key": "PYTHONPATH",
+            "value": "/foo/bar"
+        }
+    ];
+    $scope.dockerPullInfo = {
+        "repository": "busybox",
+        "tag": "latest"
+    };
+
+    $scope.removeEnvironmentVariable = function(variable){
+        for (var x in $scope.dockerRunInfo.environmentVariables) {
+            var item = $scope.dockerRunInfo.environmentVariables[x];
+            if ((item.key === variable.key) && (variable.value == item.value)) {
+                $scope.dockerRunInfo.environmentVariables.splice(x, 1);
+            }
+        }
+    };
+    $scope.addEnvironmentVariable = function(){
+        if ($scope.dockerRunInfo.newEnvironmentVariable.key.length === 0) {
+            notify('you must fill the key before adding an environment variable');
+            return;
+        }
+        if ($scope.dockerRunInfo.newEnvironmentVariable.value.length === 0) {
+            notify('you must fill the value before adding an environment variable');
+            return;
+        }
+        $scope.dockerRunInfo.environmentVariables.push($scope.dockerRunInfo.newEnvironmentVariable);
+        $scope.dockerRunInfo.newEnvironmentVariable = {key: "", value:""};
+    }
     $scope.stopContainer = function(container){
         var url = "/api/docker/container/" + container.Id + "/stop";
         $http.post(url).success(function (data, status, headers, config) {

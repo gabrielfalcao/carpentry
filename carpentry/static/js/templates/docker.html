@@ -1,5 +1,5 @@
 <navbar />
-<div class="container">
+<div class="container" ng-controller="DockerController">
   <div class="row">
     <div class="col-lg-12">
       <img src="/assets/img/docker-logo.png" />
@@ -7,82 +7,117 @@
   </div>
   <div class="row">
     <div class="col-lg-4">
-      <h2>Operations</h2>
-      <hr />
-      <h3>pull an image by name</h3>
-      <br />
-      <form class="form-horizontal">
-        <div class="form-group">
-          <label class="col-lg-2 "><strong>repository</strong></label>
-          <div class="col-sm-10">
-            <input type="text"
-                   class="form-control input-sm"
-                   ng-model="dockerPullInfo.repository"
-                   placeholder="e.g. redis"/>
+      <h3>Operations</h3>
+      <div class="well">
+        <h4>pull an image by name</h4>
+        <br />
+        <form class="form-horizontal">
+          <div class="form-group">
+            <label class="col-sm-4"><strong>repository</strong></label>
+            <div class="col-sm-8">
+              <input type="text"
+                     class="form-control input-sm"
+                     ng-model="dockerPullInfo.repository"
+                     placeholder="e.g. redis"/>
+            </div>
+            <label class="col-sm-4"><strong>tag</strong></label>
+            <div class="col-sm-8">
+              <input type="text"
+                     class="form-control input-sm"
+                     ng-model="dockerPullInfo.tag"
+                     placeholder="latest"/>
+            </div>
           </div>
-          <label class="col-lg-2 "><strong>tag</strong></label>
-          <div class="col-sm-10">
-            <input type="text"
-                   class="form-control input-sm"
-                   ng-model="dockerPullInfo.tag"
-                   placeholder="latest"/>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="col-sm-12">
-            <button class="form-control btn btn-warning" ng-click="dockerPull(dockerPullInfo)">
-              <i class="fa fa-download"></i>
+          <div class="form-group">
+            <div class="col-sm-12">
+              <button class="form-control btn btn-warning" ng-click="dockerPull(dockerPullInfo)">
+                <i class="fa fa-download"></i>
 pull</button>
 
+            </div>
           </div>
+        </form>
+      </div>
+      <div class="well">
+        <h4>run an image</h4>
+        <br />
+        <div ng-hide="dockerImages.length" class="well ng-cloak">
+        pull or build an image so that you can run it here :)
         </div>
-      </form>
-      <hr />
-      <h3>run an image</h3>
-      <br />
-      <form class="form-horizontal">
-        <div class="form-group">
-          <label class="col-sm-4"><strong>image</strong></label>
-          <div class="col-sm-8">
-            <select class="form-control input-sm">
-              <option ng-model="dockerRunInfo.imageId"
-                      value="{{image.Id}}"
-                      ng-repeat="image in dockerImages">{{ image.RepoTags[0] }}</option>
-            </select>
+        <form class="form-horizontal" ng-show="dockerImages.length">
+          <div class="form-group">
+            <label class="col-sm-4"><strong>image</strong></label>
+            <div class="col-sm-8">
+              <select class="form-control input-sm">
+                <option ng-model="dockerRunInfo.imageId"
+                        value="{{image.Id}}"
+                        ng-repeat="image in dockerImages">{{ image.RepoTags[0] }}</option>
+              </select>
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-4"><strong>hostname</strong></label>
-          <div class="col-sm-8">
-            <input type="text"
+          <div class="form-group">
+            <label class="col-sm-4"><strong>hostname</strong></label>
+            <div class="col-sm-8">
+              <input type="text"
+                     class="form-control input-sm"
+                     ng-model="dockerRunInfo.hostname"
+                     placeholder="redistest1"  />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-12"><strong>environment variables</strong></label>
+            <div class="environ-pair" ng-repeat="variable in dockerRunInfo.environmentVariables">
+              <div class="col-sm-10">
+                <input type="text"
+                       class="form-control input-sm"
+                       disabled="disabled"
+                       value="{{variable.key}}={{variable.value}}"/>
+              </div>
+              <div class="col-sm-2">
+                <btn class="btn btn-danger" ng-click="removeEnvironmentVariable(variable)">
+                  <i class="fa fa-minus"></i>
+                </btn>
+              </div>
+            </div>
+
+            <div class="environ-pair">
+              <div class="col-sm-4">
+                <input type="text"
+                       class="form-control input-sm"
+                       placeholder="key"
+                       ng-model="dockerRunInfo.newEnvironmentVariable.key"/>
+              </div>
+              <div class="col-sm-4">
+                <input type="text"
+                       class="form-control input-sm"
+                       placeholder="value"
+                       ng-model="dockerRunInfo.newEnvironmentVariable.value"/>
+              </div>
+              <div class="col-sm-4">
+                <button style="width:100%;margin-top:2px;" class="btn btn-sm btn-success" ng-click="addEnvironmentVariable()">
+                  <i class="fa fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-12"><strong>shell command:</strong></label>
+            <div class="col-sm-12">
+              <textarea
                    class="form-control input-sm"
-                   ng-model="dockerRunInfo.hostname"
-                   placeholder="redistest1"  />
+                       ng-model="dockerRunInfo.command"></textarea>
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="col-sm-4"><strong>environment variables</strong></label>
-          <div class="col-sm-4">
-            <input type="text"
-                   class="form-control input-sm"
-                   placeholder="key"
-                   ng-model="dockerRunInfo.newEnvironmentVariable.key"/>
+          <div class="form-group">
+            <div class="col-sm-12">
+              <button class="form-control btn btn-info"
+                      ng-click="dockerRun(dockerRunInfo)">
+                <i class="fa fa-play-circle"></i>run</button>
+            </div>
           </div>
-          <div class="col-sm-4">
-            <input type="text"
-                   class="form-control input-sm"
-                   placeholder="value"
-                   ng-model="dockerRunInfo.newEnvironmentVariable.value"/>
-          </div>
-        </div>
-        <div class="form-group">
-          <div class="col-sm-12">
-            <button class="form-control btn btn-info"
-                    ng-click="dockerRun(dockerRunInfo)">
-              <i class="fa fa-play-circle"></i>run</button>
-          </div>
-        </div>
-      </form>
+        </form>
+
+      </div>
     </div>
     <div class="col-lg-8">
       <h2>Images</h2>
@@ -108,7 +143,6 @@ Remove</button>
           </tr>
         </tbody>
       </table>
-      <hr />
       <h2>Containers</h2>
       <table class="table">
         <thead>

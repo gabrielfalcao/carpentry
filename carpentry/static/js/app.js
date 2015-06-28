@@ -113,7 +113,7 @@ angular.module('CarpentryApp', [
         $http.get("/api/user").success(function(data, status){
             $rootScope.user = data;
             $rootScope.isAuthenticated = true;
-            console.log("GitHub Metadata", data);
+            // console.log("GitHub Metadata", data);
             $rootScope.go($rootScope.originalUrl);
         }).error(function(data, status){
             location.href = "/logout";
@@ -124,11 +124,11 @@ angular.module('CarpentryApp', [
             .get('/api/docker/images')
             .success(function(data, status, headers, config) {
                 $rootScope.dockerImages = data;
-                console.log(data);
+                // console.log(data);
             })
 
             .error(function(data, status, headers, config) {
-                console.log('failed to list docker images ');
+                // console.log('failed to list docker images ');
                 notify('failed to list docker images');
             });
     };
@@ -137,11 +137,11 @@ angular.module('CarpentryApp', [
             .get('/api/docker/containers')
             .success(function(data, status, headers, config) {
                 $rootScope.dockerContainers = data;
-                console.log(data);
+                // console.log(data);
             })
 
             .error(function(data, status, headers, config) {
-                console.log('failed to list docker containers ');
+                // console.log('failed to list docker containers ');
                 notify('failed to list docker containers');
             });
     };
@@ -153,7 +153,7 @@ angular.module('CarpentryApp', [
             if (data.error) {
                 notify("ERROR: " + data.error);
             } else {
-                console.log("ERROR", data, status);
+                // console.log("ERROR", data, status);
             }
         }
     };
@@ -168,7 +168,7 @@ angular.module('CarpentryApp', [
     $rootScope.buildCache = {};
 
     $rootScope.triggerBuild = function(builder, stay){
-        console.log( "triggerBuild");
+        // console.log( "triggerBuild");
         $http
             .post('/api/builder/' + builder.id + '/build')
 
@@ -220,6 +220,13 @@ angular.module('CarpentryApp', [
         description: 'fullscreen',
         callback: function () {
             $rootScope.go('/fullscreen');
+        }
+    });
+    hotkeys.add({
+        combo: 'D',
+        description: 'docker management',
+        callback: function () {
+            $rootScope.go('/docker');
         }
     });
     hotkeys.add({
