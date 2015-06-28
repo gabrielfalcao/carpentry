@@ -3,6 +3,7 @@
 #
 import uuid
 import json
+import httpretty
 from carpentry.models import Builder, CarpentryPreference, Build
 
 from .helpers import api

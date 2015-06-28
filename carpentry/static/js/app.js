@@ -21,6 +21,7 @@ angular.module('CarpentryApp', [
     cfpLoadingBarProvider.includeBar = false;
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.latencyThreshold = 10;
+
     $stateProvider.state('index', {
         url: '/',
         templateUrl: '/assets/js/templates/index.html',

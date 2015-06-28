@@ -1,5 +1,4 @@
 <navbar />
-
 <div class="container">
   <div class="row">
     <div class="col-lg-12">
@@ -9,7 +8,6 @@
   <div class="row">
     <div class="col-lg-4">
       <h2>Operations</h2>
-
       <hr />
       <h3>pull an image by name</h3>
       <br />
@@ -17,50 +15,75 @@
         <div class="form-group">
           <label class="col-lg-2 "><strong>repository</strong></label>
           <div class="col-sm-10">
-            <input type="text" class="form-control input-sm" ng-model="dockerPullInfo.repository" placeholder="e.g. redis"/>
+            <input type="text"
+                   class="form-control input-sm"
+                   ng-model="dockerPullInfo.repository"
+                   placeholder="e.g. redis"/>
           </div>
           <label class="col-lg-2 "><strong>tag</strong></label>
           <div class="col-sm-10">
-            <input type="text" class="form-control input-sm" ng-model="dockerPullInfo.tag" placeholder="latest"/>
+            <input type="text"
+                   class="form-control input-sm"
+                   ng-model="dockerPullInfo.tag"
+                   placeholder="latest"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-12">
             <button class="form-control btn btn-warning" ng-click="dockerPull(dockerPullInfo)">
               <i class="fa fa-download"></i>
 pull</button>
+
           </div>
         </div>
       </form>
-
       <hr />
       <h3>run an image</h3>
       <br />
       <form class="form-horizontal">
         <div class="form-group">
-          <label class="col-lg-2 "><strong>image</strong></label>
-          <div class="col-sm-10">
+          <label class="col-sm-4"><strong>image</strong></label>
+          <div class="col-sm-8">
             <select class="form-control input-sm">
-              <option ng-model="dockerRunInfo.imageId" value="{{image.Id}}" ng-repeat="image in dockerImages">{{ image.RepoTags[0] }}</option>
+              <option ng-model="dockerRunInfo.imageId"
+                      value="{{image.Id}}"
+                      ng-repeat="image in dockerImages">{{ image.RepoTags[0] }}</option>
             </select>
           </div>
         </div>
         <div class="form-group">
-          <label class="col-lg-2 "><strong>hostname</strong></label>
-          <div class="col-sm-10">
-            <input type="text"class="form-control input-sm" ng-model="dockerRunInfo.hostname" placeholder="redistest1"  />
+          <label class="col-sm-4"><strong>hostname</strong></label>
+          <div class="col-sm-8">
+            <input type="text"
+                   class="form-control input-sm"
+                   ng-model="dockerRunInfo.hostname"
+                   placeholder="redistest1"  />
           </div>
-          <div class="form-group">
-            <label class="col-lg-2 "><strong>environment vars</strong></label>
-            <div class="col-sm-10">
-              <textarea class="form-control input-sm" ng-model="dockerRunInfo.environ" cols="8" style="width:294px;margin-left:10px" ></textarea>
-              <button class="form-control btn btn-info"
-                      ng-click="dockerRun(dockerRunInfo)">
-                <i class="fa fa-play-circle"></i>
-run</button>
-            </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-4"><strong>environment variables</strong></label>
+          <div class="col-sm-4">
+            <input type="text"
+                   class="form-control input-sm"
+                   placeholder="key"
+                   ng-model="dockerRunInfo.newEnvironmentVariable.key"/>
+          </div>
+          <div class="col-sm-4">
+            <input type="text"
+                   class="form-control input-sm"
+                   placeholder="value"
+                   ng-model="dockerRunInfo.newEnvironmentVariable.value"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-12">
+            <button class="form-control btn btn-info"
+                    ng-click="dockerRun(dockerRunInfo)">
+              <i class="fa fa-play-circle"></i>run</button>
           </div>
         </div>
       </form>
     </div>
-
-
     <div class="col-lg-8">
       <h2>Images</h2>
       <table class="table">
@@ -85,10 +108,7 @@ Remove</button>
           </tr>
         </tbody>
       </table>
-
       <hr />
-
-
       <h2>Containers</h2>
       <table class="table">
         <thead>

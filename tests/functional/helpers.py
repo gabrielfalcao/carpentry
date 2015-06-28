@@ -3,6 +3,7 @@
 import httpretty
 import logging
 import uuid
+import json
 from sure import scenario
 
 from tumbler.core import Web
@@ -27,9 +28,10 @@ class GithubMocker(object):
         )
 
     def on_get(self, path, body=None, status=200, headers={}):
+        url = "/".join(["https://api.github.com", path.lstrip('/')])
         httpretty.register_uri(
             httpretty.GET,
-            "/".join(["https://api.github.com", path.lstrip('/')]),
+            url,
             body=body,
             headers=headers,
             status=status
@@ -77,6 +79,11 @@ def prepare_http_client(context):
     context.user.save()
 
     context.github = GithubMocker(context.user)
+    context.github.on_get('/user/orgs', body=json.dumps([
+        {
+            'login': 'cnry'
+        }
+    ]))
 
     context.headers = {
         'Content-Type': 'application/json',
