@@ -23,7 +23,8 @@ def calculate_redis_key(instructions):
 
 def get_docker_client():
     kwargs = kwargs_from_env()
-    kwargs['tls'].verify = False
+    if 'tls' in kwargs:
+        kwargs['tls'].verify = False
     kwargs['timeout'] = 60 * 5
 
     docker = Client(**kwargs)
