@@ -7,7 +7,6 @@ import re
 import json
 import time
 import logging
-import tempfile
 import traceback
 import io
 import requests
@@ -53,7 +52,6 @@ def force_unicode(string):
 def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_seconds=None):
     stdout = []
     build.stdout = build.stdout or ''
-    build.stderr = build.stderr or ''
 
     current_transfered_bytes = 0
     started_time = time.time()
@@ -70,7 +68,6 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
         out = force_unicode(raw)
         current_transfered_bytes += len(out)
         build.stdout += out
-        build.stderr += out
         stdout.append(out)
         if current_transfered_bytes >= stdout_chunk_size:
             build.save()
@@ -78,7 +75,7 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
 
     timed_out = difference > timeout_in_seconds
     if timed_out:
-        out = "Build timed out by {0} seconds".format(difference)
+        out = "\nBuild timed out by {0} seconds".format(difference)
         build.stdout += out
         build.stderr += out
 
@@ -87,10 +84,8 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
     else:
         exit_code = process.wait()
 
-    try:
-        return ''.join(stdout), exit_code
-    except UnicodeDecodeError:
-        return ''.encode('utf-8').join(stdout), exit_code
+    build.save()
+    return ''.join(stdout), exit_code
 
 
 def get_build_from_instructions(instructions):
@@ -99,16 +94,11 @@ def get_build_from_instructions(instructions):
 
 def set_build_status(instructions, status, description=None):
     build = get_build_from_instructions(instructions)
-    build.status = status
-    build.save()
 
-    github_status = GITHUB_STATUS_MAP.get(status, None)
-    if not github_status:
-        logging.info("Skipping set github build status to %s", status)
-        return
+    user = instructions.get('user', {})
+    github_access_token = user.get('github_access_token', None)
 
-    github_access_token = instructions['user']['github_access_token']
-    build.set_github_status(github_access_token, github_status, description)
+    build.set_status(status, github_access_token, description)
 
 
 class PrepareSSHKey(Step):

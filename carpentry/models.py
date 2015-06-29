@@ -354,6 +354,18 @@ class Build(Model):
     def builder(self):
         return Builder.get(id=self.builder_id)
 
+    def set_status(self, status, github_access_token=None, description=None):
+        self.status = status
+        self.save()
+
+        github_status = GITHUB_STATUS_MAP.get(status, None)
+        if not github_status:
+            msg = "[github] {0} skipping set github build status to {1}"
+            logger.info(msg.format(self, status))
+            return
+
+        self.set_github_status(github_access_token, github_status, description)
+
     def save(self):
         builder = Builder.objects.get(id=self.builder_id)
         last_builders_build = builder.get_last_build()
