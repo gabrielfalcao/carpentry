@@ -434,7 +434,7 @@ class DockerDependencyStopper(Step):
         for dependency in instructions['dependency_containers']:
             container = dependency['container']
 
-            build.stdout += "Running dependency:\n"
+            build.stdout += "Stopping dependency:\n"
             build.stdout += json.dumps(dependency, indent=2)
             build.stdout += "\n\n"
             build.save()
