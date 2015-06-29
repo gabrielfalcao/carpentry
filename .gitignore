@@ -12,3 +12,4 @@ builds.db
 carpentry.log
 sandbox
 carpentry.egg*
+carpentry_ci.egg-info
