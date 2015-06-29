@@ -501,7 +501,7 @@ class RunBuild(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'running')
 
-        if 'image' not in instructions:
+        if 'image' not in instructions['build']:
             self.build_native(instructions)
         else:
             self.build_with_docker(instructions)
