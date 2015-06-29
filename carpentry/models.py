@@ -58,8 +58,8 @@ redis_pool = redis.ConnectionPool(
 
 
 def get_pipeline():
-    from carpentry.workers import LocalBuilder
-    return LocalBuilder(JSONRedisBackend)
+    from carpentry.workers import RunBuilder
+    return RunBuilder(JSONRedisBackend)
 
 
 def slugify(string):

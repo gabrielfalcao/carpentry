@@ -7,6 +7,7 @@ import re
 import json
 import time
 import logging
+import tempfile
 import traceback
 import io
 import requests
@@ -18,9 +19,9 @@ from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
 from docker.client import Client
-from docker.utils import kwargs_from_env
+from docker.utils import kwargs_from_env, create_host_config
 
-from carpentry.util import render_string
+from carpentry.util import render_string, get_docker_client
 from carpentry.models import Build, GITHUB_STATUS_MAP
 # import unicodedata
 
@@ -367,6 +368,98 @@ class CheckAndLoadBuildFile(Step):
         self.produce(instructions)
 
 
+class DockerDependencyRunner(Step):
+    def consume(self, instructions):
+        set_build_status(instructions, 'running', 'looking for dependency docker images')
+
+        build_info = instructions['build']
+        if 'dependencies' not in build_info.keys():
+            msg = 'not running docker dependencies because they were not set in %s'
+            logging.warning(msg, json.dumps(build_info, indent=2))
+            return
+
+        dependency_containers = []
+        instructions['dependency_containers'] = dependency_containers
+
+        build = Build.objects.get(id=instructions['id'])
+        for dependency in build_info['dependencies']:
+            build.stdout += "Running dependency:\n"
+            build.stdout += json.dumps(dependency, indent=2)
+            build.stdout += "\n\n"
+            build.save()
+            container = self.run_dependency(build, dependency)
+            dependency_containers.append(container)
+
+        instructions['dependency_containers'] = dependency_containers
+        self.produce(instructions)
+
+    def run_dependency(self, build, dependency):
+        docker = get_docker_client()
+
+        image = dependency['image']
+
+        for line in docker.pull(image, stream=True):
+            build.stdout += line
+            build.stdout += "\n"
+            build.save()
+            logging.info("docker pull {0}: {1}".format(image, line))
+
+        hostname = dependency['hostname']
+
+        container = docker.create_container(
+            image=image,
+            name=hostname,
+            hostname=hostname,
+            environment=dependency.get('environment', {}),
+            detach=True,
+        )
+
+        docker.start(container['Id'])
+        time.sleep(3)
+
+        dependency['container'] = container
+        return dependency
+
+
+class DockerDependencyStopper(Step):
+    def consume(self, instructions):
+        if 'dependency_containers' not in instructions:
+            msg = render_string('skipping docker dependency stop for {name}', instructions)
+            logging.info(msg)
+            return
+
+        docker = get_docker_client()
+
+        build = Build.objects.get(id=instructions['id'])
+        for dependency in instructions['dependency_containers']:
+            container = dependency['container']
+
+            build.stdout += "Running dependency:\n"
+            build.stdout += json.dumps(dependency, indent=2)
+            build.stdout += "\n\n"
+            build.save()
+            try:
+                docker.stop(container['Id'])
+                docker.remove_container(container['Id'], force=True)
+            except Exception as e:
+                build.stdout += traceback.format_exc(e)
+                build.stdout += "\n\n"
+                build.save()
+
+        self.produce(instructions)
+
+    def run_dependency(self, dependency):
+        docker = get_docker_client()
+        container = docker.create_container(
+            image=dependency['image'],
+            name=dependency['hostname'],
+            hostname=dependency['hostname'],
+            detach=True
+        )
+        docker.start(container['Id'])
+        return container
+
+
 class PrepareShellScript(Step):
     def write_script_to_fd(self, fd, template, instructions):
         rendered = render_string(template, instructions)
@@ -404,9 +497,72 @@ class PrepareShellScript(Step):
         self.produce(instructions)
 
 
-class LocalBuild(Step):
+class RunBuild(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'running')
+
+        if 'image' not in instructions:
+            self.build_native(instructions)
+        else:
+            self.build_with_docker(instructions)
+
+    def build_with_docker(self, instructions):
+        DOCKERFILE_TEMPLATE = '\n'.join([
+            'FROM {build[image]}',
+            'CMD ["bash", "{shell_script_path}"]'
+        ])
+        build_dir = instructions['build_dir']
+        dockerfile_path = os.path.join(build_dir, 'Dockerfile')
+
+        with io.open(dockerfile_path, 'wb') as fd:
+            rendered_dockerfile = render_string(DOCKERFILE_TEMPLATE, instructions)
+            fd.write(rendered_dockerfile)
+
+        docker = get_docker_client()
+        commit = instructions['commit']
+        slug = instructions['slug']
+        image_tag = ':'.join([slug, commit[:8]])
+
+        build = Build.get(id=instructions['id'])
+
+        for line in docker.build(path=build_dir,
+                                 rm=True,
+                                 forcerm=True,
+                                 stream=True,
+                                 tag=image_tag):
+            build.stdout += line
+            build.save()
+
+        container_links = [(d['image'], d['hostname']) for d in instructions['dependency_containers']]
+
+        container = docker.create_container(
+            image=image_tag,
+            environment=instructions['build'].get('environment', {}),
+            host_config=create_host_config(
+                links=container_links
+            ),
+            name=image_tag,
+        )
+        docker.start(container['Id'])
+
+        for line in docker.logs(container['Id'], stream=True, stdout=True):
+            build.stdout += line
+            build.save()
+
+        build.code = docker.wait(container)
+
+        if build.code == 0:
+            status = 'succeeded'
+        else:
+            status = 'failed'
+
+        build.status = status
+        build.save()
+
+        instructions['container'] = container
+        self.produce(instructions)
+
+    def build_native(self, instructions):
         cmd = render_string('bash {shell_script_path}', instructions)
 
         self.log(render_string("running: bash {shell_script_path}", instructions))

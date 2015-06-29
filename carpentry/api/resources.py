@@ -121,6 +121,9 @@ def retrieve_builder(user, id):
 def clear_builds(user, id):
     builder = models.Builder.get(id=id)
     deleted_builds = builder.clear_builds()
+    if not deleted_builds:
+        return json_response({'total': 0})
+
     total = len(deleted_builds)
     logging.info("Deleted {0} builds of commits {2}:\n{1}".format(
         total,

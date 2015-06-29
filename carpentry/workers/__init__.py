@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 
-from carpentry.workers.pipelines import LocalBuilder
+from carpentry.workers.pipelines import RunBuilder
 
 
-__all__ = ['LocalBuilder']
+__all__ = ['RunBuilder']

@@ -21,7 +21,7 @@ from carpentry import routes
 from carpentry import conf
 from carpentry.server import CarpentryHttpServer, setup_logging
 from carpentry.api.resources import get_models
-from carpentry.workers.pipelines import LocalBuilder
+from carpentry.workers.pipelines import RunBuilder
 
 this_node = Node(__file__).dir
 
@@ -137,7 +137,7 @@ def carpentry_run_local_pipeline():
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
 
     print LOGO
-    pipeline = LocalBuilder(JSONRedisBackend)
+    pipeline = RunBuilder(JSONRedisBackend)
 
     coloredlogs.install(level=logging.INFO)
     setup_logging(logging.INFO)
@@ -165,7 +165,7 @@ def carpentry_setup():
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
 
     create_keyspace('carpentry', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
-    pipeline = LocalBuilder(JSONRedisBackend)
+    pipeline = RunBuilder(JSONRedisBackend)
     backend = pipeline.get_backend()
     if args.flush_redis:
         for key in backend.redis.keys('carpentry*'):

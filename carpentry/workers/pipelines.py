@@ -7,13 +7,15 @@ from carpentry.workers.steps import (
     PrepareSSHKey,
     PushKeyToGithub,
     LocalRetrieve,
-    LocalBuild,
+    RunBuild,
     CheckAndLoadBuildFile,
     PrepareShellScript,
+    DockerDependencyStopper,
+    DockerDependencyRunner,
 )
 
 
-class LocalBuilder(Pipeline):
+class RunBuilder(Pipeline):
     """A very simple builder that just runs subprocesses in the
     machine where carpentry is installed.
     """
@@ -24,5 +26,7 @@ class LocalBuilder(Pipeline):
         LocalRetrieve,
         CheckAndLoadBuildFile,
         PrepareShellScript,
-        LocalBuild
+        DockerDependencyRunner,
+        RunBuild,
+        DockerDependencyStopper,
     ]
