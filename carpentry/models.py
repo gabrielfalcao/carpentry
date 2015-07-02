@@ -122,7 +122,7 @@ class Builder(Model):
             'Authorization': 'token {0}'.format(github_access_token)
         }
 
-        url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_info)
+        url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_repo_info)
         response = requests.delete(url, headers=headers)
         return response
 
@@ -134,12 +134,12 @@ class Builder(Model):
         headers = {
             'Authorization': 'token {0}'.format(github_access_token)
         }
-        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_info)
+        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_repo_info)
 
         response = requests.get(url, headers=headers)
         all_hooks = response.json()
         base_url = conf.get_full_url('')
-        logger.info("%s hooks found for repo %s", len(all_hooks), self.github_info)
+        logger.info("%s hooks found for repo %s", len(all_hooks), self.github_repo_info)
         logger.info("trying to match them with the address: %s", base_url)
         if response.status_code > 300:
             logger.warning("github returned %s on %s:%s", response.status_code, url, response.text)
@@ -150,6 +150,7 @@ class Builder(Model):
             if not isinstance(hook_config, dict):
                 logger.error("Hook config is a %s %s", type(hook_config), hook_config)
                 hook_config = {}
+
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']
 
@@ -158,7 +159,7 @@ class Builder(Model):
                 continue
 
             if hook_url.startswith(base_url):
-                logger.info("removing hook %s from repo %s", hook_config, self.github_info)
+                logger.info("removing hook %s from repo %s", hook_config, self.github_repo_info)
                 self.delete_single_github_hook(
                     hook_id,
                     github_access_token
@@ -173,7 +174,7 @@ class Builder(Model):
         return {}
 
     @property
-    def github_info(self):
+    def github_repo_info(self):
         return Builder.determine_github_repo_from_git_uri(self.git_uri)
 
     def determine_github_hook_url(self):
@@ -200,7 +201,7 @@ class Builder(Model):
                 "content_type": "json"
             }
         })
-        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_info)
+        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_repo_info)
         response = requests.post(url, data=request_payload, headers=headers)
         self.github_hook_data = response.text
         self.save()
@@ -312,7 +313,7 @@ class Build(Model):
         return conf.get_full_url(path)
 
     @property
-    def github_info(self):
+    def github_repo_info(self):
         return Builder.determine_github_repo_from_git_uri(self.git_uri)
 
     @property
@@ -334,7 +335,7 @@ class Build(Model):
             'Authorization': 'token {0}'.format(github_access_token)
         }
         template_url = 'https://api.github.com/repos/{{owner}}/{{name}}/statuses/{0}'.format(self.commit)
-        url = render_string(template_url, self.github_info)
+        url = render_string(template_url, self.github_repo_info)
 
         request_payload = json.dumps({
             "state": "success",
@@ -353,6 +354,13 @@ class Build(Model):
     @property
     def builder(self):
         return Builder.get(id=self.builder_id)
+
+    def append_to_stdout(self, string):
+        if not isinstance(self.stdout, basestring):
+            self.stdout = ''
+
+        self.stdout += string
+        self.save()
 
     def set_status(self, status, github_access_token=None, description=None):
         self.status = status
@@ -378,6 +386,7 @@ class Build(Model):
 
     def to_dict(self):
         return model_to_dict(self, {
+            'github_repo_info': self.github_repo_info,
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'author_gravatar_url': self.author_gravatar_url
         })

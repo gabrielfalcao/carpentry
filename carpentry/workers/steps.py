@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 from __future__ import unicode_literals
+
 import os
 import re
 import json
@@ -17,11 +18,11 @@ from carpentry import conf
 from datetime import datetime
 from subprocess import Popen, PIPE, STDOUT, check_output, CalledProcessError
 from lineup import Step
-from docker.client import Client
-from docker.utils import kwargs_from_env, create_host_config
+
+from docker.utils import create_host_config
 
 from carpentry.util import render_string, get_docker_client
-from carpentry.models import Build, GITHUB_STATUS_MAP
+from carpentry.models import Build
 # import unicodedata
 
 
@@ -33,6 +34,17 @@ COMMIT_REGEX = re.compile(
 
 COMMIT_MESSAGE_REGEX = re.compile(
     r'Date:.*?\n\s*(?P<commit_message>.*?)\s*^diff --git', re.M | re.S)
+
+
+def response_did_succeed(response):
+    return int(response.status_code) in [
+        200,
+        201,
+        202,
+        204,
+        205,
+        206,
+    ]
 
 
 def run_command(command, chdir, environment={}):
@@ -50,9 +62,10 @@ def force_unicode(string):
 
 
 def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_seconds=None):
-    stdout = []
-    build.stdout = build.stdout or ''
+    if not build.stdout:
+        build.stdout = ''
 
+    stdout = []
     current_transfered_bytes = 0
     started_time = time.time()
     difference = time.time() - started_time
@@ -116,73 +129,84 @@ class PrepareSSHKey(Step):
         os.chmod(destination, mode)
 
     def consume(self, instructions):
-        b = Build.objects.get(id=instructions['id'])
-        b.stdout = b.stdout or 'preparing ssh key...\n'
-        b.save()
+        b = get_build_from_instructions(instructions)
+        b.append_to_stdout('preparing ssh key...\n')
+
         now = datetime.utcnow()
         set_build_status(instructions, 'running', 'carpentry build started at {0} UTC'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
         slug = instructions['slug']
-        workdir = conf.build_node.join(slug)
 
         ssh_dir = conf.ssh_keys_node.join(slug)
 
-        private_key = instructions['id_rsa_private']
-        public_key = instructions['id_rsa_public']
+        private_key = instructions.get('id_rsa_private', None)
+        public_key = instructions.get('id_rsa_public', None)
 
         id_rsa_private_key_path = render_string('{slug}-id_rsa', instructions)
         id_rsa_public_key_path = render_string('{slug}-id_rsa.pub', instructions)
+
         instructions['id_rsa_private_key_path'] = os.path.join(ssh_dir, id_rsa_private_key_path)
         instructions['id_rsa_public_key_path'] = os.path.join(ssh_dir, id_rsa_public_key_path)
 
         if not private_key:
-            raise RuntimeError(render_string('the builder {builder_id} does not have a private_key set', instructions))
+            msg = render_string(
+                'the builder {builder_id} does not have a private_key set',
+                instructions
+            )
+            b.append_to_stdout(msg)
+            raise RuntimeError(msg)
 
         if not public_key:
-            raise RuntimeError(render_string('the builder {builder_id} does not have a public_key set', instructions))
+            msg = render_string(
+                'the builder {builder_id} does not have a public_key set',
+                instructions
+            )
+            b.append_to_stdout(msg)
+            raise RuntimeError(msg)
 
-        self.write_file(ssh_dir, id_rsa_private_key_path, private_key, mode=0600)
-        self.write_file(ssh_dir, id_rsa_public_key_path, public_key, mode=0644)
+        self.write_file(
+            ssh_dir,
+            id_rsa_private_key_path,
+            private_key,
+            mode=0600
+        )
+        self.write_file(
+            ssh_dir,
+            id_rsa_public_key_path,
+            public_key,
+            mode=0644
+        )
 
-        instructions['ssh_dir'] = ssh_dir
-        instructions['workdir'] = workdir
+        command = render_string(
+            'ssh-add {id_rsa_private_key_path}',
+            instructions
+        )
+
         try:
-            instructions['ssh_add'] = check_output(render_string('ssh-add {id_rsa_private_key_path}', instructions), shell=True)
-        except CalledProcessError:
-            pass
+            ssh_add_output = check_output(
+                command,
+                shell=True
+            )
+            instructions['ssh_add'] = ssh_add_output
+
+        except CalledProcessError as e:
+            tb = traceback.format_exc(e)
+            b.append_to_stdout(tb)
+
         self.produce(instructions)
 
 
 class PushKeyToGithub(Step):
     REGEX = re.compile(r'(?P<owner>[\w_-]+)/(?P<repo>[\w_-]+)([.]git)?$')
 
-    def parse_github_repo(self, instructions):
-        git_uri = instructions['git_uri']
-        found = self.REGEX.search(git_uri)
-        if found:
-            data = found.groupdict()
-            return data['owner'], data['repo']
-
-    def consume(self, instructions):
-        b = Build.objects.get(id=instructions['id'])
-        b.stdout += "pushing key to github...\n"
-        b.save()
-
-        github_access_token = instructions['user']['github_access_token']
-
+    def push_keys_into_api_and_get_response(self, title, owner, repo, key, access_token):
         headers = {
-            'Authorization': 'token {0}'.format(github_access_token)
+            'Authorization': 'token {0}'.format(access_token)
         }
 
-        owner_and_repo = self.parse_github_repo(instructions)
-        if not owner_and_repo:
-            self.log('INVALID GITHUB REPO, not pushing ssh keys as deploy keys')
-            return self.produce(instructions)
-
-        owner, repo = owner_and_repo
         url = 'https://api.github.com/repos/{0}/{1}/keys'.format(owner, repo)
         payload = json.dumps({
-            "title": "carpentry {0}".format(instructions['name']),
-            "key": instructions['id_rsa_public'],
+            "title": title,
+            "key": key,
             "read_only": True
         }, indent=2)
 
@@ -190,27 +214,55 @@ class PushKeyToGithub(Step):
         self.log("Pushing deploy keys to github {0}".format(payload))
 
         response = requests.post(url, data=payload, headers=headers)
-        if int(response.status_code) > 300:
-            logging.error("%s: Failed to push deploy key %s", response.status_code, response.text)
-            b = Build.objects.get(id=instructions['id'])
-            b.stdout = b.stdout or ''
-            b.status = 'failed'
+        return response
 
-            b.stdout += "\n--------------------\n"
-            b.stdout += "Failed to push deploy key\n"
-            b.stdout += "POST {0}\n".format(url)
-            b.stdout += "RESPONSE:\n\n"
-            try:
-                b.stdout += json.dumps(response.json(), indent=2)
-            except Exception as e:
-                b.stdout += str(e)
-                b.stdout += response.text
+    def dump_error_into_build_output(self, build, response):
+        msg = "%s: failed to push deploy key %s"
+        logging.error(msg, response.status_code, response.text)
+        build.append_to_stdout('failed')
+        build.append_to_stdout("\n--------------------\n")
+        build.append_to_stdout("Failed to push deploy key\n")
+        build.append_to_stdout("RESPONSE:\n\n")
+        build.append_to_stdout(response.text)
+        build.append_to_stdout("\n--------------------\n")
 
-            b.stdout += "\n--------------------\n"
-            b.save()
-        else:
+    def consume(self, instructions):
+        github_repo_info = instructions.get('github_repo_info', {})
+        build = get_build_from_instructions(instructions)
+        if not github_repo_info:
+            msg = render_string(
+                '{name} declared an invalid github repo: {git_uri}, '
+                'not pushing ssh keys as deploy keys',
+                instructions
+            )
+            build.append_to_stdout(msg)
+            self.log(msg)
+            return
+
+        build.append_to_stdout("pushing key to github...\n")
+        user = instructions['user']
+
+        # gathering data to form the payload
+        title = render_string("carpentry {name}", instructions)
+        owner = github_repo_info.get('owner')
+        repo = github_repo_info.get('name')
+        github_access_token = user.get('github_access_token')
+        public_key = instructions['public_key']
+
+        response = self.push_keys_into_api_and_get_response(
+            title,
+            owner,
+            repo,
+            public_key,
+            github_access_token,
+        )
+
+        if response_did_succeed(response):
             instructions['github_deploy_key'] = response.json()
-            self.log("Keys pushed to github successfully!!!!!")
+            build.append_to_stdout(
+                "Keys pushed to github successfully!!!!!")
+        else:
+            self.dump_error_into_build_output(build, response)
 
         self.produce(instructions)
 
@@ -218,13 +270,14 @@ class PushKeyToGithub(Step):
 class LocalRetrieve(Step):
     def consume(self, instructions):
         set_build_status(instructions, 'retrieving')
+
         b = Build.objects.get(id=instructions['id'])
-        b.stdout += 'retrieving repo...\n'
-        b.save()
+        b.append_to_stdout('retrieving repo...\n')
 
         slug = instructions['slug']
         workdir = conf.workdir_node.join(slug)
         build_dir = conf.build_node.join(slug)
+
         if not os.path.exists(build_dir):
             os.makedirs(build_dir)
 
@@ -256,12 +309,11 @@ class LocalRetrieve(Step):
 
         if int(exit_code) != 0:
             self.log('Git clone failed {0}'.format(stdout))
-            b.stdout = b.stdout or ''
             b.status = 'failed'
 
-            b.stdout += "Failed to {0}\n".format(git)
-            b.stdout += force_unicode(stdout)
-            b.stdout += "\n"
+            b.append_to_stdout("Failed to {0}\n".format(git))
+            b.append_to_stdout(force_unicode(stdout))
+            b.append_to_stdout("\n")
             b.save()
             raise RuntimeError('git clone failed:\n{0}'.format(stdout))
 
@@ -279,26 +331,22 @@ class LocalRetrieve(Step):
 
             if int(exit_code) != 0:
                 self.log('git checkout failed {0}'.format(stdout))
-                b.stdout = b.stdout or ''
-                b.status = 'failed'
-
-                b.stdout += "Failed to {0}\n".format(git)
-                b.stdout += force_unicode(stdout)
-                b.stdout += "\n"
-                b.save()
-                raise RuntimeError('git clone failed:\n{0}'.format(stdout))
+                b.append_to_stdout('failed')
+                b.append_to_stdout("Failed to {0}\n".format(git))
+                b.append_to_stdout(force_unicode(stdout))
+                b.append_to_stdout("\n")
+                self.log('git clone failed:\n{0}'.format(stdout))
+                return
 
         git_show = conf.git_executable_path + ' show HEAD'
         try:
             git_show_stdout = check_output(git_show, cwd=chdir, shell=True)
-            b.stdout += force_unicode(git_show_stdout)
+            b.append_to_stdout(force_unicode(git_show_stdout))
 
         except CalledProcessError as e:
-            b.stdout += b'Failed to retrieve commit information\n'
-            b.stdout += b'-----------------\n'
-            b.stdout += force_unicode(traceback.format_exc(e))
-
-        b.save()
+            b.append_to_stdout(b'Failed to retrieve commit information\n')
+            b.append_to_stdout(b'-----------------\n')
+            b.append_to_stdout(force_unicode(traceback.format_exc(e)))
 
         author = AUTHOR_REGEX.search(git_show_stdout)
         commit = COMMIT_REGEX.search(git_show_stdout)
@@ -336,8 +384,7 @@ class CheckAndLoadBuildFile(Step):
 
         if not os.path.exists(yml_path):
             instructions['build'] = {'shell': instructions['shell_script']}
-            b.stdout += '.carpentry.yml not found, using provided shell_script\n'
-            b.save()
+            b.append_to_stdout('.carpentry.yml not found, using provided shell_script\n')
 
             return self.produce(instructions)
 
@@ -345,8 +392,7 @@ class CheckAndLoadBuildFile(Step):
             raw_yml = fd.read()
 
         self.log("Successfully loaded {0}".format(yml_path))
-        b.stdout += '.carpentry.yml successfully loaded\n'
-        b.save()
+        b.append_to_stdout('.carpentry.yml successfully loaded\n')
 
         build = yaml.load(raw_yml)
         instructions['build'] = build
@@ -373,10 +419,9 @@ class DockerDependencyRunner(Step):
 
         build = Build.objects.get(id=instructions['id'])
         for dependency in build_info['dependencies']:
-            build.stdout += "Running dependency:\n"
-            build.stdout += json.dumps(dependency, indent=2)
-            build.stdout += "\n\n"
-            build.save()
+            build.append_to_stdout("Running dependency:\n")
+            build.append_to_stdout(json.dumps(dependency, indent=2))
+            build.append_to_stdout("\n\n")
             container = self.run_dependency(build, dependency)
             dependency_containers.append(container)
 
@@ -389,9 +434,8 @@ class DockerDependencyRunner(Step):
         image = dependency['image']
 
         for line in docker.pull(image, stream=True):
-            build.stdout += line
-            build.stdout += "\n"
-            build.save()
+            build.append_to_stdout(line)
+            build.append_to_stdout("\n")
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
@@ -424,17 +468,15 @@ class DockerDependencyStopper(Step):
         for dependency in instructions['dependency_containers']:
             container = dependency['container']
 
-            build.stdout += "Stopping dependency:\n"
-            build.stdout += json.dumps(dependency, indent=2)
-            build.stdout += "\n\n"
-            build.save()
+            build.append_to_stdout("Stopping dependency:\n")
+            build.append_to_stdout(json.dumps(dependency, indent=2))
+            build.append_to_stdout("\n\n")
             try:
                 docker.stop(container['Id'])
                 docker.remove_container(container['Id'], force=True)
             except Exception as e:
-                build.stdout += traceback.format_exc(e)
-                build.stdout += "\n\n"
-                build.save()
+                build.append_to_stdout(traceback.format_exc(e))
+                build.append_to_stdout("\n\n")
 
         self.produce(instructions)
 
@@ -469,18 +511,19 @@ class PrepareShellScript(Step):
 
         self.log(render_string('writing {shell_script_path}', instructions))
 
+        shell_script = instructions['build']['shell']
+
         with io.open(shell_script_path, 'wb') as fd:
             self.write_script_to_fd(fd, "#!/bin/bash", instructions)
             self.write_script_to_fd(fd, "set -e", instructions)
-            self.write_script_to_fd(fd, instructions['build']['shell'], instructions)
+            self.write_script_to_fd(fd, shell_script, instructions)
 
-        b.stdout += '---------------------------\n'
-        b.stdout += 'build script:\n'
-        b.stdout += '---------------------------\n\n'
-        b.stdout += instructions['build']['shell']
-        b.stdout += '\n\n'
-        b.stdout += '---------------------------\n'
-        b.save()
+        b.append_to_stdout('---------------------------\n')
+        b.append_to_stdout('build script:\n')
+        b.append_to_stdout('---------------------------\n\n')
+        b.append_to_stdout(shell_script)
+        b.append_to_stdout('\n\n')
+        b.append_to_stdout('---------------------------\n')
 
         os.chmod(shell_script_path, 0755)
 
@@ -520,8 +563,7 @@ class RunBuild(Step):
                                  forcerm=True,
                                  stream=True,
                                  tag=image_tag):
-            build.stdout += line
-            build.save()
+            build.append_to_stdout(line)
 
         container_links = [(d['image'], d['hostname']) for d in instructions['dependency_containers']]
 
@@ -536,8 +578,7 @@ class RunBuild(Step):
         docker.start(container['Id'])
 
         for line in docker.logs(container['Id'], stream=True, stdout=True):
-            build.stdout += line
-            build.save()
+            build.append_to_stdout(line)
 
         build.code = docker.wait(container)
 
@@ -561,7 +602,7 @@ class RunBuild(Step):
         process = run_command(cmd, chdir=instructions['build_dir'])
 
         b = Build.get(id=instructions['id'])
-        b.stdout += 'running {0}...\n'.format(cmd)
+        b.append_to_stdout('running {0}...\n'.format(cmd))
         b.save()
 
         timeout_in_seconds = instructions.get('build_timeout_in_seconds')
@@ -571,7 +612,7 @@ class RunBuild(Step):
             'exit_code': exit_code,
         }
 
-        b.stdout += force_unicode(stdout)
+        b.append_to_stdout(force_unicode(stdout))
         b.code = int(exit_code)
         b.date_finished = datetime.utcnow()
         b.save()
@@ -590,13 +631,4 @@ class RunBuild(Step):
             now.strftime('%Y/%m/%d %H:%M:%S')
         )
         set_build_status(instructions, status, msg)
-
-        self.produce(instructions)
-
-
-class CreateDockerImage(Step):
-    def consume(self, instructions):
-        kwargs = kwargs_from_env()
-        kwargs['tls'].assert_hostname = False
-        docker = Client(**kwargs)
         self.produce(instructions)
