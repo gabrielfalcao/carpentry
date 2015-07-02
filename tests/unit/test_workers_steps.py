@@ -613,11 +613,10 @@ def test_push_key_consume_no_github_info(get_build_from_instructions):
 def test_push_key_consume_ok(
         push_keys_into_api_and_get_response,
         get_build_from_instructions):
-    ('PushKeyToGithub#consume() when should push '
-     'the keys to github')
+    ('PushKeyToGithub#consume() when failed to push')
     response = push_keys_into_api_and_get_response.return_value
-    response.text = '{"yay": "json"}'
     response.status_code = 201
+    response.json.return_value = {'yay': 'json'}
 
     build = get_build_from_instructions.return_value
 
@@ -641,6 +640,22 @@ def test_push_key_consume_ok(
         call(u'pushing key to github...\n'),
         call(u'Keys pushed to github successfully!!!!!')
     ])
+
+    pusher.produce.assert_called_once_with({
+        'public_key': 'ssh-rsa 1234blablabla',
+        'name': 'casablanca',
+        'github_repo_info': {
+            'owner': 'gabrielfalcao',
+            'name': 'HTTPretty'
+        },
+        'git_uri': 'git@googlecode.seriously.com/foobar',
+        'github_deploy_key': {
+            'yay': 'json'
+        },
+        'user': {
+            'access_token': 'psssstsecret'
+        }
+    })
 
 
 @patch('carpentry.workers.steps.get_build_from_instructions')
