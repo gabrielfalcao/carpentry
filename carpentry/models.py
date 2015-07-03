@@ -101,8 +101,8 @@ class Builder(Model):
     name = columns.Text(required=True)
     git_uri = columns.Text(index=True)
     shell_script = columns.Text(required=True)
-    id_rsa_private = columns.Text()
-    id_rsa_public = columns.Text()
+    id_rsa_private = columns.Text(required=True)
+    id_rsa_public = columns.Text(required=True)
     status = columns.Text(default='ready')
     branch = columns.Text(default='master')
 
@@ -362,17 +362,18 @@ class Build(Model):
         self.stdout += string
         self.save()
 
-    def set_status(self, status, github_access_token=None, description=None):
+    def set_status(self, status, description=None, github_access_token=None):
         self.status = status
         self.save()
 
-        github_status = GITHUB_STATUS_MAP.get(status, None)
-        if not github_status:
+        if not github_access_token:
             msg = "[github] {0} skipping set github build status to {1}"
             logger.info(msg.format(self, status))
             return
 
-        self.set_github_status(github_access_token, github_status, description)
+        github_status = GITHUB_STATUS_MAP.get(status, None)
+        if github_status:
+            self.set_github_status(github_access_token, github_status, description)
 
     def save(self):
         builder = Builder.objects.get(id=self.builder_id)
@@ -390,21 +391,6 @@ class Build(Model):
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'author_gravatar_url': self.author_gravatar_url
         })
-
-    @classmethod
-    def calculate_redis_key_for(Build, builder_id, action):
-        return b'build:{0}:{1}'.format(builder_id, action)
-
-    @classmethod
-    def push_live_output(Build, build_id, stdout, stderr):
-        stdout_key = Build.calculate_redis_key_for(build_id, 'stdout')
-        stderr_key = Build.calculate_redis_key_for(build_id, 'stderr')
-
-        cache = redis.Redis(connection_pool=redis_pool)
-        pipe = cache.pipeline()
-        pipe.append(stdout_key, stdout)
-        pipe.append(stderr_key, stderr)
-        return pipe.execute()
 
 
 class User(Model):

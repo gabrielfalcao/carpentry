@@ -13,6 +13,7 @@ from carpentry.workers.steps import get_build_from_instructions
 from carpentry.workers.steps import set_build_status
 from carpentry.workers.steps import PrepareSSHKey
 from carpentry.workers.steps import PushKeyToGithub
+from carpentry.workers.steps import LocalRetrieve
 from carpentry.workers.steps import response_did_succeed
 
 
