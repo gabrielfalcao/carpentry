@@ -118,9 +118,17 @@ def set_build_status(instructions, status, description=None):
 class CarpentryPipelineStep(Step):
     def handle_exception(self, e, instructions):
         build = get_build_from_instructions(instructions)
-        tb = traceback.format_exc(e)
+        error = traceback.format_exc(e)
         build.set_status('failed')
-        build.append_to_stdout(tb)
+        build.append_to_stdout(error)
+        try:
+            DockerDependencyStopper.stop_and_remove_dependency_containers(
+                build,
+                instructions
+            )
+        except Exception as dependency_exception:
+            error = traceback.format_exc(dependency_exception)
+            build.append_to_stdout(error)
 
 
 class PrepareSSHKey(CarpentryPipelineStep):
@@ -472,6 +480,48 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
 
 class DockerDependencyStopper(CarpentryPipelineStep):
+    @classmethod
+    def do_stop_dependency_container(cls, build, dependency, container):
+        docker = get_docker_client()
+        build.append_to_stdout("------------------------------\n")
+        build.append_to_stdout("stopping dependency container:\n")
+        build.append_to_stdout(json.dumps(dependency, indent=2))
+        build.append_to_stdout("\n\n")
+        try:
+            docker.stop(container['Id'])
+        except Exception as e:
+            build.append_to_stdout(traceback.format_exc(e))
+            build.append_to_stdout("\n\n")
+
+    @classmethod
+    def do_remove_dependency_container(cls, build, dependency, container):
+        docker = get_docker_client()
+        build.append_to_stdout("------------------------------\n")
+        build.append_to_stdout("removing dependency container:\n")
+        build.append_to_stdout(json.dumps(dependency, indent=2))
+        build.append_to_stdout("\n\n")
+        try:
+            docker.remove(container['Id'])
+        except Exception as e:
+            build.append_to_stdout(traceback.format_exc(e))
+            build.append_to_stdout("\n\n")
+
+    @classmethod
+    def stop_and_remove_dependency_containers(cls, build, instructions):
+        build = Build.objects.get(id=instructions['id'])
+        for dependency in instructions['dependency_containers']:
+            container = dependency['container']
+            cls.do_stop_dependency_container(
+                build,
+                dependency,
+                container
+            )
+            cls.do_remove_dependency_container(
+                build,
+                dependency,
+                container
+            )
+
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
         if 'dependency_containers' not in instructions:
@@ -480,34 +530,11 @@ class DockerDependencyStopper(CarpentryPipelineStep):
             build.append_to_stdout(msg)
             return self.produce(instructions)
 
-        docker = get_docker_client()
-
-        build = Build.objects.get(id=instructions['id'])
-        for dependency in instructions['dependency_containers']:
-            container = dependency['container']
-
-            build.append_to_stdout("Stopping dependency:\n")
-            build.append_to_stdout(json.dumps(dependency, indent=2))
-            build.append_to_stdout("\n\n")
-            try:
-                docker.stop(container['Id'])
-                docker.remove_container(container['Id'], force=True)
-            except Exception as e:
-                build.append_to_stdout(traceback.format_exc(e))
-                build.append_to_stdout("\n\n")
-
-        self.produce(instructions)
-
-    def run_dependency(self, dependency):
-        docker = get_docker_client()
-        container = docker.create_container(
-            image=dependency['image'],
-            name=dependency['hostname'],
-            hostname=dependency['hostname'],
-            detach=True
+        self.stop_and_remove_dependency_containers(
+            build,
+            instructions
         )
-        docker.start(container['Id'])
-        return container
+        self.produce(instructions)
 
 
 class PrepareShellScript(CarpentryPipelineStep):

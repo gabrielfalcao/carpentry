@@ -697,10 +697,11 @@ def test_push_key_consume_failed(
     )
 
 
+@patch('carpentry.workers.steps.DockerDependencyStopper')
 @patch('carpentry.workers.steps.traceback')
 @patch('carpentry.workers.steps.get_build_from_instructions')
 def test_base_pipeline_handle_exception(
-        get_build_from_instructions, traceback):
+        get_build_from_instructions, traceback, DockerDependencyStopper):
     ("CarpentryPipelineStep#handle_exception() should "
      "append the traceback to the stdout")
     build = get_build_from_instructions.return_value
@@ -729,6 +730,12 @@ def test_base_pipeline_handle_exception(
 
     # And the traceback should have been formed using the exception instance
     traceback.format_exc.assert_called_once_with(e)
+
+    # And the containers were stopped and removed
+    DockerDependencyStopper.stop_and_remove_dependency_containers.assert_called_once_with(
+        build,
+        instructions
+    )
 
 
 @patch('carpentry.workers.steps.os')
