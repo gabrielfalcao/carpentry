@@ -281,7 +281,7 @@ class PushKeyToGithub(CarpentryPipelineStep):
 
 
 class LocalRetrieve(CarpentryPipelineStep):
-    def ensure_builddir(self, build, instructions):
+    def ensure_build_dir(self, build, instructions):
         slug = instructions['slug']
         workdir = conf.workdir_node.join(slug)
         build_dir = conf.build_node.join(slug)
@@ -329,7 +329,7 @@ class LocalRetrieve(CarpentryPipelineStep):
     def consume(self, instructions):
         build = set_build_status(instructions, 'retrieving')
         build.append_to_stdout('retrieving repo...\n')
-        build_dir, instructions = self.ensure_builddir(build, instructions)
+        build_dir, instructions = self.ensure_build_dir(build, instructions)
 
         stdout, exit_code, instructions = self.run_git_clone(build, build_dir, instructions)
 
@@ -565,7 +565,7 @@ class RunBuild(CarpentryPipelineStep):
             fd.write(rendered_dockerfile)
 
         docker = get_docker_client()
-        commit = instructions['commit']
+        commit = instructions['git']['commit']
         slug = instructions['slug']
         image_tag = ':'.join([slug, commit[:8]])
 

@@ -47,18 +47,18 @@ release: assets
 	./.release
 
 deploy-web:
-	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t upstart -t carpentry-workers deployment/carpentry-io-native.yml
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t upstart -t carpentry-workers deployment/carpentry-io-native.yml
 
 deploy-workers:
-	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t upstart -t carpentry-web deployment/carpentry-io-native.yml
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t upstart -t carpentry-web deployment/carpentry-io-native.yml
 
 deploy-from-scratch:
-	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry --extra-vars="carpentry_recreate_keyspace=yes" deployment/carpentry-io-native.yml
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry --extra-vars="carpentry_recreate_keyspace=yes" deployment/carpentry-io-native.yml
 
 deploy-all:
-	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry deployment/carpentry-io-native.yml
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry deployment/carpentry-io-native.yml
 
 deploy-nginx:
-	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t nginx deployment/carpentry-io-native.yml
+	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t nginx deployment/carpentry-io-native.yml
 
 deploy: deploy-all

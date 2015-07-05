@@ -11,6 +11,7 @@ from carpentry.workers.steps import run_command
 from carpentry.workers.steps import stream_output
 from carpentry.workers.steps import get_build_from_instructions
 from carpentry.workers.steps import set_build_status
+from carpentry.workers.steps import CarpentryPipelineStep
 from carpentry.workers.steps import PrepareSSHKey
 from carpentry.workers.steps import PushKeyToGithub
 from carpentry.workers.steps import LocalRetrieve
@@ -220,9 +221,9 @@ def test_set_build_status(get_build_from_instructions):
     # And build.set_status should have been called with the
     # github_access_token and the given description
     build.set_status.assert_called_once_with(
-        'running',
-        'github-token',
-        'geronimooooo',
+        u'running',
+        description=u'geronimooooo',
+        github_access_token=u'github-token',
     )
 
 
@@ -630,7 +631,7 @@ def test_push_key_consume_ok(
             'owner': 'gabrielfalcao',
             'name': 'HTTPretty',
         },
-        'public_key': 'ssh-rsa 1234blablabla',
+        'id_rsa_public': 'ssh-rsa 1234blablabla',
         'user': {
             'access_token': 'psssstsecret'
         }
@@ -643,7 +644,7 @@ def test_push_key_consume_ok(
     ])
 
     pusher.produce.assert_called_once_with({
-        'public_key': 'ssh-rsa 1234blablabla',
+        'id_rsa_public': 'ssh-rsa 1234blablabla',
         'name': 'casablanca',
         'github_repo_info': {
             'owner': 'gabrielfalcao',
@@ -683,7 +684,7 @@ def test_push_key_consume_failed(
             'owner': 'gabrielfalcao',
             'name': 'HTTPretty',
         },
-        'public_key': 'ssh-rsa 1234blablabla',
+        'id_rsa_public': 'ssh-rsa 1234blablabla',
         'user': {
             'access_token': 'psssstsecret'
         }
@@ -694,3 +695,67 @@ def test_push_key_consume_failed(
         build,
         response
     )
+
+
+@patch('carpentry.workers.steps.traceback')
+@patch('carpentry.workers.steps.get_build_from_instructions')
+def test_base_pipeline_handle_exception(
+        get_build_from_instructions, traceback):
+    ("CarpentryPipelineStep#handle_exception() should "
+     "append the traceback to the stdout")
+    build = get_build_from_instructions.return_value
+
+    # Given that I have an instance of CarpentryPipelineStep
+    step = prepare_step_instance(CarpentryPipelineStep)
+
+    # And that I have an instance of an exception
+    e = ValueError('boom')
+
+    # And some build instructions
+    instructions = {
+        'test': 'foobar',
+    }
+
+    # When I call handle_exception
+    step.handle_exception(e, instructions)
+
+    # Then the build should have been set to failed
+    build.set_status.assert_called_once_with('failed')
+
+    # And the traceback should have been appended to the output
+    build.append_to_stdout.assert_called_once_with(
+        traceback.format_exc.return_value
+    )
+
+    # And the traceback should have been formed using the exception instance
+    traceback.format_exc.assert_called_once_with(e)
+
+
+@patch('carpentry.workers.steps.os')
+@patch('carpentry.workers.steps.shutil')
+@patch('carpentry.workers.steps.conf')
+def test_local_retrieve_ensure_build_dir(conf, shutil, os):
+    ("LocalRetrieve#ensure_build_dir should remove the tree")
+    conf.build_node.join.side_effect = lambda path: "/srv/test/{0}".format(path)
+
+    os.path.exists.return_value = False
+
+    # Given an instance of LocalRetrieve
+    retriever = prepare_step_instance(LocalRetrieve)
+
+    # And I prepare some build instructions with slug
+    instructions = {
+        'slug': 'my-project'
+    }
+
+    # And a build instance mock
+    build = Mock(name='Build')
+
+    # When I call ensure_build_dir
+    retriever.ensure_build_dir(build, instructions)
+
+    # Then it should have created the build dir
+    os.makedirs.assert_has_calls([
+        call('/srv/test/my-project'),
+        call('/srv/test/my-project'),
+    ])
