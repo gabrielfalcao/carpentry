@@ -446,6 +446,9 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         image = dependency['image']
 
+        if ':' not in image:
+            image = '{0}:latest'.format(image)
+
         for line in docker.pull(image, stream=True):
             build.append_to_stdout(line)
             build.append_to_stdout("\n")
