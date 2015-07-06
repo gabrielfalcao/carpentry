@@ -388,6 +388,7 @@ class LocalRetrieve(CarpentryPipelineStep):
         build.save()
         self.log("meta: %s", meta)
         instructions['git'] = meta
+
         self.produce(instructions)
 
 
@@ -603,15 +604,16 @@ class RunBuild(CarpentryPipelineStep):
 
         for line in docker.build(path=build_dir,
                                  rm=True,
+                                 pull=True,
                                  forcerm=True,
                                  stream=True,
-                                 tag=image_tag):
+                                 tag=slug):
             build.append_to_stdout(line)
 
         container_links = [(d['image'], d['hostname']) for d in instructions['dependency_containers']]
 
         container = docker.create_container(
-            image=image_tag,
+            image=slug,
             environment=instructions['build'].get('environment', {}),
             host_config=create_host_config(
                 links=container_links

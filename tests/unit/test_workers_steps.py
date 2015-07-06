@@ -738,6 +738,52 @@ def test_base_pipeline_handle_exception(
     )
 
 
+@patch('carpentry.workers.steps.DockerDependencyStopper')
+@patch('carpentry.workers.steps.traceback')
+@patch('carpentry.workers.steps.get_build_from_instructions')
+def test_base_pipeline_handle_exception_twice(
+        get_build_from_instructions, traceback, DockerDependencyStopper):
+    ("CarpentryPipelineStep#handle_exception() should "
+     "append the traceback to the stdout")
+    build = get_build_from_instructions.return_value
+
+    # Given that I have an instance of CarpentryPipelineStep
+    step = prepare_step_instance(CarpentryPipelineStep)
+
+    # And that I have an instance of an exception
+    e1 = ValueError('boom 1')
+
+    # And that I have an instance of an exception for the dependency stop and removal
+    e2 = ValueError('boom 2')
+
+    # And some build instructions
+    instructions = {
+        'test': 'foobar',
+    }
+
+    # And that stop_and_remove_dependency_containers raises an
+    # exception
+    DockerDependencyStopper.stop_and_remove_dependency_containers.side_effect = e2
+
+    # When I call handle_exception
+    step.handle_exception(e1, instructions)
+
+    # Then the build should have been set to failed
+    build.set_status.assert_called_once_with('failed')
+
+    # And the traceback should have been appended to the output
+    build.append_to_stdout.assert_has_calls([
+        call(traceback.format_exc.return_value),
+        call(traceback.format_exc.return_value),
+    ])
+
+    # And the traceback should have been called twice
+    traceback.format_exc.assert_has_calls([
+        call(e1),
+        call(e2),
+    ])
+
+
 @patch('carpentry.workers.steps.os')
 @patch('carpentry.workers.steps.shutil')
 @patch('carpentry.workers.steps.conf')
