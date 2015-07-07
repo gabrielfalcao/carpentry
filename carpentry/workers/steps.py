@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import os
+
 import re
 import json
 import time
@@ -21,7 +22,7 @@ from lineup import Step
 
 from docker.utils import create_host_config
 
-from carpentry.util import render_string, get_docker_client
+from carpentry.util import render_string, get_docker_client, response_did_succeed, force_unicode
 from carpentry.models import Build
 # import unicodedata
 
@@ -36,15 +37,9 @@ COMMIT_MESSAGE_REGEX = re.compile(
     r'Date:.*?\n\s*(?P<commit_message>.*?)\s*^diff --git', re.M | re.S)
 
 
-def response_did_succeed(response):
-    return int(response.status_code) in [
-        200,
-        201,
-        202,
-        204,
-        205,
-        206,
-    ]
+def extract_container_name(docker, container):
+    container = docker.inspect_container(container)
+    return container['Name'].lstrip('/')
 
 
 def run_command(command, chdir, environment={}):
@@ -52,13 +47,6 @@ def run_command(command, chdir, environment={}):
         return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
     except Exception:
         logging.exception("Failed to run {0}".format(command))
-
-
-def force_unicode(string):
-    if not isinstance(string, unicode):
-        return unicode(string, errors='ignore')
-
-    return string
 
 
 def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_seconds=None):
@@ -465,6 +453,11 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         hostname = dependency['hostname']
 
+        DockerDependencyStopper.stop_and_remove_conflicting_containers(
+            build,
+            hostname
+        )
+
         container = docker.create_container(
             image=image,
             name=hostname,
@@ -482,11 +475,11 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
 class DockerDependencyStopper(CarpentryPipelineStep):
     @classmethod
-    def do_stop_dependency_container(cls, build, dependency, container):
+    def do_stop_dependency_container(cls, build, container):
         docker = get_docker_client()
         build.append_to_stdout("------------------------------\n")
-        build.append_to_stdout("stopping dependency container:\n")
-        build.append_to_stdout(json.dumps(dependency, indent=2))
+        build.append_to_stdout("stopping dependency container:")
+        build.append_to_stdout(extract_container_name(docker, container))
         build.append_to_stdout("\n\n")
         try:
             docker.stop(container['Id'])
@@ -495,14 +488,14 @@ class DockerDependencyStopper(CarpentryPipelineStep):
             build.append_to_stdout("\n\n")
 
     @classmethod
-    def do_remove_dependency_container(cls, build, dependency, container):
+    def do_remove_dependency_container(cls, build, container):
         docker = get_docker_client()
         build.append_to_stdout("------------------------------\n")
-        build.append_to_stdout("removing dependency container:\n")
-        build.append_to_stdout(json.dumps(dependency, indent=2))
+        build.append_to_stdout("removing dependency container:")
+        build.append_to_stdout(extract_container_name(docker, container))
         build.append_to_stdout("\n\n")
         try:
-            docker.remove(container['Id'])
+            docker.remove_container(container['Id'])
         except Exception as e:
             build.append_to_stdout(traceback.format_exc(e))
             build.append_to_stdout("\n\n")
@@ -510,18 +503,33 @@ class DockerDependencyStopper(CarpentryPipelineStep):
     @classmethod
     def stop_and_remove_dependency_containers(cls, build, instructions):
         build = Build.objects.get(id=instructions['id'])
-        for dependency in instructions['dependency_containers']:
+        for dependency in instructions.get('dependency_containers', []) or []:
             container = dependency['container']
             cls.do_stop_dependency_container(
                 build,
-                dependency,
                 container
             )
             cls.do_remove_dependency_container(
                 build,
-                dependency,
                 container
             )
+
+    @classmethod
+    def stop_and_remove_conflicting_containers(cls, build, name):
+        docker = get_docker_client()
+        for container in docker.containers():
+            container_name = extract_container_name(docker, container)
+            if name in container_name or container_name in name:
+                DockerDependencyStopper.do_stop_dependency_container(
+                    build,
+                    container
+                )
+                DockerDependencyStopper.do_remove_dependency_container(
+                    build,
+                    container
+                )
+            else:
+                logging.info("{0} does not conflict with {1}".format(container_name, name))
 
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
@@ -548,7 +556,9 @@ class PrepareShellScript(CarpentryPipelineStep):
     def consume(self, instructions):
         build = set_build_status(instructions, 'preparing')
         build_dir = instructions['build_dir']
-        shell_script_path = os.path.join(build_dir, render_string('.carpentry.{slug}.shell.sh', instructions))
+        shell_script_filename = render_string('.carpentry.{slug}.shell.sh', instructions)
+        shell_script_path = os.path.join(build_dir, shell_script_filename)
+        instructions['shell_script_filename'] = shell_script_filename
         instructions['shell_script_path'] = shell_script_path
 
         build.append_to_stdout('wrote {0}...\n'.format(shell_script_path))
@@ -586,7 +596,9 @@ class RunBuild(CarpentryPipelineStep):
     def build_with_docker(self, instructions):
         DOCKERFILE_TEMPLATE = '\n'.join([
             'FROM {build[image]}',
-            'CMD ["bash", "{shell_script_path}"]'
+            'COPY . /carpentry-sandbox',
+            'WORKDIR /carpentry-sandbox',
+            'CMD ["bash", "{shell_script_filename}"]'
         ])
         build_dir = instructions['build_dir']
         dockerfile_path = os.path.join(build_dir, 'Dockerfile')
@@ -598,9 +610,12 @@ class RunBuild(CarpentryPipelineStep):
         docker = get_docker_client()
         commit = instructions['git']['commit']
         slug = instructions['slug']
-        image_tag = ':'.join([slug, commit[:8]])
 
         build = Build.get(id=instructions['id'])
+        image = slug
+
+        container_name = '_'.join([slug, commit[:8]])
+        DockerDependencyStopper.stop_and_remove_conflicting_containers(build, container_name)
 
         for line in docker.build(path=build_dir,
                                  rm=True,
@@ -610,15 +625,22 @@ class RunBuild(CarpentryPipelineStep):
                                  tag=slug):
             build.append_to_stdout(line)
 
-        container_links = [(d['image'], d['hostname']) for d in instructions['dependency_containers']]
+        container_links = [(extract_container_name(docker, d['container']), d['hostname'])
+                           for d in instructions['dependency_containers']]
 
+        build_info = instructions['build']
+        environment = build_info.get('environment', {})
+
+        DockerDependencyStopper.stop_and_remove_conflicting_containers(
+            build,
+            container_name,
+        )
         container = docker.create_container(
-            image=slug,
-            environment=instructions['build'].get('environment', {}),
+            image=image,
+            environment=environment,
             host_config=create_host_config(
                 links=container_links
             ),
-            name=image_tag,
         )
         docker.start(container['Id'])
 

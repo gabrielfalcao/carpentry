@@ -24,3 +24,21 @@ def get_docker_client():
 
     docker = Client(**kwargs)
     return docker
+
+
+def force_unicode(string):
+    if not isinstance(string, unicode):
+        return unicode(string, errors='ignore')
+
+    return string
+
+
+def response_did_succeed(response):
+    return int(response.status_code) in [
+        200,
+        201,
+        202,
+        204,
+        205,
+        206,
+    ]

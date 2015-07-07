@@ -16,7 +16,6 @@ from carpentry.api.core import (
     ensure_json_request
 )
 from cqlengine.models import Model
-from docker.utils import create_host_config
 from carpentry.util import get_docker_client
 
 from carpentry import models
@@ -326,15 +325,24 @@ def stop_container(user, container_id):
 def remove_container(user, container_id):
     docker = get_docker_client()
 
-    data = docker.remove_container(
-        container_id,
-        v=True,
-    )
-    data = docker.remove_container(
-        container_id,
-        v=True,
-        force=True
-    )
+    try:
+        data = docker.remove_container(
+            container_id,
+            v=True,
+        )
+    except:
+        logger.exception("Failed to remove container {0} in a friendly way".format(container_id))
+        try:
+            data = docker.remove_container(
+                container_id,
+                v=True,
+                force=True
+            )
+            logger.info("Container {0} was removed forcefully".format(container_id))
+        except:
+            logger.exception("Failed to remove container {0} forcefully".format(container_id))
+            data = {}
+
     return json_response(data)
 
 
@@ -385,3 +393,10 @@ def docker_run(user, image_id):
     docker.start(container['Id'])
 
     return json_response(dict(container))
+
+
+@web.get('/api/github/repos')
+@authenticated
+def get_github_repos(user):
+    results = user.retrieve_and_cache_github_repositories()
+    return json_response(results)

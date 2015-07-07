@@ -145,6 +145,18 @@ angular.module('CarpentryApp', [
                 notify('failed to list docker containers');
             });
     };
+    $rootScope.getRepositories = function(){
+        $http
+            .get('/api/github/repos')
+            .success(function(data, status, headers, config) {
+                console.log(data);
+                $rootScope.githubRepositories = data;
+            })
+            .error(function(data, status, headers, config) {
+                // console.log('failed to list docker images ');
+                notify('failed to list github repositories');
+            });
+    };
 
     $rootScope.defaultErrorHandler = function(data, status, headers, config) {
         if (status === 401) {
@@ -157,6 +169,8 @@ angular.module('CarpentryApp', [
             }
         }
     };
+
+    $rootScope.getRepositories();
 }).directive('showtab', function () {
     return {
         link: function (scope, element, attrs) {

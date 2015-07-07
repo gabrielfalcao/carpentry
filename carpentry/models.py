@@ -13,7 +13,7 @@ from lineup import JSONRedisBackend
 
 from cqlengine import columns
 from cqlengine.models import Model
-from carpentry.util import render_string
+from carpentry.util import render_string, force_unicode, response_did_succeed
 from carpentry import conf
 
 logger = logging.getLogger('carpentry')
@@ -36,9 +36,9 @@ STATUS_MAP = {
     'failed': 'danger',
     'retrieving': 'info',
     'running': 'warning',
-    'scheduled': 'warning',
+    'scheduled': 'info',
     'checking': 'info',
-    'preparing': 'active',
+    'preparing': 'info',
 }
 
 GITHUB_STATUS_MAP = {
@@ -298,6 +298,7 @@ class Build(Model):
     date_finished = columns.DateTime()
     github_status_data = columns.Text()
     github_webhook_data = columns.Text()
+    docker_status = columns.Text()
 
     @property
     def author_gravatar_url(self):
@@ -359,7 +360,7 @@ class Build(Model):
         if not isinstance(self.stdout, basestring):
             self.stdout = ''
 
-        self.stdout += string
+        self.stdout += force_unicode(string)
         self.save()
 
     def set_status(self, status, description=None, github_access_token=None):
@@ -386,11 +387,15 @@ class Build(Model):
         return super(Build, self).save()
 
     def to_dict(self):
-        return model_to_dict(self, {
+        result = model_to_dict(self, {
             'github_repo_info': self.github_repo_info,
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'author_gravatar_url': self.author_gravatar_url
         })
+        docker_status = result.pop('docker_status', None) or '{}'
+        deserialized_docker_status = json.loads(docker_status)
+        result['docker_status'] = deserialized_docker_status
+        return result
 
 
 class User(Model):
@@ -432,6 +437,45 @@ class User(Model):
         if len(users) > 0:
             return users[0]
 
+    def prepare_github_request_headers(self):
+        headers = {
+            'Authorization': 'token {0}'.format(self.github_access_token)
+        }
+        return headers
+
+    def retrieve_organization_repos(self, name):
+        headers = self.prepare_github_request_headers()
+        url = 'https://api.github.com/orgs/{0}/repos'.format(name)
+        response = requests.get(url, headers=headers)
+        if not response_did_succeed(response):
+            logger.info('[{0} repos] failed to retrieve {1}'.format(name, url))
+            return []
+
+        metadata = response.json()
+        return metadata
+
+    def retrieve_user_repos(self):
+        headers = self.prepare_github_request_headers()
+        url = 'https://api.github.com/user/repos'
+        response = requests.get(url, headers=headers)
+        if not response_did_succeed(response):
+            logger.info('[user repos] failed to retrieve {0}'.format(url))
+            return []
+
+        metadata = response.json()
+        return metadata
+
+    def retrieve_and_cache_github_repositories(self):
+        personal_repos = self.retrieve_user_repos()
+        organization_repos = []
+        for organization_name in conf.allowed_github_organizations:
+            repos = self.retrieve_organization_repos(organization_name)
+            organization_repos.extend(repos)
+
+        all_repos = organization_repos + personal_repos
+        GithubRepository.store_many_from_list(all_repos)
+        return all_repos
+
     def get_github_organizations(self):
         github = self.get_github_metadata()
         organizations = github.get('organizations', None)
@@ -448,3 +492,71 @@ class User(Model):
         self.github_metadata = json.dumps(github)
         self.save()
         return organizations
+
+
+class GithubRepository(Model):
+    """holds an individual repo coming as json from the github api
+    response, the `name`, `owner` and `git_uri` are stored as fields
+    of this model, and the full `response_data` is also available as a
+    raw json value
+    """
+    id = columns.TimeUUID(primary_key=True, partition_key=True)
+    name = columns.Text(required=True)
+    owner = columns.Text(required=True)
+    git_uri = columns.Text(required=True, index=True)
+    response_data = columns.Text(required=True)
+
+    @classmethod
+    def store_many_from_list(cls, items):
+        for item in items:
+            yield cls.store_one_from_dict(item)
+
+    @classmethod
+    def store_one_from_dict(cls, item):
+        name = item['name']
+        git_uri = item['git_uri']
+        owner_info = item['owner']
+        owner = owner_info['login']
+        GithubOrganization.store_one_from_dict(owner_info)
+        response_data = json.dumps(item)
+
+        model = cls(
+            id=uuid.uuid4(),
+            name=name,
+            git_uri=git_uri,
+            owner=owner,
+            response_data=response_data
+        )
+        model.save()
+        return model
+
+
+class GithubOrganization(Model):
+    id = columns.TimeUUID(primary_key=True, partition_key=True)
+    login = columns.Text(required=True)
+    github_id = columns.Integer()
+    avatar_url = columns.Text()
+    url = columns.Text()
+    html_url = columns.Text()
+    response_data = columns.Text()
+
+    @classmethod
+    def store_one_from_dict(cls, item):
+        login = item['login']
+        github_id = item['id']
+        avatar_url = item['avatar_url']
+        url = item['url']
+        html_url = item['html_url']
+        response_data = json.dumps(item)
+
+        model = cls(
+            id=uuid.uuid4(),
+            login=login,
+            github_id=github_id,
+            avatar_url=avatar_url,
+            url=url,
+            html_url=html_url,
+            response_data=response_data
+        )
+        model.save()
+        return model

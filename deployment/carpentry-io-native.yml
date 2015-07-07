@@ -67,3 +67,15 @@
       service: name=nginx state=restarted
       tags:
         - nginx
+
+
+    - name: restart web
+      service: name=carpentry-web state=restarted
+      tags:
+        - restart
+
+    - name: restart workers
+      service: name="carpentry-workers-{{ item }}" state=restarted
+      with_sequence: count="{{ carpentry_worker_processes }}"
+      tags:
+        - restart
