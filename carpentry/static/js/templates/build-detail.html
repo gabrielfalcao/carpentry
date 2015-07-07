@@ -31,15 +31,13 @@
               <dt ng-if="build.commit">Commit Hash</dt><dd ng-id="build.commit">{{ build.commit }}</dd>
               <dt ng-if="build.commit_message">Message</dt><dd ng-id="build.commit_message"><pre>{{ build.commit_message }}</pre></dd>
               <dt ng-if="build.commit_message">commit message</dt><dd ng-id="build.commit_message">{{ build.commit_message }}</dd>
+              <dt ng-if="build.docker_status.status">docker</dt><dd ng-id="build.docker_status.status">{{ build.docker_status.status }}</dd>
+              <dt ng-if="build.docker_status.stream"></dt><dd ng-id="build.stream.stream">{{ build.docker_status.stream }}</dd>
+              <dt ng-if="build.docker_status.progress"></dt><dd ng-id="build.progress.progress">{{ build.docker_status.progress }}</dd>
             </dl>
           </div>
         </div>
         <div class="panel-body">
-          <p ng-if="build.docker_status"><strong class="text-info">docker status</strong></p>
-          <p ng-if="build.docker_status.status"><strong class="text-warning">{{ build.docker_status.status }}</strong></p>
-          <p ng-if="build.docker_status.progress"><strong class="text-warning">{{ build.docker_status.progress }}</strong></p>
-          <p ng-if="build.docker_status.stream"><strong class="text-success">{{ build.docker_status.stream }}</strong></p>
-
           <pre scroll-glue style="overflow-y: auto;max-height: 640px; background: #222; color: white;"  ng-bind-html="html_output"></pre>
           <p ng-if="build.docker_status"><strong class="text-info">docker status</strong></p>
           <p ng-if="build.docker_status.status"><strong class="text-warning">{{ build.docker_status.status }}</strong></p>

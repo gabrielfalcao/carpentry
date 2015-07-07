@@ -433,10 +433,19 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         build = Build.objects.get(id=instructions['id'])
         for dependency in build_info['dependencies']:
-            build.append_to_stdout("Running dependency:\n")
-            build.append_to_stdout(json.dumps(dependency, indent=2))
-            build.append_to_stdout("\n\n")
+            info = {
+                "status": render_string("running image {image}:{hostname}", dependency),
+                "stream": "requesting...",
+            }
+            line = json.dumps(info)
+            build.register_docker_status(line)
             container = self.run_dependency(build, dependency)
+            container_name = extract_container_name(container)
+            msg = 'successfully running as {0}\n'.format(container_name)
+            info['stream'] = msg
+            line = json.dumps(info)
+            build.register_docker_status(line)
+            build.append_to_stdout(msg)
             dependency_containers.append(container)
 
         instructions['dependency_containers'] = dependency_containers
@@ -635,17 +644,17 @@ class RunBuild(CarpentryPipelineStep):
         slug = instructions['slug']
 
         build = Build.get(id=instructions['id'])
-        image = slug
+        image = instructions['build']['image']
 
         container_name = '_'.join([slug, commit[:8]])
 
-        for line in docker.build(path=build_dir,
-                                 rm=True,
-                                 pull=True,
-                                 forcerm=True,
-                                 stream=True,
-                                 tag=slug):
-            build.register_docker_status(line)
+        # for line in docker.build(path=build_dir,
+        #                          rm=True,
+        #                          pull=True,
+        #                          forcerm=True,
+        #                          stream=True,
+        #                          tag=slug):
+        #     build.register_docker_status(line)
 
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
                            for d in instructions['dependency_containers']]
@@ -658,17 +667,31 @@ class RunBuild(CarpentryPipelineStep):
             container_name,
         )
 
+        build.append_to_stdout('pulling docker image {0}\n'.format(image))
+        for line in docker.pull(image, stream=True):
+            build.register_docker_status(line)
+            logging.info("docker pull {0}: {1}".format(image, line))
+
+        build.append_to_stdout('running tests inside of {0}\n'.format(image))
         container = docker.create_container(
             image=image,
+            command=render_string('bash {shell_script_filename}', instructions),
             environment=environment,
+            volumes=['/carpentry-sandbox'],
+            working_dir='/carpentry-sandbox',
             host_config=create_host_config(
-                links=container_links
-            ),
+                links=container_links,
+                binds={
+                    build_dir: {
+                        'bind': '/carpentry-sandbox',
+                        'mode': 'rw',
+                    }
+                }
+            )
         )
         docker.start(container['Id'])
 
-        for line in docker.logs(container['Id'], stream=True, stdout=True, stderr=True, timestamps=True):
-            build.append_to_stdout(line)
+        for line in docker.logs(container['Id'], stream=True, stdout=True, stderr=True):
             build.register_docker_status(line)
 
         build.code = docker.wait(container)
@@ -680,7 +703,12 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
             build.set_status('failed')
 
-        instructions['container'] = container
+        container_name = extract_container_name(container)
+        DockerDependencyStopper.stop_and_remove_conflicting_containers(
+            build,
+            container_name
+        )
+
         self.produce(instructions)
 
     def build_native(self, instructions):
