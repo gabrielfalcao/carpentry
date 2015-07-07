@@ -196,10 +196,14 @@ class PrepareSSHKey(CarpentryPipelineStep):
             b.append_to_stdout('\n')
             b.append_to_stdout(ssh_add_output)
             b.append_to_stdout('\n')
-
         except CalledProcessError as e:
             tb = traceback.format_exc(e)
-            b.append_to_stdout(tb)
+            b.append_to_stdout('the ssh-agent is ready')
+            msg = "failed to run: {0}\n{1}".format(
+                command,
+                tb
+            )
+            logging.warning(msg)
 
         self.produce(instructions)
 
@@ -663,7 +667,8 @@ class RunBuild(CarpentryPipelineStep):
         )
         docker.start(container['Id'])
 
-        for line in docker.logs(container['Id'], stream=True, stdout=True):
+        for line in docker.logs(container['Id'], stream=True, stdout=True, stderr=True, timestamps=True):
+            build.append_to_stdout(line)
             build.register_docker_status(line)
 
         build.code = docker.wait(container)
