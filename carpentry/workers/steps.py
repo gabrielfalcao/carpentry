@@ -483,12 +483,12 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             build.register_docker_status(line)
 
         container_name = extract_container_name(docker, container)
-        msg = 'successfully running as {0}\n'.format(container_name)
+        msg = '\nsuccessfully running as {0}\n'.format(container_name)
         info['stream'] = msg
         line = json.dumps(info)
         build.register_docker_status(line)
         build.append_to_stdout(msg)
-        build.append_to_stdout('waiting for next step...\n')
+        build.append_to_stdout('\nwaiting for next step...\n')
 
         dependency['container'] = container
         return dependency
@@ -667,7 +667,7 @@ class RunBuild(CarpentryPipelineStep):
             container_name,
         )
 
-        build.append_to_stdout('pulling docker image {0}\n'.format(image))
+        build.append_to_stdout('\npulling docker image {0}...\n'.format(image))
         for line in docker.pull(image, stream=True):
             build.register_docker_status(line)
             build.append_to_stdout('.')
