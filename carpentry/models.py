@@ -394,19 +394,24 @@ class Build(Model):
             'author_gravatar_url': self.author_gravatar_url
         })
         docker_status = result.pop('docker_status', None) or '{}'
-        deserialized_docker_status = json.loads(docker_status)
+        try:
+            deserialized_docker_status = json.loads(docker_status)
+        except ValueError:
+            deserialized_docker_status = {}
+
         result['docker_status'] = deserialized_docker_status
         return result
 
     def register_docker_status(self, line):
+        self.stdout = self.stdout or b''
         try:
             json.loads(line)
             self.docker_status = line
+        except ValueError:
+            self.stdout += force_unicode(line)
         except Exception as e:
             error = traceback.format_exc(e)
-            self.stdout = self.stdout or b''
             self.stdout += force_unicode(error)
-            self.docker_status = json.dumps({'status': 'Failed to register docker'})
 
         self.save()
 

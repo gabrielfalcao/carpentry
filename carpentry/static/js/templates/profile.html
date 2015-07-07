@@ -1,12 +1,54 @@
 <navbar />
 
-<div class="container">
-  <div class="page-header">
-    <div class="row">
-      <div class="col-lg-12">
-        <h1>{{ user.name }} ({{user.login}})</h1>
-        <h2>{{ user.email }}</h2>
-        <img ng-src="{{user.avatar_url}}" class="ng-cloak" alt="{{user.name}}" ng-show="user.avatar_url" />
+<div class="container-fluid well col-lg-12">
+  <div class="row-fluid">
+    <div class="col-lg-2" >
+      <img ng-src="{{user.avatar_url}}?&s=140"
+           class="ng-cloak img-circle"
+           alt="{{user.name}}"
+           ng-show="user.avatar_url"
+           width="140"
+           height="140"
+           />
+    </div>
+
+    <div class="col-lg-10">
+      <dl class="col-lg-4">
+        <dt>@</dt><dd>{{ user.login }}</dd>
+        <dt>Name</dt><dd>{{ user.name }}</dd>
+        <dt>Location</dt><dd>{{ user.location }}</dd>
+        <dt>Email</dt><dd>{{ user.email }}</dd>
+      </div>
+      <div class="col-lg-4">
+        <dl class="dl-horizontal">
+          <dt>{{ user.public_repos }}</dt><dd>public repos</dd>
+          <dt>{{ user.owned_private_repos }}</dt><dd>private repos</dd>
+          <dt>{{ user.public_gists }}</dt><dd>public gists</dd>
+          <dt>{{ user.private_gists }}</dt><dd>private gists</dd>
+        </dl>
+      </div>
+      <div class="col-lg-3">
+        <h3>Organizations:</h3>
+        <img ng-src="{{organization.avatar_url}}"
+             class="ng-cloak img-circle"
+             alt="foo"
+             ng-repeat="organization in user.organizations"
+             width="35"
+             height="35"
+             />
+      </div>
+    </div>
+    <pre>{{ user|json }}</pre>
+    <div class="col-lg-2">
+      <div class="btn-group">
+        <a class="btn dropdown-toggle btn-info" data-toggle="dropdown" href="#">
+                    Action
+          <span class="icon-cog icon-white"></span><span class="caret"></span>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a href="#"><span class="icon-wrench"></span> Modify</a></li>
+          <li><a href="#"><span class="icon-trash"></span> Delete</a></li>
+        </ul>
       </div>
     </div>
   </div>

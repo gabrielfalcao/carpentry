@@ -649,8 +649,10 @@ class RunBuild(CarpentryPipelineStep):
         build.code = docker.wait(container)
 
         if build.code == 0:
+            build.append_to_stdout('\n\nCarpentry build succeeded :)\n\n')
             build.set_status('succeeded')
         else:
+            build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
             build.set_status('failed')
 
         instructions['container'] = container

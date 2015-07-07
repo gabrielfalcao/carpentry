@@ -1,8 +1,8 @@
 <navbar />
 
-<div class="container"  ng-controller="BuildController">
+<div class="container-fluid"  ng-controller="BuildController">
   <div class="page-header">
-    <div class="row">
+    <div class="row-fluid">
       <div class="col-lg-12">
         <h1>
           <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a>
@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row-fluid">
     <div class="col-lg-12">
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!html_output">
         <div class="panel-heading">
@@ -24,13 +24,24 @@
 
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!html_output">
         <div class="panel-heading">
-          <h3 class="panel-title ng-cloak" ng-show="build.commit" id="panel-title">{{ build.commit }}</h3>
-          <h4 class="ng-cloak" ng-show="build.author_name">by {{ build.author_name }} ({{ build.author_email }})</h4>
+          <div>
+            <dl id="build-details" class="dl-horizontal">
+              <dt ng-show="build.author_name">Author Name</dt><dd>{{ build.author_name }}</dd>
+              <dt ng-show="build.author_email">Author Email</dt><dd>{{ build.author_email }}</dd>
+              <dt ng-show="build.commit">Commit Hash</dt><dd>{{ build.commit }}</dd>
+              <dt ng-show="build.commit_message">Message</dt><dd><pre>{{ build.commit_message }}</pre></dd>
+              <dt ng-show="build.commit_message">commit message</dt><dd>{{ build.commit_message }}</dd>
+              <dt ng-show="build.docker_status.status">docker status</dt><dd>{{ build.docker_status.status }}</dd>
+              <dt ng-show="build.docker_status.stream">docker log</dt><dd>{{ build.docker_status.stream }}</dd>
+            </dl>
+          </div>
         </div>
         <div class="panel-body">
-          <code class="ng-cloak" ng-show="build.commit_message">{{ build.commit_message }}</code>
-
           <pre scroll-glue style="overflow-y: auto;max-height: 640px; background: #222; color: white;"  ng-bind-html="html_output"></pre>
+          <p ng-if="build.docker_status"><strong class="text-info">docker status</strong></p>
+          <p ng-if="build.docker_status.status"><strong class="text-warning">{{ build.docker_status.status }}</strong></p>
+          <p ng-if="build.docker_status.stream"><strong class="text-success">{{ build.docker_status.stream }}</strong></p>
+          <p><pre>{{ build.docker_status|json }}</pre></p>
         </div>
       </div>
       <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">
