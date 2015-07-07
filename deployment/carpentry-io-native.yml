@@ -9,6 +9,7 @@
     carpentry_build_images: no
     carpentry_docker_deployment: no
     carpentry_recreate_keyspace: no
+    carpentry_flush_all_data: yes
     full_server_url: http://carpentry.io
     carpentry_http_hostname: carpentry.io
     carpentry_http_port: 5000
@@ -79,3 +80,7 @@
       with_sequence: count="{{ carpentry_worker_processes }}"
       tags:
         - restart
+
+    - name: cleanup and recreate full cassandra db and flush worker redis queues
+      shell: /srv/carpentry/venv/bin/carpentry setup --drop --flush-redis
+      when: carpentry_flush_all_data
