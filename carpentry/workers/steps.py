@@ -476,28 +476,48 @@ class DockerDependencyStopper(CarpentryPipelineStep):
     @classmethod
     def do_stop_dependency_container(cls, build, container):
         docker = get_docker_client()
-        build.append_to_stdout("------------------------------\n")
-        build.append_to_stdout("stopping dependency container:")
-        build.append_to_stdout(extract_container_name(docker, container))
-        build.append_to_stdout("\n\n")
+        container_name = extract_container_name(docker, container)
+        info = {
+            "status": "stopping dependency container: {0}".format(container_name),
+            "stream": "requesting to docker api...",
+        }
+        line = json.dumps(info)
+        build.register_docker_status(line)
+
         try:
             docker.stop(container['Id'])
+            info["stream"] = '{0} successfully stopped'.format(container_name)
+            line = json.dumps(info)
+            build.register_docker_status(line)
+
         except Exception as e:
-            build.append_to_stdout(traceback.format_exc(e))
-            build.append_to_stdout("\n\n")
+            info["traceback"] = traceback.format_exc(e)
+            info["stream"] = '{0} failed to stop'.format(container_name)
+            line = json.dumps(info)
+            build.register_docker_status(line)
 
     @classmethod
     def do_remove_dependency_container(cls, build, container):
         docker = get_docker_client()
-        build.append_to_stdout("------------------------------\n")
-        build.append_to_stdout("removing dependency container:")
-        build.append_to_stdout(extract_container_name(docker, container))
-        build.append_to_stdout("\n\n")
+        container_name = extract_container_name(docker, container)
+        info = {
+            "status": "removing dependency container: {0}".format(container_name),
+            "stream": "requesting to docker api...",
+        }
+        line = json.dumps(info)
+        build.register_docker_status(line)
+
         try:
             docker.remove_container(container['Id'])
+            info["stream"] = '{0} successfully removed'.format(container_name)
+            line = json.dumps(info)
+            build.register_docker_status(line)
+
         except Exception as e:
-            build.append_to_stdout(traceback.format_exc(e))
-            build.append_to_stdout("\n\n")
+            info["traceback"] = traceback.format_exc(e)
+            info["stream"] = '{0} failed to remove'.format(container_name)
+            line = json.dumps(info)
+            build.register_docker_status(line)
 
     @classmethod
     def stop_and_remove_dependency_containers(cls, build, instructions):
@@ -614,7 +634,6 @@ class RunBuild(CarpentryPipelineStep):
         image = slug
 
         container_name = '_'.join([slug, commit[:8]])
-        DockerDependencyStopper.stop_and_remove_conflicting_containers(build, container_name)
 
         for line in docker.build(path=build_dir,
                                  rm=True,
@@ -634,6 +653,7 @@ class RunBuild(CarpentryPipelineStep):
             build,
             container_name,
         )
+
         container = docker.create_container(
             image=image,
             environment=environment,

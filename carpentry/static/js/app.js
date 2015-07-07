@@ -1,6 +1,7 @@
 angular.module('CarpentryApp', [
     'ngCookies',
     'ui.router',
+    'ui.bootstrap.progressbar',
     'cfp.hotkeys',
     'cgNotify',
     /* 'btford.socket-io', */
