@@ -455,6 +455,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         for line in docker.pull(image, stream=True):
             build.register_docker_status(line)
+            build.append_to_stdout('.')
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
@@ -487,6 +488,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         line = json.dumps(info)
         build.register_docker_status(line)
         build.append_to_stdout(msg)
+        build.append_to_stdout('waiting for next step...\n')
 
         dependency['container'] = container
         return dependency
@@ -654,15 +656,6 @@ class RunBuild(CarpentryPipelineStep):
         image = instructions['build']['image']
 
         container_name = '_'.join([slug, commit[:8]])
-
-        # for line in docker.build(path=build_dir,
-        #                          rm=True,
-        #                          pull=True,
-        #                          forcerm=True,
-        #                          stream=True,
-        #                          tag=slug):
-        #     build.register_docker_status(line)
-
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
                            for d in instructions['dependency_containers']]
 
@@ -677,6 +670,7 @@ class RunBuild(CarpentryPipelineStep):
         build.append_to_stdout('pulling docker image {0}\n'.format(image))
         for line in docker.pull(image, stream=True):
             build.register_docker_status(line)
+            build.append_to_stdout('.')
             logging.info("docker pull {0}: {1}".format(image, line))
 
         build.append_to_stdout('running tests inside of {0}\n'.format(image))
@@ -710,7 +704,7 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
             build.set_status('failed')
 
-        container_name = extract_container_name(container)
+        container_name = extract_container_name(docker, container)
         DockerDependencyStopper.stop_and_remove_conflicting_containers(
             build,
             container_name
