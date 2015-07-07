@@ -407,7 +407,7 @@ class Build(Model):
         self.stdout = self.stdout or b''
         try:
             json.loads(line)
-            self.docker_status = force_unicode(line)
+            self.docker_status = line
         except ValueError:
             self.stdout += force_unicode(line)
         except Exception as e:

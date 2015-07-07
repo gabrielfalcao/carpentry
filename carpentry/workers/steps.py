@@ -673,7 +673,7 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('.')
             logging.info("docker pull {0}: {1}".format(image, line))
 
-        build.append_to_stdout('running tests inside of {0}\n'.format(image))
+        build.append_to_stdout('\nrunning tests inside of {0}\n'.format(image))
         container = docker.create_container(
             image=image,
             command=render_string('bash {shell_script_filename}', instructions),
@@ -693,6 +693,8 @@ class RunBuild(CarpentryPipelineStep):
         docker.start(container['Id'])
 
         for line in docker.logs(container['Id'], stream=True, stdout=True, stderr=True):
+            build.append_to_stdout(line)
+            build.append_to_stdout('\n')
             build.register_docker_status(line)
 
         build.code = docker.wait(container)
@@ -721,7 +723,7 @@ class RunBuild(CarpentryPipelineStep):
         process = run_command(cmd, chdir=instructions['build_dir'])
 
         b = Build.get(id=instructions['id'])
-        b.append_to_stdout('running {0}...\n'.format(cmd))
+        b.append_to_stdout('\nrunning {0}...\n'.format(cmd))
         b.save()
 
         timeout_in_seconds = instructions.get('build_timeout_in_seconds')
