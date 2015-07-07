@@ -8,6 +8,7 @@ import requests
 import hashlib
 import logging
 import datetime
+import traceback
 # from dateutil.parser import parse as parse_datetime
 from lineup import JSONRedisBackend
 
@@ -396,6 +397,18 @@ class Build(Model):
         deserialized_docker_status = json.loads(docker_status)
         result['docker_status'] = deserialized_docker_status
         return result
+
+    def register_docker_status(self, line):
+        try:
+            json.loads(line)
+            self.docker_status = line
+        except Exception as e:
+            error = traceback.format_exc(e)
+            self.stdout = self.stdout or b''
+            self.stdout += force_unicode(error)
+            self.docker_status = json.dumps({'status': 'Failed to register docker'})
+
+        self.save()
 
 
 class User(Model):

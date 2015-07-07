@@ -447,8 +447,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             image = '{0}:latest'.format(image)
 
         for line in docker.pull(image, stream=True):
-            build.docker_status = line
-            build.save()
+            build.register_docker_status(line)
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
@@ -623,8 +622,7 @@ class RunBuild(CarpentryPipelineStep):
                                  forcerm=True,
                                  stream=True,
                                  tag=slug):
-            build.docker_status = line
-            build.save()
+            build.register_docker_status(line)
 
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
                            for d in instructions['dependency_containers']]
@@ -646,8 +644,7 @@ class RunBuild(CarpentryPipelineStep):
         docker.start(container['Id'])
 
         for line in docker.logs(container['Id'], stream=True, stdout=True):
-            build.docker_status = line
-            build.save()
+            build.register_docker_status(line)
 
         build.code = docker.wait(container)
 
