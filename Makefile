@@ -58,6 +58,9 @@ deploy-from-scratch:
 deploy-all:
 	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry deployment/carpentry-io-native.yml
 
+production-db-reset:
+	ansible-playbook -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t flush deployment/carpentry-io-native.yml
+
 deploy-nginx:
 	ansible-playbook -vvvv -i deployment/inventory.ini --vault-password-file=~/.ansible-vault.carpentry -t update-code -t nginx deployment/carpentry-io-native.yml
 
