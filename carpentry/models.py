@@ -64,7 +64,7 @@ def get_pipeline():
 
 
 def slugify(string):
-    return re.sub(r'\W+', '', string)
+    return re.sub(r'\W+', '', string).lower()
 
 
 def serialize_value(value):
@@ -84,6 +84,7 @@ def model_to_dict(instance, extra={}):
     data = {}
     for key, value in instance.items():
         data[key] = serialize_value(value)
+
     if isinstance(extra, dict):
         data.update(extra)
     else:
@@ -579,3 +580,6 @@ class GithubOrganization(Model):
         )
         model.save()
         return model
+
+    def to_dict(self):
+        return model_to_dict(self)
