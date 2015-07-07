@@ -9,7 +9,7 @@
     carpentry_build_images: no
     carpentry_docker_deployment: no
     carpentry_recreate_keyspace: no
-    carpentry_flush_all_data: yes
+    carpentry_flush_all_data: no
     full_server_url: http://carpentry.io
     carpentry_http_hostname: carpentry.io
     carpentry_http_port: 5000
