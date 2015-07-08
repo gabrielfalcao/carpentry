@@ -7,6 +7,7 @@ from datetime import datetime, date, time
 from carpentry.models import serialize_value
 from carpentry.models import get_pipeline
 from carpentry.models import slugify
+from carpentry.models import model_to_dict
 from carpentry.models import GithubOrganization
 from carpentry.workers import RunBuilder
 
@@ -74,7 +75,7 @@ def test_serialize_model_to_dict():
         login='chucknorris',
     )
 
-    org.to_dict().should.equal({
+    model_to_dict(org).should.equal({
         'avatar_url': None,
         'github_id': None,
         'html_url': None,

@@ -459,11 +459,13 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
+        all_container_names = [extract_container_name(c) for c in docker.container()]
 
-        DockerDependencyStopper.stop_and_remove_conflicting_containers(
-            build,
-            hostname
-        )
+        if hostname in all_container_names:
+            msg = render_string('dependency {image} is already running as {hostname}', dependency)
+            build.append_to_stdout(msg)
+            logging.warning(msg)
+            return
 
         container = docker.create_container(
             image=image,
@@ -662,11 +664,6 @@ class RunBuild(CarpentryPipelineStep):
         build_info = instructions['build']
         environment = build_info.get('environment', {})
 
-        DockerDependencyStopper.stop_and_remove_conflicting_containers(
-            build,
-            container_name,
-        )
-
         build.append_to_stdout('\npulling docker image {0}...\n'.format(image))
         for line in docker.pull(image, stream=True):
             build.register_docker_status(line)
@@ -697,7 +694,9 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('\n')
             build.register_docker_status(line)
 
-        build.code = docker.wait(container)
+        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or 300)
+
+        build.code = docker.wait(container, timeout=timeout_in_seconds)
 
         if build.code == 0:
             build.append_to_stdout('\n\nCarpentry build succeeded :)\n\n')
@@ -706,13 +705,22 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
             build.set_status('failed')
 
-        container_name = extract_container_name(docker, container)
-        DockerDependencyStopper.stop_and_remove_conflicting_containers(
-            build,
-            container_name
-        )
+        self.stop_and_remove_container(docker, container)
 
         self.produce(instructions)
+
+    def stop_and_remove_container(self, docker, container):
+        name = extract_container_name(container)
+        error_msg = "Failed to stop container {0}".format(name)
+        try:
+            docker.stop(container)
+        except:
+            logging.exception(error_msg)
+
+        try:
+            docker.remove_container(container)
+        except:
+            logging.exception(error_msg)
 
     def build_native(self, instructions):
         cmd = render_string('bash {shell_script_path}', instructions)
@@ -724,7 +732,6 @@ class RunBuild(CarpentryPipelineStep):
 
         b = Build.get(id=instructions['id'])
         b.append_to_stdout('\nrunning {0}...\n'.format(cmd))
-        b.save()
 
         timeout_in_seconds = instructions.get('build_timeout_in_seconds')
         stdout, exit_code = stream_output(self, process, b, timeout_in_seconds=timeout_in_seconds)
