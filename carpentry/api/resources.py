@@ -15,7 +15,7 @@ from carpentry.api.core import (
     authenticated,
     ensure_json_request
 )
-from cqlengine.models import Model
+from carpentry.models import CarpentryBaseModel
 from carpentry.util import get_docker_client
 
 from carpentry import models
@@ -32,8 +32,8 @@ TIMEOUT_BEFORE_SIGKILL = 5  # seconds
 def is_model(v):
     return (
         isinstance(v, type) and
-        issubclass(v, Model) and
-        v != Model
+        issubclass(v, CarpentryBaseModel) and
+        v != CarpentryBaseModel
     )
 
 

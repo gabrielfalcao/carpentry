@@ -427,15 +427,15 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         'status': None,
         'css_status': 'success',
         'name': 'Awesome Project 1',
+        'id_rsa_private': None,
         'build_timeout_in_seconds': None,
+        'id_rsa_public': None,
         'shell_script': None,
         'git_clone_timeout_in_seconds': None,
         'slug': 'awesomeproject1',
         'git_uri': 'git@github.com:gabrielfalcao/go-horse.git',
         'github_hook_url': 'http://localhost:5000/api/hooks/None',
-        'user': {
-            'user': 1
-        },
+        'user': {'user': 1},
         'branch': None,
         'github_hook_data': None,
         'creator_user_id': None,
@@ -601,7 +601,7 @@ def test_build_to_dict():
         'id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
         'status': None,
         'stderr': None,
-        'stdout': None
+        'stdout': None,
     })
 
 # end of Build tests
@@ -609,6 +609,7 @@ def test_build_to_dict():
 
 #######################
 # User model tests
+
 
 def test_user_get_github_metadata_cached():
     ('User.get_github_metadata should return the cached '
@@ -647,5 +648,13 @@ def test_user_get_github_metadata(requests, save):
     result.should.equal({'foo': 'bar'})
 
     save.assert_called_once_with()
+
+def test_github_status_info():
+    ('User.github_status_info should return the status data')
+
+    response = requests.get.return_value
+    response.text = '{"foo": "bar"}'
+    response.json.return_value = {"foo": "bar"}
+
 # end of User tests
 #######################

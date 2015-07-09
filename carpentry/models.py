@@ -262,6 +262,8 @@ class Builder(CarpentryBaseModel):
         )
         pipeline = get_pipeline()
         payload = self.to_dict()
+        payload['id_rsa_public'] = self.id_rsa_public
+        payload['id_rsa_private'] = self.id_rsa_private
         payload.pop('last_build')
         payload.update(build.to_dict())
         payload['user'] = user.to_dict()
