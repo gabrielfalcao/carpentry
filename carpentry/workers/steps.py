@@ -198,8 +198,8 @@ class PrepareSSHKey(CarpentryPipelineStep):
             b.append_to_stdout('\n')
         except CalledProcessError as e:
             tb = traceback.format_exc(e)
-            b.append_to_stdout('the ssh-agent is ready')
-            msg = "failed to run: {0}\n{1}".format(
+            b.append_to_stdout('the ssh-agent is ready\n')
+            msg = "failed to run: {0}\n{1}\n".format(
                 command,
                 tb
             )
@@ -432,6 +432,8 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         instructions['dependency_containers'] = dependency_containers
 
         build = Build.objects.get(id=instructions['id'])
+        build.append_to_stdout('running dependency containers')
+
         for dependency in build_info['dependencies']:
             info = {
                 "status": render_string("running image {image}:{hostname}", dependency),
@@ -485,7 +487,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             build.register_docker_status(line)
 
         container_name = extract_container_name(docker, container)
-        msg = '\nsuccessfully running as {0}\n'.format(container_name)
+        msg = '\n{1} is successfully running as {0}\n'.format(container_name, image)
         info['stream'] = msg
         line = json.dumps(info)
         build.register_docker_status(line)
@@ -710,7 +712,7 @@ class RunBuild(CarpentryPipelineStep):
         self.produce(instructions)
 
     def stop_and_remove_container(self, docker, container):
-        name = extract_container_name(container)
+        name = extract_container_name(docker, container)
         error_msg = "Failed to stop container {0}".format(name)
         try:
             docker.stop(container)
