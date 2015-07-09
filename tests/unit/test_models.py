@@ -649,12 +649,6 @@ def test_user_get_github_metadata(requests, save):
 
     save.assert_called_once_with()
 
-def test_github_status_info():
-    ('User.github_status_info should return the status data')
-
-    response = requests.get.return_value
-    response.text = '{"foo": "bar"}'
-    response.json.return_value = {"foo": "bar"}
 
 # end of User tests
 #######################
