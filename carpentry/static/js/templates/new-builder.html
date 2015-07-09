@@ -27,11 +27,13 @@
             <div class="form-group">
               <label for="shell_script" class="col-lg-2 control-label"><strong>SHELL SCRIPT</strong></label>
               <div class="col-lg-10">
-                <div class="well">
+                <input id="load-yaml" type="checkbox" ng-model="builder.loadFromYAML" value="true" />
+                load from <code>.carpentry.yml</code>
+                <div class="well" ng-if="!builder.loadFromYAML" style="margin-top:16px">
                   Examples:&nbsp;&nbsp;
-                  <button ng-repeat="(language, script) in SHELL_SCRIPT_EXAMPLES" ng-click="doShellScriptExample(language)" class="btn btn-sm btn-primary">{{ language }}</button>
+                  <button ng-repeat="(language, script) in SHELL_SCRIPT_EXAMPLES" ng-click="doShellScriptExample(language)" class="btn btn-sm btn-success">{{ language }}</button>
                 </div>
-                <textarea id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
+                <textarea ng-if="!builder.loadFromYAML" id="shell_script" class="form-control" ng-model="builder.shell_script" rows="25" style="font-family: Monaco,monospace;font-size:12px"></textarea>
               </div>
             </div>
             <div class="form-group ng-cloak" ng-hide="builder.generate_ssh_keys">

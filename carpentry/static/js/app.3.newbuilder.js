@@ -51,6 +51,7 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
 
     $scope.builder = {
         'generate_ssh_keys': true,
+        'loadFromYAML': true,
         'name': $rootScope.user.name + "'s Project",
         'git_uri': 'git@github.com:'+$rootScope.user.login+'/yourrepo.git',
         'shell_script': $scope.SHELL_SCRIPT_EXAMPLES[DEFAULT_LANGUAGE]
