@@ -459,7 +459,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
-        all_container_names = [extract_container_name(c) for c in docker.container()]
+        all_container_names = [extract_container_name(c) for c in docker.containers()]
 
         if hostname in all_container_names:
             msg = render_string('dependency {image} is already running as {hostname}', dependency)

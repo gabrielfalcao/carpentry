@@ -67,7 +67,7 @@ def slugify(string):
     return re.sub(r'\W+', '', string).lower()
 
 
-def serialize_value(value):
+def prepare_value_for_serialization(value):
     if isinstance(value, uuid.UUID):
         result = str(value)
     elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
@@ -83,22 +83,27 @@ def serialize_value(value):
 def model_to_dict(instance, extra={}):
     data = {}
     for key, value in instance.items():
-        data[key] = serialize_value(value)
+        data[key] = prepare_value_for_serialization(value)
 
-    if isinstance(extra, dict):
-        data.update(extra)
-    else:
-        msg = (
-            "carpentry.models.model_to_dict's 2nd "
-            "argument `extra` must be a dict,"
-            " got a {0} instead"
-        )
-        raise TypeError(msg.format(type(extra)))
-
+    data.update(extra)
     return data
 
 
-class Builder(Model):
+class CarpentryBaseModel(Model):
+    __abstract__ = True
+
+    def to_dict(self):
+        return model_to_dict(self)
+
+    def prepare_github_request_headers(self, github_access_token=None):
+        github_access_token = github_access_token or getattr(self, 'github_access_token', None)
+        headers = {
+            'Authorization': 'token {0}'.format(github_access_token)
+        }
+        return headers
+
+
+class Builder(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     name = columns.Text(required=True)
     git_uri = columns.Text(index=True)
@@ -112,56 +117,69 @@ class Builder(Model):
     github_hook_data = columns.Text()
     git_clone_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
     build_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
-    # docker_dependencies = columns.Map(columns.Text(), columns.Text())
+
+    @property
+    def creator(self):
+        return User.get(id=self.creator_user_id)
 
     def get_fallback_github_access_token(self):
-        creator = User.get(id=self.creator_user_id)
-        return creator.github_access_token
+        return self.creator.github_access_token
 
-    def delete_single_github_hook(self, hook_id, github_access_token=None):
-        github_access_token = github_access_token or self.get_fallback_github_access_token()
-        headers = {
-            'Authorization': 'token {0}'.format(github_access_token)
-        }
+    @property
+    def github_access_token(self):
+        return self.get_fallback_github_access_token()
 
+    def delete_single_github_hook(self, hook_id, github_access_token):
+        headers = self.prepare_github_request_headers(github_access_token)
         url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_repo_info)
         response = requests.delete(url, headers=headers)
         return response
 
-    def cleanup_github_hooks(self, github_access_token=None):
-        if not github_access_token:
-            creator = User.get(id=self.creator_user_id)
-            github_access_token = creator.github_access_token
-
-        headers = {
-            'Authorization': 'token {0}'.format(github_access_token)
-        }
-        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_repo_info)
+    def list_github_hooks(self, github_access_token=None):
+        headers = self.prepare_github_request_headers(
+            github_access_token
+        )
+        url = render_string(
+            'https://api.github.com/repos/{owner}/{name}/hooks',
+            self.github_repo_info
+        )
 
         response = requests.get(url, headers=headers)
-        all_hooks = response.json()
+        try:
+            all_hooks = response.json()
+        except ValueError:
+            msg = '[{0}] github failed to list hooks:\n{1}\n'.format(
+                url,
+                response.text
+            )
+            logger.warning(msg)
+            all_hooks = []
+
+        return all_hooks
+
+    def cleanup_github_hooks(self, github_access_token=None):
+        all_hooks = self.list_github_hooks(github_access_token)
         base_url = conf.get_full_url('')
-        logger.info("%s hooks found for repo %s", len(all_hooks), self.github_repo_info)
-        logger.info("trying to match them with the address: %s", base_url)
-        if response.status_code > 300:
-            logger.warning("github returned %s on %s:%s", response.status_code, url, response.text)
-            return
+        logger.info(
+            "%s hooks found for repo %s",
+            len(all_hooks),
+            self.github_repo_info
+        )
 
         for hook in all_hooks:
-            hook_config = hook.get('config', {})
-            if not isinstance(hook_config, dict):
-                logger.error("Hook config is a %s %s", type(hook_config), hook_config)
-                hook_config = {}
-
+            hook_config = hook['config']
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']
 
             if not hook_url:
-                logger.info("could not find a url in the config of the hook %s", hook)
                 continue
 
             if hook_url.startswith(base_url):
-                logger.info("removing hook %s from repo %s", hook_config, self.github_repo_info)
+                logger.info(
+                    "removing hook %s from repo %s",
+                    hook_config,
+                    self.github_repo_info
+                )
                 self.delete_single_github_hook(
                     hook_id,
                     github_access_token
@@ -177,7 +195,9 @@ class Builder(Model):
 
     @property
     def github_repo_info(self):
-        return Builder.determine_github_repo_from_git_uri(self.git_uri)
+        return Builder.determine_github_repo_from_git_uri(
+            self.git_uri
+        )
 
     def determine_github_hook_url(self):
         path = '/api/hooks/{0}'.format(self.id)
@@ -185,12 +205,16 @@ class Builder(Model):
 
     def set_github_hook(self, github_access_token):
         if self.github_hook_data:
-            logging.warning('github hook already set for %s', self.name)
+            logging.warning(
+                'github hook already set for %s',
+                self.name
+            )
             return json.loads(self.github_hook_data)
 
-        headers = {
-            'Authorization': 'token {0}'.format(github_access_token)
-        }
+        headers = self.prepare_github_request_headers(
+            github_access_token
+        )
+
         request_payload = json.dumps({
             "name": "web",
             "active": True,
@@ -203,23 +227,28 @@ class Builder(Model):
                 "content_type": "json"
             }
         })
-        url = render_string('https://api.github.com/repos/{owner}/{name}/hooks', self.github_repo_info)
-        response = requests.post(url, data=request_payload, headers=headers)
+        url = render_string(
+            'https://api.github.com/repos/{owner}/{name}/hooks',
+            self.github_repo_info
+        )
+        response = requests.post(
+            url,
+            data=request_payload,
+            headers=headers
+        )
         self.github_hook_data = response.text
         self.save()
-        logging.warning("when setting github hook %s %s", url, response)
+        logging.warning(
+            "when setting github hook %s %s",
+            url,
+            response
+        )
         return response.json()
 
-    @property
-    def github_hook_info(self):
-        if not self.github_hook_data:
-            msg = "Attempted to retrieve github_hook_info for builder {0}"
-            logger.warning(msg.format(self.id))
-            return {}
+    def trigger(self, user, branch=None, commit=None,
+                author_name=None, author_email=None,
+                github_webhook_data=None):
 
-        return json.loads(self.github_hook_data)
-
-    def trigger(self, user, branch=None, commit=None, author_name=None, author_email=None, github_webhook_data=None):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
@@ -269,21 +298,18 @@ class Builder(Model):
             'last_build': serialized_build,
             'github_hook_url': self.determine_github_hook_url()
         })
-        # result.pop('id_rsa_private', None)
-        # result.pop('id_rsa_public', None)
+        result.pop('id_rsa_private', None)
+        result.pop('id_rsa_public', None)
         return result
 
 
-class CarpentryPreference(Model):
+class CarpentryPreference(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     key = columns.Text(required=True)
     value = columns.Text(required=True)
 
-    def to_dict(self):
-        return model_to_dict(self)
 
-
-class Build(Model):
+class Build(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     builder_id = columns.TimeUUID(required=True, index=True)
     git_uri = columns.Text()
@@ -334,9 +360,8 @@ class Build(Model):
                 status, '. '.join(options)
             ))
 
-        headers = {
-            'Authorization': 'token {0}'.format(github_access_token)
-        }
+        headers = self.prepare_github_request_headers(
+            github_access_token)
         template_url = 'https://api.github.com/repos/{{owner}}/{{name}}/statuses/{0}'.format(self.commit)
         url = render_string(template_url, self.github_repo_info)
 
@@ -418,7 +443,7 @@ class Build(Model):
         self.save()
 
 
-class User(Model):
+class User(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     github_access_token = columns.Text(index=True)
     name = columns.Text()
@@ -435,9 +460,7 @@ class User(Model):
         if self.github_metadata:
             return json.loads(self.github_metadata)
 
-        headers = {
-            'Authorization': 'token {0}'.format(self.github_access_token)
-        }
+        headers = self.prepare_github_request_headers()
         response = requests.get('https://api.github.com/user', headers=headers)
         metadata = response.json()
         self.github_metadata = response.text
@@ -456,12 +479,6 @@ class User(Model):
         users = User.objects.filter(carpentry_token=carpentry_token)
         if len(users) > 0:
             return users[0]
-
-    def prepare_github_request_headers(self):
-        headers = {
-            'Authorization': 'token {0}'.format(self.github_access_token)
-        }
-        return headers
 
     def retrieve_organization_repos(self, name):
         headers = self.prepare_github_request_headers()
@@ -514,7 +531,7 @@ class User(Model):
         return organizations
 
 
-class GithubRepository(Model):
+class GithubRepository(CarpentryBaseModel):
     """holds an individual repo coming as json from the github api
     response, the `name`, `owner` and `git_uri` are stored as fields
     of this model, and the full `response_data` is also available as a
@@ -551,7 +568,7 @@ class GithubRepository(Model):
         return model
 
 
-class GithubOrganization(Model):
+class GithubOrganization(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     login = columns.Text(required=True)
     github_id = columns.Integer()
@@ -580,6 +597,3 @@ class GithubOrganization(Model):
         )
         model.save()
         return model
-
-    def to_dict(self):
-        return model_to_dict(self)

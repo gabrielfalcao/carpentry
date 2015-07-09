@@ -4,7 +4,6 @@
 
 import os
 import sys
-import json
 import urlparse
 from plant import Node
 from milieu import Environment
@@ -13,9 +12,9 @@ self = sys.modules[__name__]
 DEFAULT_WORKDIR = os.getenv('CARPENTRY_WORKDIR') or '/tmp/carpentry'
 
 
-def get_env(self, path):
-    if os.path.exists(carpentry_config_path):  # pragma: no cover
-        env = Environment.from_file(carpentry_config_path)
+def get_env(path):
+    if os.path.exists(path):
+        env = Environment.from_file(path)
     else:
         env = Environment()
     return env
@@ -49,7 +48,7 @@ def set_things(self, env):
 
 
 def setup_from_config_path(self, path):
-    env = get_env(self, path)
+    env = get_env(path)
     set_things(self, env)
 
 
