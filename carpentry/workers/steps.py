@@ -492,7 +492,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         line = json.dumps(info)
         build.register_docker_status(line)
         build.append_to_stdout(msg)
-        build.append_to_stdout('\nwaiting for next step...\n')
+        build.append_to_stdout('waiting for next step...\n')
 
         dependency['container'] = container
         return dependency
@@ -618,10 +618,10 @@ class PrepareShellScript(CarpentryPipelineStep):
             self.write_script_to_fd(fd, shell_script, instructions)
 
         build.append_to_stdout('---------------------------\n')
-        build.append_to_stdout('build script:\n')
-        build.append_to_stdout('---------------------------\n\n')
+        build.append_to_stdout(render_string('{shell_script_filename}:\n', instructions))
+        build.append_to_stdout('---------------------------\n')
         build.append_to_stdout(shell_script)
-        build.append_to_stdout('\n\n')
+        build.append_to_stdout('\n')
         build.append_to_stdout('---------------------------\n')
 
         os.chmod(shell_script_path, 0755)
