@@ -432,7 +432,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         instructions['dependency_containers'] = dependency_containers
 
         build = Build.objects.get(id=instructions['id'])
-        build.append_to_stdout('running dependency containers')
+        build.append_to_stdout('running dependency containers\n')
 
         for dependency in build_info['dependencies']:
             info = {
@@ -691,7 +691,7 @@ class RunBuild(CarpentryPipelineStep):
         )
         docker.start(container['Id'])
 
-        for line in docker.logs(container['Id'], stream=True, stdout=True, stderr=True):
+        for line in docker.logs(container, stream=True, stdout=True, stderr=True):
             build.append_to_stdout(line)
             build.append_to_stdout('\n')
             build.register_docker_status(line)

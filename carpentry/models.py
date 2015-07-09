@@ -349,10 +349,11 @@ class Build(CarpentryBaseModel):
 
     @property
     def github_status_info(self):
-        if not self.github_status_data:
+        try:
+            return json.loads(self.github_status_data)
+        except (TypeError, ValueError):
+            # either github_status_data is None or is not a valid json
             return {}
-
-        return json.loads(self.github_status_data)
 
     def set_github_status(self, github_access_token, status, description):
         # options: pending, success, error, or failure
