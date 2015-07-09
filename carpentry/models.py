@@ -387,10 +387,9 @@ class Build(CarpentryBaseModel):
         return Builder.get(id=self.builder_id)
 
     def append_to_stdout(self, string):
-        if not isinstance(self.stdout, basestring):
-            self.stdout = ''
-
-        self.stdout += force_unicode(string)
+        value = force_unicode(string)
+        self.stdout = self.stdout or u''
+        self.stdout += value
         self.save()
 
     def set_status(self, status, description=None, github_access_token=None):
@@ -516,7 +515,7 @@ class User(CarpentryBaseModel):
         GithubRepository.store_many_from_list(all_repos)
         return all_repos
 
-    def get_github_organizations(self):
+    def get_github_organizations(self):  
         github = self.get_github_metadata()
         organizations = github.get('organizations', None)
         if organizations:
@@ -534,7 +533,7 @@ class User(CarpentryBaseModel):
         return organizations
 
 
-class GithubRepository(CarpentryBaseModel):
+class GithubRepository(CarpentryBaseModel):  
     """holds an individual repo coming as json from the github api
     response, the `name`, `owner` and `git_uri` are stored as fields
     of this model, and the full `response_data` is also available as a
@@ -571,7 +570,7 @@ class GithubRepository(CarpentryBaseModel):
         return model
 
 
-class GithubOrganization(CarpentryBaseModel):
+class GithubOrganization(CarpentryBaseModel):  
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     login = columns.Text(required=True)
     github_id = columns.Integer()

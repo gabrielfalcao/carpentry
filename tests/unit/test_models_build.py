@@ -119,3 +119,49 @@ def test_github_status_info_failed():
     b = Build()
     b.github_status_info.should.be.a(dict)
     b.github_status_info.should.be.empty
+
+
+def test_set_github_status_invalid():
+    ('Build.set_github_status raises ValueError when the status is invalid')
+
+    b = Build()
+    b.set_github_status.when.called_with('test-token', 'unknownstatus', 'description').should.have.raised(
+        ValueError,
+        'Build.set_github_status got an invalid status: unknownstatus our of the options pending. success. error. failure'
+    )
+
+
+@patch('carpentry.models.Builder')
+def test_builder_property(Builder):
+    "Build.builder returns the parent builder model instance"
+
+    # Given an instance of build that has a builder_id
+    b = Build(builder_id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'))
+
+    # When I check the .builder property
+    b.builder.should.equal(Builder.get.return_value)
+
+    # Then I see that it was retrieved using Builder.get(id=builder_id)
+    Builder.get.assert_called_once_with(id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'))
+
+
+@patch('carpentry.models.Build.save')
+@patch('carpentry.models.force_unicode')
+def test_append_to_stdout(force_unicode, save_build):
+    ("Build.append_to_stdout() appends the forced unicode string and")
+    force_unicode.side_effect = lambda x: "[{0}]".format(x)
+
+    # Given an instance of build that has some stdout string already
+    b = Build(stdout='[beginning]')
+
+    # When I call append_to_stdout
+    b.append_to_stdout('end')
+
+    # Then the stdout should have been concatenated with the result of force_unicode
+    b.stdout.should.equal('[beginning][end]')
+
+    # And Build.save was called
+    save_build.assert_called_once_with()
+
+    # And force_unicode was called with the given string
+    force_unicode.assert_called_once_with('end')

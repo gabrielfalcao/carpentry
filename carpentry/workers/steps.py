@@ -696,7 +696,7 @@ class RunBuild(CarpentryPipelineStep):
             build.append_to_stdout('\n')
             build.register_docker_status(line)
 
-        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or 300)
+        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or 900)
 
         build.code = docker.wait(container, timeout=timeout_in_seconds)
 

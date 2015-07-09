@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import uuid
 import logging
 import inspect
-import traceback
+
 from dateutil.parser import parse as parse_datetime
 from flask import request
 from tumbler import json_response
@@ -93,30 +93,16 @@ def create_builder(user):
         data['id_rsa_private'] = private_key
         data['id_rsa_public'] = public_key
 
-        builder = models.Builder.create(**data)
-        logger.info('creating new builder: %s', builder.name)
-    try:
-        try:
-            builder.cleanup_github_hooks()
-        except Exception:
-            logger.exception('failed to cleanup github hooks for {0}'.format(builder.git_uri))
+    builder = models.Builder.create(**data)
+    logger.info('creating new builder: %s', builder.name)
+    builder.cleanup_github_hooks()
 
-        try:
-            hook = builder.set_github_hook(user.github_access_token)
-        except Exception:
-            msg = 'failed to cleanup github hooks for {0}'.format(builder.git_uri)
-            logger.exception(msg)
+    hook = builder.set_github_hook(user.github_access_token)
 
-        logger.info('setting github hook: %s', hook)
-        payload = builder.to_dict()
-        return json_response(payload, status=200)
+    logger.info('setting github hook: %s', hook)
 
-    except Exception as e:
-        logger.exception('Failed to create builder')
-        payload = {
-            'error': traceback.format_exc(e)
-        }
-    return json_response(payload, status=500)
+    payload = builder.to_dict()
+    return json_response(payload, status=200)
 
 
 @web.get('/api/builder/<id>')
@@ -168,15 +154,9 @@ def edit_builder(user, id):
         setattr(item, attr, value)
 
     item.save()
-    try:
-        item.cleanup_github_hooks(user.github_access_token)
-    except Exception:
-        logger.exception('failed to cleanup github hooks for {0}'.format(item.git_uri))
 
-    try:
-        item.set_github_hook(user.github_access_token)
-    except Exception:
-        logger.exception('failed to set github hooks for {0}'.format(item.git_uri))
+    item.cleanup_github_hooks(user.github_access_token)
+    item.set_github_hook(user.github_access_token)
 
     logger.info('edit builder: %s', item.name)
     return json_response(item.to_dict())
@@ -187,10 +167,7 @@ def edit_builder(user, id):
 def remove_builder(user, id):
     item = models.Builder.objects.get(id=id)
     item.clear_builds()
-    try:
-        item.cleanup_github_hooks(user.github_access_token)
-    except Exception:
-        logger.exception('failed to clean github hooks for {0}'.format(item.git_uri))
+    item.cleanup_github_hooks(user.github_access_token)
 
     item.delete()
     logger.info('deleting builder: %s', item.name)
@@ -325,24 +302,10 @@ def stop_container(user, container_id):
 def remove_container(user, container_id):
     docker = get_docker_client()
 
-    try:
-        data = docker.remove_container(
-            container_id,
-            v=True,
-        )
-    except:
-        logger.exception("Failed to remove container {0} in a friendly way".format(container_id))
-        try:
-            data = docker.remove_container(
-                container_id,
-                v=True,
-                force=True
-            )
-            logger.info("Container {0} was removed forcefully".format(container_id))
-        except:
-            logger.exception("Failed to remove container {0} forcefully".format(container_id))
-            data = {}
-
+    data = docker.remove_container(
+        container_id,
+        v=True,
+    )
     return json_response(data)
 
 
