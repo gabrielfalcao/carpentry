@@ -11,11 +11,12 @@ function Builder(data){
     }
 
     self.url = "#builders/" + self.id;
-
+    self.alertClass = "alert alert-" + self.css_status;
 }
 Builder.prototype.triggerBuild = function(branch){
     var self = this;
 };
+
 
 Builder.fromList = function(listOfBuilderData) {
     var results = {};
