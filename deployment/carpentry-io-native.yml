@@ -13,8 +13,8 @@
     full_server_url: http://carpentry.io
     carpentry_http_hostname: carpentry.io
     carpentry_http_port: 5000
-    carpentry_web_processes: 2
-    carpentry_worker_processes: 10
+    carpentry_web_processes: 4
+    carpentry_worker_processes: 1
     cassandra:
       version: '2.0.1'
       version_branch: '2.0'
