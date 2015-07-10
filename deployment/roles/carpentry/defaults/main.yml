@@ -7,6 +7,6 @@ carpentry_worker_processes: 2
 docker_version: 1.6.0
 docker_admin_users: []
 carpentry_secret_key: something-secret
-carpentry_version: 0.2.23
+carpentry_version: 0.2.24
 docker_opts:
   - "--iptables=false"
