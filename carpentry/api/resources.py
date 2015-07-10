@@ -124,6 +124,8 @@ def clear_builds(user, id):
     if not deleted_builds:
         return json_response({'total': 0})
 
+    builder.status = 'ready'
+    builder.save()
     total = len(deleted_builds)
     logging.info("Deleted {0} builds of commits {2}:\n{1}".format(
         total,
