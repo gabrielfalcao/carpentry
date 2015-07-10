@@ -389,7 +389,7 @@ class Build(CarpentryBaseModel):
 
     def append_to_stdout(self, string):
         value = force_unicode(string)
-        msg = '[{0}] {1}'.format(self.name, value)
+        msg = '{0} {1}'.format(self.github_repo_info, value)
         logger.info(msg)
         self.stdout = self.stdout or u''
         self.stdout += value
