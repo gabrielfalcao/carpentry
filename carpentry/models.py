@@ -385,7 +385,11 @@ class Build(CarpentryBaseModel):
 
     @property
     def builder(self):
-        return Builder.get(id=self.builder_id)
+        self._cached_builder = getattr(self, '_cached_builder', None)
+        if not self._cached_builder:
+            self._cached_builder = Builder.get(id=self.builder_id)
+
+        return self._cached_builder
 
     def append_to_stdout(self, string):
         value = force_unicode(string)
@@ -404,7 +408,7 @@ class Build(CarpentryBaseModel):
             logger.info(msg.format(self, status))
             return
 
-        github_status = GITHUB_STATUS_MAP.get(status, 'error')
+        github_status = GITHUB_STATUS_MAP.get(status, 'pending')
         self.set_github_status(
             github_access_token,
             github_status,
