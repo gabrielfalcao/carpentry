@@ -165,3 +165,150 @@ def test_append_to_stdout(force_unicode, save_build):
 
     # And force_unicode was called with the given string
     force_unicode.assert_called_once_with('end')
+
+
+@patch('carpentry.models.Build.save')
+def test_set_status_notoken(save_build):
+    ('Build.set_status should just change the build status and save it')
+
+    # Given a build instance
+    b = Build()
+
+    # When I call set_status
+    b.set_status('failed')
+
+    # Then save_build should have been called
+    save_build.assert_called_once_with()
+
+    # And the status should have been set
+    b.status.should.equal('failed')
+
+
+@patch('carpentry.models.Builder.get')
+@patch('carpentry.models.Build.set_github_status')
+@patch('carpentry.models.Build.save')
+def test_set_status_github(save_build,
+                           set_github_status,
+                           get_builder):
+    ('Build.set_status should also set the github status')
+    parent_builder = get_builder.return_value
+
+    # Given a build instance
+    b = Build()
+
+    # When I call set_status with an unknown status
+    b.set_status('unknown', 'oops', 'test-token')
+
+    # Then save_build should have been called
+    save_build.assert_called_once_with()
+
+    # And the status should have been set
+    b.status.should.equal('unknown')
+
+    # And set_github_status should have been called
+    set_github_status.assert_called_once_with(
+        'test-token',
+        'error',
+        'oops'
+    )
+
+
+@patch('carpentry.models.CarpentryBaseModel.save')
+@patch('carpentry.models.Builder.get')
+def test_build_save(get_builder, base_save):
+    ('Build.save should set the status of the '
+     'parent builder as well')
+    parent_builder = get_builder.return_value
+
+    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+
+    # Given a build instance
+    b = Build(
+        status='success',
+        builder_id=brid
+    )
+
+    b.save()
+
+    parent_builder.status.should.equal('success')
+    parent_builder.save.assert_called_once_with()
+
+
+def test_build_to_dict_bad_docker_status():
+    ('Build.save should set the status of the '
+     'parent builder as well')
+    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+
+    # Given a build instance
+    b = Build(
+        docker_status='B@D',
+        status='success',
+        builder_id=brid,
+        git_uri='git@github.com:gabrielfalcao/lettuce.git'
+    )
+
+    b.to_dict().should.equal({
+        'author_email': None,
+        'author_gravatar_url': 'https://s.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e',
+        'author_name': None,
+        'branch': None,
+        'builder_id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
+        'code': None,
+        'commit': None,
+        'commit_message': None,
+        'css_status': 'warning',
+        'date_created': None,
+        'date_finished': None,
+        'docker_status': {},
+        'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
+        'github_repo_info': {
+            'name': 'lettuce',
+            'owner': 'gabrielfalcao'
+        },
+        'github_status_data': None,
+        'github_webhook_data': None,
+        'id': None,
+        'status': 'success',
+        'stderr': None,
+        'stdout': None
+    })
+
+
+@patch('carpentry.models.Build.save')
+def test_register_docker_status_json_ok(save_build):
+    ('Build.register_docker_status sets the docker_status and saves when receiving a valid json')
+    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+
+    # Given a build instance
+    b = Build(
+        docker_status='B@D',
+        status='success',
+        builder_id=brid,
+        git_uri='git@github.com:gabrielfalcao/lettuce.git'
+    )
+
+    b.register_docker_status('{"foo":"bar"}')
+    b.docker_status.should.equal('{"foo":"bar"}')
+    save_build.assert_called_once_with()
+
+
+@patch('carpentry.models.Build.append_to_stdout')
+@patch('carpentry.models.Build.save')
+def test_register_docker_status_json_failing(save_build, append_to_stdout):
+    ('Build.register_docker_status skips setting the status '
+     'when the given line is not a json object')
+    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+
+    # Given a build instance
+    b = Build(
+        docker_status='B@D',
+        status='success',
+        builder_id=brid,
+        git_uri='git@github.com:gabrielfalcao/lettuce.git'
+    )
+
+    b.register_docker_status('amor')
+    b.docker_status.should.equal('B@D')
+
+    append_to_stdout.assert_called_once_with('amor')
+    save_build.called.should.be.false

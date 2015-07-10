@@ -401,18 +401,17 @@ class Build(CarpentryBaseModel):
             logger.info(msg.format(self, status))
             return
 
-        github_status = GITHUB_STATUS_MAP.get(status, None)
-        if github_status:
-            self.set_github_status(github_access_token, github_status, description)
+        github_status = GITHUB_STATUS_MAP.get(status, 'error')
+        self.set_github_status(
+            github_access_token,
+            github_status,
+            description
+        )
 
     def save(self):
-        builder = Builder.objects.get(id=self.builder_id)
-        last_builders_build = builder.get_last_build()
-
-        if last_builders_build and last_builders_build.id == self.id:
-            builder.status = self.status
-            builder.save()
-
+        builder = self.builder
+        builder.status = self.status
+        builder.save()
         return super(Build, self).save()
 
     def to_dict(self):
@@ -431,18 +430,12 @@ class Build(CarpentryBaseModel):
         return result
 
     def register_docker_status(self, line):
-        self.stdout = self.stdout or b''
         try:
             json.loads(line)
             self.docker_status = line
+            self.save()
         except ValueError:
-            self.stdout += force_unicode(line)
-        except Exception as e:
-            self.stdout += force_unicode(line)
-            error = traceback.format_exc(e)
-            self.stdout += force_unicode(error)
-
-        self.save()
+            self.append_to_stdout(line)
 
 
 class User(CarpentryBaseModel):
@@ -515,7 +508,7 @@ class User(CarpentryBaseModel):
         GithubRepository.store_many_from_list(all_repos)
         return all_repos
 
-    def get_github_organizations(self):  
+    def get_github_organizations(self):
         github = self.get_github_metadata()
         organizations = github.get('organizations', None)
         if organizations:
@@ -533,7 +526,7 @@ class User(CarpentryBaseModel):
         return organizations
 
 
-class GithubRepository(CarpentryBaseModel):  
+class GithubRepository(CarpentryBaseModel):
     """holds an individual repo coming as json from the github api
     response, the `name`, `owner` and `git_uri` are stored as fields
     of this model, and the full `response_data` is also available as a
@@ -570,7 +563,7 @@ class GithubRepository(CarpentryBaseModel):
         return model
 
 
-class GithubOrganization(CarpentryBaseModel):  
+class GithubOrganization(CarpentryBaseModel):
     id = columns.TimeUUID(primary_key=True, partition_key=True)
     login = columns.Text(required=True)
     github_id = columns.Integer()
