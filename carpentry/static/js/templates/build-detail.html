@@ -30,7 +30,7 @@
               <dt ng-if="build.author_email">Author Email</dt><dd ng-id="build.author_email">{{ build.author_email }}</dd>
               <dt ng-if="build.commit">Commit Hash</dt><dd ng-id="build.commit">{{ build.commit }}</dd>
               <dt ng-if="build.commit_message">commit message</dt><dd ng-if="build.commit_message">{{ build.commit_message }}</dd>
-              <dt ng-if="build.docker_status.status">docker</dt><dd ng-id="build.docker_status.status">{{ build.docker_status.status }}</dd>
+              <dt ng-if="build.docker_status.status">docker</dt><dd ng-id="build.docker_status.status">{{ build.docker_status.status }} <code ng-if="build.docker_status.id">{{ build.docker_status.id }}</code> </dd>
               <dt ng-if="build.docker_status.stream"></dt><dd ng-id="build.stream.stream">{{ build.docker_status.stream }}</dd>
               <dt ng-if="build.docker_status.progress"></dt><dd ng-id="build.progress.progress">{{ build.docker_status.progress }}</dd>
             </dl>

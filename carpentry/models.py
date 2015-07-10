@@ -388,6 +388,8 @@ class Build(CarpentryBaseModel):
 
     def append_to_stdout(self, string):
         value = force_unicode(string)
+        msg = '[build output] {1}'.format(self.id, value)
+        logger.info(msg)
         self.stdout = self.stdout or u''
         self.stdout += value
         self.save()
@@ -434,6 +436,8 @@ class Build(CarpentryBaseModel):
             json.loads(line)
             self.docker_status = line
             self.save()
+            msg = 'registered docker status: {0}'.format(line)
+            logger.info(msg)
         except ValueError:
             self.append_to_stdout(line)
 

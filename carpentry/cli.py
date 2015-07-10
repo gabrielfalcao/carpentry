@@ -38,7 +38,8 @@ Y88b  d88P888  888888    888 d88PY8b.    888  888Y88b. 888    Y88b 888
                          888                                       888
                          888\033[1;35m Continuous Integration\033[1;32m         Y8b d88P
                          888\033[1;35m for the \033[1;32mpeople\033[1;32m                 "Y88P"\033[0m
-'''
+version {0}
+'''.format(version)
 
 
 def args_include_debug_or_info():
