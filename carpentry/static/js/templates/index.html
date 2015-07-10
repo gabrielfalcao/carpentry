@@ -1,7 +1,7 @@
 <navbar />
-<div class="container">
+<div class="container-fluid">
   <div class="page-header">
-    <div class="row">
+    <div class="row-fluid">
       <div class="col-lg-12">
         <h1 id="buttons">Latest builds
           <button ng-click="go('/fullscreen')" class="btn btn-s btn-info">Full Screen</button>
@@ -9,7 +9,7 @@
       </div>
     </div>
   </div>
-  <div class="row">
+  <div class="row-fluid">
     <div class="col-lg-12">
       <table class="table">
         <thead>
@@ -27,7 +27,7 @@
           <tr ng-class="builder.css_status">
             <td><strong>
               <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a></strong></td>
-              <th class="ng-cloak" ng-hide="!builder.last_build" scope="row">{{ builder.last_build.number }}</th>
+              <th class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.number }}</th>
               <td class="ng-cloak" ng-hide="!builder.last_build">{{ builder.last_build.author_name }} &lt;{{ builder.last_build.author_email }}&gt;</td>
               <td class="ng-cloak" ng-hide="!builder.last_build">
                 <a ng-href="#/builder/{{builder.id}}/build/{{builder.last_build.id}}">{{ builder.last_build.commit }}</a>
