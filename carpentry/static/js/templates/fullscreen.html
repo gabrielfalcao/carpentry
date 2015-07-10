@@ -1,22 +1,18 @@
-<div class="shy-tooltip">
-  <strong class="text-success" ng-show="is_watching_builds">ON</strong>
-  <strong class="text-danger" ng-hide="is_watching_builds">OFF</strong>
-  <strong>[press ? or enter]</strong>
-</div>
-<div class="tile-canvas">
-  <div ng-if="failedMessage" class="fullscreen failed" style="overflow:auto">
-    <h1 ng-if="failedMessage">{{ failedReason }}</h1>
-    <pre ng-if="failedMessage">{{ failedMessage }}</pre>
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="col-md-2 alert" ng-repeat="builder in builders" ng-if="builder.last_build.author_name" ng-class="alert-{{builder.css_status}}">
+      <img class="avatar" width="200" height="200" ng-show="builder.last_build.author_gravatar_url" ng-src="{{builder.last_build.author_gravatar_url}}?s=200" alt="{{ builder.last_build.author_name }}" />
+      <h3>{{ builder.name }}</h3>
+      <p ng-if="builder.last_build.author_name"><strong>Author Name</strong><span ng-if="builder.last_build.author_name">{{ builder.last_build.author_name }}</span></p>
+      <p ng-if="builder.last_build.author_email"><strong>Author Email</strong><span ng-if="builder.last_build.author_email">{{ builder.last_build.author_email }}</span></p>
+      <p ng-if="builder.last_build.commit"><strong>Commit Hash</strong><span ng-if="builder.last_build.commit">{{ builder.last_build.commit }}</span></p>
+      <p ng-if="builder.last_build.commit_message"><strong>commit message</strong><span ng-if="builder.last_build.commit_message">{{ builder.last_build.commit_message }}</span></p>
+      <p ng-if="builder.last_build.docker_status.status">
+        <strong>Docker Status</strong>
+        <span ng-if="builder.last_build.docker_status.status">{{ builder.last_build.docker_status.status }} <span ng-if="builder.last_build.docker_status.id">{{ builder.last_build.docker_status.id }}</span> </span></p>
+        <span ng-if="builder.last_build.stream.stream">{{ builder.last_build.docker_status.stream }}</span>
+        <span ng-if="builder.last_build.progress.progress">{{ builder.last_build.docker_status.progress }}</span>
+      </p>
+    </div>
   </div>
-  <div class="fullscreen running" ng-hide="builders">
-    <h1 class="ng-cloak">Nothing here yet</h1>
-  </div>
-  <div class="build" ng-class="builder.css_status" ng-repeat="builder in builders">
-    <h4>{{ builder.name }}</h4>
-    <h6 ng-show="builder.last_build.commit_message">{{ builder.last_build.commit_message }}</h6>
-    <h5 ng-if="project.last_build.author_name">by {{ builder.last_build.author_name }}</h5>
-    <h6 ng-if="builder.last_build.author_email">[{{ builder.last_build.author_email }}]</h6>
-    <img class="avatar" width="75" height="75" ng-show="builder.last_build.author_gravatar_url" ng-src="{{builder.last_build.author_gravatar_url}}?s=75" alt="{{ builder.last_build.author_name }}" />
-  </div>
-
 </div>

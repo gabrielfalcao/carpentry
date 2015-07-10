@@ -127,7 +127,7 @@ def clear_builds(user, id):
     total = len(deleted_builds)
     logging.info("Deleted {0} builds of commits {2}:\n{1}".format(
         total,
-        "\n".join([b.commit for b in deleted_builds if b]),
+        "\n".join(filter(bool, [b.commit for b in deleted_builds if b])),
         builder.git_uri
     ))
     return json_response({'total': total})

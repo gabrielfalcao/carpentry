@@ -32,11 +32,11 @@ make
 
 def main():
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-    for name in ['sure', 'tumbler']:
+    for name in ['client-api', 'birdseed', 'birdseye', 'cauldron', 'bunny']:
         Builder.create(
             id=uuid1(),
             name=name,
-            git_uri='git@github.com:gabrielfalcao/{0}.git'.format(name),
+            git_uri='git@github.com:cnry/{0}.git'.format(name),
             shell_script=PYTHON,
             status='ready',
             id_rsa_private=read_ssh_file('id_rsa'),

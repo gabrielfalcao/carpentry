@@ -42,18 +42,18 @@ class Authenticator(object):
 
         g.user = result = User.from_carpentry_token(token)
         if not g.user:
-            logging.warning("could not find a User in the database for the token %s, maybe the user was deleted :(", token)
+            logging.debug("could not find a User in the database for the token %s, maybe the user was deleted :(", token)
             return
 
         user_organizations = [o['login'] for o in g.user.get_github_organizations()]
 
-        allowed = not user_organizations  # for now I'll allow people who don't belong do any orgs, just for testing
+        allowed = False
         for user_org in user_organizations:
             if user_org in conf.allowed_github_organizations:
                 allowed = True
 
         if not allowed:
-            logging.warning("User %s was not allowed in the organizations %s", g.user, conf.allowed_github_organizations)
+            logging.error("User %s was not allowed in the organizations %s", g.user, conf.allowed_github_organizations)
             return None
 
         return result
