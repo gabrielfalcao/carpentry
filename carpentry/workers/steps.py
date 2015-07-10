@@ -655,12 +655,6 @@ class RunBuild(CarpentryPipelineStep):
             self.build_with_docker(instructions)
 
     def build_with_docker(self, instructions):
-        DOCKERFILE_TEMPLATE = '\n'.join([
-            'FROM {build[image]}',
-            'COPY . /carpentry-sandbox',
-            'WORKDIR /carpentry-sandbox',
-            'CMD ["bash", "{shell_script_filename}"]'
-        ])
         build_dir = instructions['build_dir']
 
         docker = get_docker_client()
@@ -668,9 +662,11 @@ class RunBuild(CarpentryPipelineStep):
         build = get_build_from_instructions(instructions)
         image = instructions['build']['image']
 
-        build.append_to_stdout('preparing container links\n')
+        dependency_containers = instructions.get('dependency_containers', []) or []
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
-                           for d in filter(bool, instructions['dependency_containers'])]
+                           for d in filter(bool, dependency_containers)]
+        if container_links:
+            build.append_to_stdout('\npreparing container links\n')
 
         build_info = instructions['build']
         environment = build_info.get('environment', {})
