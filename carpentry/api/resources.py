@@ -179,6 +179,18 @@ def remove_builder(user, id):
     return json_response(item.to_dict())
 
 
+@web.delete('/api/build/<id>')
+@authenticated
+def remove_build(user, id):
+    item = models.Build.objects.get(id=id)
+    item.clear_builds()
+    item.cleanup_github_hooks(user.github_access_token)
+
+    item.delete()
+    logger.info('deleting build: %s', item.name)
+    return json_response(item.to_dict())
+
+
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):

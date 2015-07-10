@@ -51,6 +51,8 @@
           <i class="fa fa-pencil"></i> edit builder</button>
           <button ng-if="builder" class="btn btn-large btn-info" ng-click="triggerBuild(builder)">
             <i class="fa fa-play-circle"></i> rebuild now
+          <button ng-if="builder" class="btn btn-large btn-danger" ng-click="deleteBuild(build)">
+            <i class="fa fa-play-recycle"></i> delete build
 
     </div>
   </div>

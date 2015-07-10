@@ -65,4 +65,16 @@ angular.module('CarpentryApp.Build', [
         get_build();
     }, 500);
     get_build();
+    $scope.deleteBuild = function(build){
+        $http
+            .delete('/api/build/' + build.id)
+            .success(function(data, status, headers, config) {
+                notify("build deleted!");
+            })
+
+            .error(function(data, status, headers, config) {
+                console.log('failed to delete build');
+            });
+
+    };
 });
