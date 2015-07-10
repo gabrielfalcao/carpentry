@@ -220,7 +220,7 @@ class PushKeyToGithub(CarpentryPipelineStep):
         payload = json.dumps({
             "title": title,
             "key": key,
-            "read_only": True
+            "read_only": True,
         }, indent=2)
 
         self.log("Pushing deploy keys to github {0}".format(url))
@@ -273,7 +273,7 @@ class PushKeyToGithub(CarpentryPipelineStep):
         if response_did_succeed(response):
             instructions['github_deploy_key'] = response.json()
             build.append_to_stdout(
-                "Keys pushed to github successfully!!!!!")
+                "Keys pushed to github successfully!!!!!\n")
         else:
             self.dump_error_into_build_output(build, response)
 
@@ -283,8 +283,9 @@ class PushKeyToGithub(CarpentryPipelineStep):
 class LocalRetrieve(CarpentryPipelineStep):
     def ensure_build_dir(self, build, instructions):
         slug = instructions['slug']
-        workdir = conf.workdir_node.join(slug)
-        build_dir = conf.build_node.join(slug)
+        path = os.path.join(slug, str(build['id']))
+        workdir = conf.workdir_node.join(path)
+        build_dir = conf.build_node.join(path)
 
         instructions['workdir'] = workdir
         instructions['build_dir'] = build_dir
@@ -328,7 +329,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
     def consume(self, instructions):
         build = set_build_status(instructions, 'retrieving')
-        build.append_to_stdout('retrieving repo...\n')
+        build.append_to_stdout('\nretrieving repo...\n')
         build_dir, instructions = self.ensure_build_dir(build, instructions)
 
         stdout, exit_code, instructions = self.run_git_clone(build, build_dir, instructions)
@@ -547,8 +548,11 @@ class DockerDependencyStopper(CarpentryPipelineStep):
 
     @classmethod
     def stop_and_remove_dependency_containers(cls, build, instructions):
-        build = Build.objects.get(id=instructions['id'])
+        build = get_build_from_instructions(instructions)
         for dependency in instructions.get('dependency_containers', []) or []:
+            if not dependency:
+                continue
+
             container = dependency['container']
             cls.do_stop_dependency_container(
                 build,
@@ -659,9 +663,8 @@ class RunBuild(CarpentryPipelineStep):
         build = Build.get(id=instructions['id'])
         image = instructions['build']['image']
 
-        container_name = '_'.join([slug, commit[:8]])
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
-                           for d in instructions['dependency_containers']]
+                           for d in filter(bool, instructions['dependency_containers'])]
 
         build_info = instructions['build']
         environment = build_info.get('environment', {})
@@ -691,9 +694,7 @@ class RunBuild(CarpentryPipelineStep):
         )
         docker.start(container['Id'])
 
-        for line in docker.logs(container, stream=True, stdout=True, stderr=True):
-            build.append_to_stdout(line)
-            build.append_to_stdout('\n')
+        for line in docker.logs(container, stream=True, stdout=True):
             build.register_docker_status(line)
 
         timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or 900)

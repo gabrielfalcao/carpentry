@@ -23,14 +23,13 @@
       </div>
 
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-hide="!html_output">
-        <div class="panel-heading">
+        <div class="panel-heading" ng-if="build.commit">
           <div>
             <dl id="build-details" class="dl-horizontal">
               <dt ng-if="build.author_name">Author Name</dt><dd ng-id="build.author_name">{{ build.author_name }}</dd>
               <dt ng-if="build.author_email">Author Email</dt><dd ng-id="build.author_email">{{ build.author_email }}</dd>
               <dt ng-if="build.commit">Commit Hash</dt><dd ng-id="build.commit">{{ build.commit }}</dd>
-              <dt ng-if="build.commit_message">Message</dt><dd ng-id="build.commit_message"><pre>{{ build.commit_message }}</pre></dd>
-              <dt ng-if="build.commit_message">commit message</dt><dd ng-id="build.commit_message">{{ build.commit_message }}</dd>
+              <dt ng-if="build.commit_message">commit message</dt><dd ng-if="build.commit_message">{{ build.commit_message }}</dd>
               <dt ng-if="build.docker_status.status">docker</dt><dd ng-id="build.docker_status.status">{{ build.docker_status.status }}</dd>
               <dt ng-if="build.docker_status.stream"></dt><dd ng-id="build.stream.stream">{{ build.docker_status.stream }}</dd>
               <dt ng-if="build.docker_status.progress"></dt><dd ng-id="build.progress.progress">{{ build.docker_status.progress }}</dd>
