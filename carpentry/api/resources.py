@@ -81,6 +81,7 @@ def create_builder(user):
         'name': unicode,
         'git_uri': unicode,
         'shell_script': unicode,
+        'json_instructions': any,
         'id_rsa_private': any,
         'generate_ssh_keys': bool,
         'id_rsa_public': any,
@@ -275,7 +276,7 @@ def trigger_builder_hook(id):
 @authenticated
 def list_images(user):
     docker = get_docker_client()
-    data = docker.images()
+    data = sorted(docker.images(), key=lambda x: x['id'])
     return json_response(data)
 
 
@@ -283,7 +284,7 @@ def list_images(user):
 @authenticated
 def list_containers(user):
     docker = get_docker_client()
-    data = docker.containers(all=True)
+    data = sorted(docker.containers(all=True), key=lambda x: x['id'])
     return json_response(data)
 
 

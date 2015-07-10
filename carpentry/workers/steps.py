@@ -37,6 +37,10 @@ COMMIT_MESSAGE_REGEX = re.compile(
     r'Date:.*?\n\s*(?P<commit_message>.*?)\s*^diff --git', re.M | re.S)
 
 
+def nice_current_time():
+    return datetime.utcnow().strftime('%Y/%m/%d - %H:%M:%S')
+
+
 def extract_container_name(docker, container):
     container = docker.inspect_container(container)
     return container['Name'].lstrip('/')
@@ -93,9 +97,7 @@ def get_build_from_instructions(instructions):
     return Build.objects.get(id=instructions['id'])
 
 
-def set_build_status(instructions, status, description=None):
-    build = get_build_from_instructions(instructions)
-
+def set_build_status(build, instructions, status, description=None):
     user = instructions.get('user', {})
     github_access_token = user.get('github_access_token', None)
 
@@ -107,8 +109,9 @@ class CarpentryPipelineStep(Step):
     def handle_exception(self, e, instructions):
         build = get_build_from_instructions(instructions)
         error = traceback.format_exc(e)
-        build.set_status('failed')
         build.append_to_stdout(error)
+        set_build_status(build, instructions, 'failed', 'carpentry server error: {0}'.format(e))
+
         try:
             DockerDependencyStopper.stop_and_remove_dependency_containers(
                 build,
@@ -139,7 +142,7 @@ class PrepareSSHKey(CarpentryPipelineStep):
 
         now = datetime.utcnow()
 
-        set_build_status(instructions, 'running', 'carpentry build started at {0} UTC'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
+        set_build_status(b, instructions, 'running', 'carpentry build started at {0} UTC'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
         slug = instructions['slug']
 
         ssh_dir = conf.ssh_keys_node.join(slug)
@@ -311,8 +314,10 @@ class LocalRetrieve(CarpentryPipelineStep):
         stdout, exit_code = stream_output(self, process, build, timeout_in_seconds=timeout_in_seconds)
         exit_code = int(exit_code)
         if exit_code != 0:
+            msg = "Failed to {0}\n".format(git)
+            set_build_status(build, instructions, 'failed', msg)
             build.set_status('failed')
-            build.append_to_stdout("Failed to {0}\n".format(git))
+            build.append_to_stdout(msg)
             build.append_to_stdout(force_unicode(stdout))
             build.append_to_stdout("\n")
 
@@ -328,7 +333,8 @@ class LocalRetrieve(CarpentryPipelineStep):
         return stdout, exit_code, instructions
 
     def consume(self, instructions):
-        build = set_build_status(instructions, 'retrieving')
+        build = get_build_from_instructions(instructions)
+        set_build_status(build, instructions, 'retrieving')
         build.append_to_stdout('\nretrieving repo...\n')
         build_dir, instructions = self.ensure_build_dir(build, instructions)
 
@@ -356,7 +362,8 @@ class LocalRetrieve(CarpentryPipelineStep):
             build.append_to_stdout(b'Failed to retrieve commit information\n')
             build.append_to_stdout(b'-----------------\n')
             build.append_to_stdout(force_unicode(traceback.format_exc(e)))
-            build.set_status('failed')
+            set_build_status(build, instructions, 'failed', str(e))
+
             self.log('git-show failed {0}'.format(stdout))
             return
 
@@ -387,8 +394,8 @@ class LocalRetrieve(CarpentryPipelineStep):
 
 class CheckAndLoadBuildFile(CarpentryPipelineStep):
     def consume(self, instructions):
-        set_build_status(instructions, 'checking')
-        b = Build.objects.get(id=instructions['id'])
+        b = get_build_from_instructions(instructions)
+        set_build_status(b, instructions, 'checking')
         b.stdout += 'checking .carpentry.yml...\n'
         b.save()
 
@@ -405,6 +412,8 @@ class CheckAndLoadBuildFile(CarpentryPipelineStep):
             raw_yml = fd.read()
 
         self.log("Successfully loaded {0}".format(yml_path))
+
+        b.json_instructions = raw_yml
         b.append_to_stdout('.carpentry.yml successfully loaded\n')
 
         build = yaml.load(raw_yml)
@@ -419,7 +428,8 @@ class CheckAndLoadBuildFile(CarpentryPipelineStep):
 
 class DockerDependencyRunner(CarpentryPipelineStep):
     def consume(self, instructions):
-        build = set_build_status(instructions, 'running', 'looking for dependency docker images')
+        build = get_build_from_instructions(instructions)
+        set_build_status(build, instructions, 'running', 'looking for dependency docker images')
 
         build_info = instructions['build']
         if 'dependencies' not in build_info.keys():
@@ -603,7 +613,8 @@ class PrepareShellScript(CarpentryPipelineStep):
         fd.write('\n')
 
     def consume(self, instructions):
-        build = set_build_status(instructions, 'preparing')
+        build = get_build_from_instructions(instructions)
+        set_build_status(build, instructions, 'preparing')
         build_dir = instructions['build_dir']
         shell_script_filename = render_string('.carpentry.{slug}.shell.sh', instructions)
         shell_script_path = os.path.join(build_dir, shell_script_filename)
@@ -635,7 +646,8 @@ class PrepareShellScript(CarpentryPipelineStep):
 
 class RunBuild(CarpentryPipelineStep):
     def consume(self, instructions):
-        set_build_status(instructions, 'running')
+        build = get_build_from_instructions(instructions)
+        set_build_status(build, instructions, 'running')
 
         if 'image' not in instructions['build']:
             self.build_native(instructions)
@@ -650,19 +662,13 @@ class RunBuild(CarpentryPipelineStep):
             'CMD ["bash", "{shell_script_filename}"]'
         ])
         build_dir = instructions['build_dir']
-        dockerfile_path = os.path.join(build_dir, 'Dockerfile')
-
-        with io.open(dockerfile_path, 'wb') as fd:
-            rendered_dockerfile = render_string(DOCKERFILE_TEMPLATE, instructions)
-            fd.write(rendered_dockerfile)
 
         docker = get_docker_client()
-        commit = instructions['git']['commit']
-        slug = instructions['slug']
 
-        build = Build.get(id=instructions['id'])
+        build = get_build_from_instructions(instructions)
         image = instructions['build']['image']
 
+        build.append_to_stdout('preparing container links\n')
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
                            for d in filter(bool, instructions['dependency_containers'])]
 
@@ -697,16 +703,17 @@ class RunBuild(CarpentryPipelineStep):
         for line in docker.logs(container, stream=True, stdout=True):
             build.register_docker_status(line)
 
-        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or 300 * 5)
+        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or conf.default_subprocess_timeout_in_seconds)
 
         build.code = docker.wait(container, timeout=timeout_in_seconds)
 
         if build.code == 0:
             build.append_to_stdout('\n\nCarpentry build succeeded :)\n\n')
-            build.set_status('succeeded')
+            set_build_status(build, instructions, 'succeeded', nice_current_time())
+
         else:
             build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
-            build.set_status('failed')
+            set_build_status(build, instructions, 'failed', nice_current_time())
 
         self.stop_and_remove_container(docker, container)
 
@@ -756,5 +763,5 @@ class RunBuild(CarpentryPipelineStep):
             status,
             now.strftime('%Y/%m/%d %H:%M:%S')
         )
-        set_build_status(instructions, status, msg)
+        set_build_status(b, instructions, status, msg)
         self.produce(instructions)

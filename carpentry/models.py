@@ -108,6 +108,7 @@ class Builder(CarpentryBaseModel):
     name = columns.Text(required=True)
     git_uri = columns.Text(index=True)
     shell_script = columns.Text(required=True)
+    json_instructions = columns.Text()
     id_rsa_private = columns.Text(required=True)
     id_rsa_public = columns.Text(required=True)
     status = columns.Text(default='ready')
@@ -388,7 +389,7 @@ class Build(CarpentryBaseModel):
 
     def append_to_stdout(self, string):
         value = force_unicode(string)
-        msg = '[build output] {1}'.format(self.id, value)
+        msg = '[{0}] {1}'.format(self.name, value)
         logger.info(msg)
         self.stdout = self.stdout or u''
         self.stdout += value
@@ -452,7 +453,7 @@ class User(CarpentryBaseModel):
 
     def to_dict(self):
         return model_to_dict(self, extra={
-            'github': self.get_github_metadata()
+            'github': self.get_github_metadata(),
         })
 
     def get_github_metadata(self):
