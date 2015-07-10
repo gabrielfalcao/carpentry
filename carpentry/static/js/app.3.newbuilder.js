@@ -52,8 +52,8 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
     $scope.builder = {
         'generate_ssh_keys': true,
         'loadFromYAML': true,
-        'name': $rootScope.user.name + "'s Project",
-        'git_uri': 'git@github.com:'+$rootScope.user.login+'/yourrepo.git',
+        'name': '',
+        'git_uri': 'git@github.com:',
         'shell_script': $scope.SHELL_SCRIPT_EXAMPLES[DEFAULT_LANGUAGE]
     };
 
@@ -77,4 +77,12 @@ angular.module('CarpentryApp.NewBuilder', ['CarpentryApp.Common']).controller('N
                 console.log('Failed to create builder', status, data);
             });
     };
+
+    $("#builder_name").typeahead({ source:jQuery.map($rootScope.githubRepositories, function(val){
+        return val.name;
+    })});
+    $("#git_uri").typeahead({ source:jQuery.map($rootScope.githubRepositories, function(val){
+        console.log(val.owner.login, val.name, val.ssh_url);
+        return val.ssh_url;
+    })});
 });
