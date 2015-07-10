@@ -410,21 +410,22 @@ class CheckAndLoadBuildFile(CarpentryPipelineStep):
 
             b.json_instructions = raw_yml
         elif not b.builder.json_instructions:
-            instructions['build'] = {
+            instructions['build'] = json_instructions = {
                 'image': 'carpentryio/python',
                 'shell': instructions['shell_script'],
             }
+            raw_yml = json.dumps(json_instructions)
             b.json_instructions = json.dumps(instructions['build'])
             b.append_to_stdout('.carpentry.yml not found, using provided shell_script\n')
             return self.produce(instructions)
-
-        raw_yml = b.builder.json_instructions or json.dumps({
-            'image': 'carpentryio/python',
-            'shell': instructions['shell_script'],
-        })
-        b.append_to_stdout('falling back to saved json instructions:\n')
-        b.append_to_stdout(raw_yml)
-        b.append_to_stdout('\n...\n')
+        else:
+            raw_yml = b.builder.json_instructions or json.dumps({
+                'image': 'carpentryio/python',
+                'shell': instructions['shell_script'],
+            })
+            b.append_to_stdout('falling back to saved json instructions:\n')
+            b.append_to_stdout(raw_yml)
+            b.append_to_stdout('\n...\n')
 
         build = yaml.load(raw_yml)
         instructions['build'] = build
