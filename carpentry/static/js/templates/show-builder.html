@@ -1,8 +1,8 @@
 <navbar />
 
-<div class="container-fluid">
+<div class="container">
   <div class="page-header">
-    <div class="row-fluid">
+    <div class="row">
       <div class="col-lg-12">
         <h1 ng-hide="builder">loading...</h1>
         <h1>{{ builder.name }}</h1>
@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <div class="row-fluid">
+  <div class="row">
     <div class="col-lg-12">
       <h4>Github Hook URL</h4>
       <code>{{builder.github_hook_url}}</code>
@@ -45,7 +45,7 @@
       <p class="ng-cloak" ng-hide="builds">No builds so far</p>
     </div>
   </div>
-  <div class="row-fluid">
+  <div class="row">
     <div class="col-lg-12">
       <h4>Actions</h4>
       <button ng-if="builder" class="btn btn-large btn-primary" ng-click="triggerBuild(builder)">

@@ -1,8 +1,8 @@
 <navbar />
 
-<div class="container-fluid"  ng-controller="BuildController">
+<div class="container"  ng-controller="BuildController">
   <div class="page-header">
-    <div class="row-fluid">
+    <div class="row">
       <div class="col-lg-12">
         <h1>
           <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a>
@@ -11,7 +11,7 @@
     </div>
   </div>
 
-  <div class="row-fluid">
+  <div class="row">
     <div class="col-lg-12">
       <div class="ng-cloak" ng-class="'panel panel-'+build.css_status" ng-show="!html_output">
         <div class="panel-heading">
