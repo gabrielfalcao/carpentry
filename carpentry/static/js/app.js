@@ -75,6 +75,8 @@ angular.module('CarpentryApp', [
     } else {
         $rootScope.originalUrl = "/";
     }
+    $rootScope.githubRepositories = [];
+
     $rootScope.resetPollers = function(){
         clearInterval($rootScope.indexPoller);
         clearInterval($rootScope.builderPoller);
