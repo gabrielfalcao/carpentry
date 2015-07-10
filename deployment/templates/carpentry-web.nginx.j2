@@ -8,8 +8,8 @@ server {
     server_name {{ carpentry_http_hostname }};
     root /srv/carpentry/static;
 
-    error_page 404 /srv/carpentry/static/404.html;
-    error_page 500 502 503 504 /srv/carpentry/static/500.html;
+    error_page 404 404.html;
+    error_page 500 502 503 504 500.html;
 
     access_log /var/log/nginx/carpentry-access.log;
     error_log /var/log/nginx/carpentry-error.log;
@@ -26,5 +26,11 @@ server {
     }
     location /assets {
        alias /srv/carpentry/src/carpentry/static;
+    }
+    location /404.html {
+       root /srv/carpentry/src/carpentry/static;
+    }
+    location /500.html {
+       root /srv/carpentry/src/carpentry/static;
     }
 }

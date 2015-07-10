@@ -4,7 +4,7 @@ carpentry_http_hostname: localhost
 carpentry_http_port: 5000
 carpentry_web_processes: 1
 carpentry_worker_processes: 2
-docker_version: 1.7.0
+docker_version: 1.6.0
 docker_admin_users: []
 carpentry_secret_key: something-secret
 carpentry_version: 0.2.19
