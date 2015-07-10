@@ -276,7 +276,7 @@ def trigger_builder_hook(id):
 @authenticated
 def list_images(user):
     docker = get_docker_client()
-    data = sorted(docker.images(), key=lambda x: x['id'])
+    data = sorted(docker.images(), key=lambda x: x['Id'])
     return json_response(data)
 
 
@@ -284,7 +284,7 @@ def list_images(user):
 @authenticated
 def list_containers(user):
     docker = get_docker_client()
-    data = sorted(docker.containers(all=True), key=lambda x: x['id'])
+    data = sorted(docker.containers(all=True), key=lambda x: x['Id'])
     return json_response(data)
 
 
