@@ -32,6 +32,9 @@ db:
 workers:
 	python carpentry/cli.py workers
 
+lint:
+	flake8 .
+
 unit:
 	nosetests -v -s --rednose --with-coverage --cover-erase --cover-package=carpentry tests/unit
 

@@ -14,7 +14,7 @@ from carpentry import conf
 from carpentry.models import User
 
 
-class Authenticator(object):
+class TokenAuthority(object):
     regex = re.compile(r'Bearer:?\s+(.*)\s*')
 
     def __init__(self, headers):
@@ -45,7 +45,7 @@ class Authenticator(object):
             logging.debug("could not find a User in the database for the token %s, maybe the user was deleted :(", token)
             return
 
-        user_organizations = [o['login'] for o in g.user.get_github_organizations()]
+        user_organizations = [o['login'] for o in g.user.retrieve_github_organizations()]
 
         allowed = False
         for user_org in user_organizations:
@@ -62,7 +62,7 @@ class Authenticator(object):
 def authenticated(resource):
     @wraps(resource)
     def decorator(*args, **kw):
-        auth = Authenticator(request.headers)
+        auth = TokenAuthority(request.headers)
         user = auth.get_user()
         if not user:
             return json_response({

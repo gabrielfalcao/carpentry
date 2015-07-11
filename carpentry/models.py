@@ -480,7 +480,7 @@ class User(CarpentryBaseModel):
         if not carpentry_token:
             return
 
-        users = User.objects.filter(carpentry_token=carpentry_token)
+        users = cls.objects.filter(carpentry_token=carpentry_token)
         if len(users) > 0:
             return users[0]
 
@@ -517,7 +517,7 @@ class User(CarpentryBaseModel):
         GithubRepository.store_many_from_list(all_repos)
         return all_repos
 
-    def get_github_organizations(self):
+    def retrieve_github_organizations(self):
         github = self.get_github_metadata()
         organizations = github.get('organizations', None)
         if organizations:
@@ -549,8 +549,12 @@ class GithubRepository(CarpentryBaseModel):
 
     @classmethod
     def store_many_from_list(cls, items):
+        results = []
         for item in items:
-            yield cls.store_one_from_dict(item)
+            r = cls.store_one_from_dict(item)
+            results.append(r)
+
+        return results
 
     @classmethod
     def store_one_from_dict(cls, item):

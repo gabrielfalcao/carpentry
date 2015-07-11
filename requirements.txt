@@ -17,3 +17,4 @@ redis>=2.10.3
 requests>=2.7.0
 tumbler>=0.0.20
 docker-py>=1.2.3
+flake8>=2.4.1

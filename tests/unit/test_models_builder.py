@@ -7,9 +7,8 @@ from datetime import datetime, date, time
 
 from carpentry.models import Builder
 
+test_uuid = uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65')
 
-###########################
-# Builder model tests
 
 @patch('carpentry.models.User')
 def test_builder_get_fallback_access_token(User):
@@ -19,7 +18,7 @@ def test_builder_get_fallback_access_token(User):
     creator.github_access_token = 'free-pass-to-github-yay'
 
     # And a valid UUID
-    user_uuid = uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65')
+    user_uuid = test_uuid
 
     # And an instance of builder with a valid user uuid
     instance1 = Builder(
