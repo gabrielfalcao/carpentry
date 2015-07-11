@@ -13,7 +13,8 @@ test_uuid = uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65')
 @patch('carpentry.models.User')
 def test_builder_get_fallback_access_token(User):
     ('Builder.get_fallback_github_access_token returns the token from the user who created the builder')
-    # Given that User is mocked to return an object with a valid string as github_access_token
+    # Given that User is mocked to return an object with a valid string as
+    # github_access_token
     creator = User.get.return_value
     creator.github_access_token = 'free-pass-to-github-yay'
 

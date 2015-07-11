@@ -42,10 +42,12 @@ class TokenAuthority(object):
 
         g.user = result = User.from_carpentry_token(token)
         if not g.user:
-            logging.debug("could not find a User in the database for the token %s, maybe the user was deleted :(", token)
+            logging.debug(
+                "could not find a User in the database for the token %s, maybe the user was deleted :(", token)
             return
 
-        user_organizations = [o['login'] for o in g.user.retrieve_github_organizations()]
+        user_organizations = [o['login']
+                              for o in g.user.retrieve_github_organizations()]
 
         allowed = False
         for user_org in user_organizations:
@@ -53,7 +55,8 @@ class TokenAuthority(object):
                 allowed = True
 
         if not allowed:
-            logging.error("User %s was not allowed in the organizations %s", g.user, conf.allowed_github_organizations)
+            logging.error("User %s was not allowed in the organizations %s",
+                          g.user, conf.allowed_github_organizations)
             return None
 
         return result

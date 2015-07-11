@@ -17,6 +17,7 @@ logger = logging.getLogger('carpentry')
 
 
 class CarpentryHttpServer(Web):
+
     def __init__(self, log_level=logger.info, *args, **kw):
         super(CarpentryHttpServer, self).__init__(*args, **kw)
         setup_logging(log_level)
@@ -80,7 +81,8 @@ class CarpentryHttpServer(Web):
                 )
                 logger.info("created new user", g.user)
             else:
-                logger.info("User already exists with github_access_token %s %s", access_token, g.user)
+                logger.info(
+                    "User already exists with github_access_token %s %s", access_token, g.user)
                 g.user = users[0]
                 g.user.carpentry_token = uuid.uuid4()
                 g.user.github_access_token = access_token
@@ -98,7 +100,8 @@ class CarpentryHttpServer(Web):
 
         @self.flask_app.route('/login', methods=["GET"])
         def login():
-            response = self.github.authorize(scope='repo_deployment,repo,user,gist,write:repo_hook,repo:status,org:admin,admin:org_hook')
+            response = self.github.authorize(
+                scope='repo_deployment,repo,user,gist,write:repo_hook,repo:status,org:admin,admin:org_hook')
             return response
 
         @self.flask_app.route('/logout', methods=["GET"])

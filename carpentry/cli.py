@@ -69,7 +69,8 @@ def carpentry_version():
         prog='carpentry version --json',
         description='prints the software version')
 
-    parser.add_argument('--json', action='store_true', default=False, help='shows the version as a json')
+    parser.add_argument('--json', action='store_true',
+                        default=False, help='shows the version as a json')
 
     args = parser.parse_args(get_remaining_sys_argv())
 
@@ -85,8 +86,10 @@ def carpentry_run():
         prog='carpentry run',
         description='runs carpentry in the given port, defaults to 5000')
 
-    parser.add_argument('-p', '--port', action='store_true', default=5000, help='the http port where carpentry will listen')
-    parser.add_argument('--host', default='localhost', help='the hostname to listen to')
+    parser.add_argument('-p', '--port', action='store_true',
+                        default=5000, help='the http port where carpentry will listen')
+    parser.add_argument(
+        '--host', default='localhost', help='the hostname to listen to')
 
     args = parser.parse_args(get_remaining_sys_argv())
     server = CarpentryHttpServer(
@@ -156,8 +159,10 @@ def carpentry_setup():
     parser = argparse.ArgumentParser(
         prog='carpentry setup',
         description='sets up the cassandra database')
-    parser.add_argument('--drop', action='store_true', default=False, help='drop any existing tables before syncing')
-    parser.add_argument('--flush-redis', action='store_true', default=False, help='flush all carpentry-related redis keys')
+    parser.add_argument('--drop', action='store_true',
+                        default=False, help='drop any existing tables before syncing')
+    parser.add_argument('--flush-redis', action='store_true',
+                        default=False, help='flush all carpentry-related redis keys')
     setup_logging(logging.INFO)
     args = parser.parse_args(get_remaining_sys_argv())
     coloredlogs.install(logging.INFO)
@@ -165,7 +170,8 @@ def carpentry_setup():
     print LOGO
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
 
-    create_keyspace('carpentry', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
+    create_keyspace('carpentry', strategy_class='SimpleStrategy',
+                    replication_factor=3, durable_writes=True)
     pipeline = RunBuilder(JSONRedisBackend)
     backend = pipeline.get_backend()
     if args.flush_redis:
@@ -196,9 +202,12 @@ def main():
 
     parser = argparse.ArgumentParser(prog='carpentry')
 
-    parser.add_argument('command', help='Available commands:\n\n{0}\n'.format("|".join(HANDLERS.keys())))
-    parser.add_argument('--debug', help='debug mode, prints debug logs to stderr', action='store_true', default=False)
-    parser.add_argument('--info', help='info mode, prints info logs to stderr', action='store_true', default=False)
+    parser.add_argument(
+        'command', help='Available commands:\n\n{0}\n'.format("|".join(HANDLERS.keys())))
+    parser.add_argument(
+        '--debug', help='debug mode, prints debug logs to stderr', action='store_true', default=False)
+    parser.add_argument(
+        '--info', help='info mode, prints info logs to stderr', action='store_true', default=False)
 
     if args_include_debug_or_info():
         argv = sys.argv[1:3]

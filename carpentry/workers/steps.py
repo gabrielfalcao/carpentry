@@ -62,7 +62,8 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
     started_time = time.time()
     difference = time.time() - started_time
 
-    timeout_in_seconds = int(timeout_in_seconds or conf.default_subprocess_timeout_in_seconds)
+    timeout_in_seconds = int(
+        timeout_in_seconds or conf.default_subprocess_timeout_in_seconds)
 
     while difference < timeout_in_seconds:
         difference = (time.time() - started_time)
@@ -101,16 +102,19 @@ def set_build_status(build, instructions, status, description=None):
     user = instructions.get('user', {})
     github_access_token = user.get('github_access_token', None)
 
-    build.set_status(status, description=description, github_access_token=github_access_token)
+    build.set_status(
+        status, description=description, github_access_token=github_access_token)
     return build
 
 
 class CarpentryPipelineStep(Step):
+
     def handle_exception(self, e, instructions):
         build = get_build_from_instructions(instructions)
         error = traceback.format_exc(e)
         build.append_to_stdout(error)
-        set_build_status(build, instructions, 'failed', 'carpentry server error: {0}'.format(e))
+        set_build_status(
+            build, instructions, 'failed', 'carpentry server error: {0}'.format(e))
 
         try:
             DockerDependencyStopper.stop_and_remove_dependency_containers(
@@ -123,6 +127,7 @@ class CarpentryPipelineStep(Step):
 
 
 class PrepareSSHKey(CarpentryPipelineStep):
+
     def write_file(self, path, filename, contents, mode=0755):
         destination = os.path.join(path, filename)
 
@@ -142,7 +147,8 @@ class PrepareSSHKey(CarpentryPipelineStep):
 
         now = datetime.utcnow()
 
-        set_build_status(b, instructions, 'running', 'carpentry build started at {0} UTC'.format(now.strftime('%Y/%m/%d %H:%M:%S')))
+        set_build_status(b, instructions, 'running', 'carpentry build started at {0} UTC'.format(
+            now.strftime('%Y/%m/%d %H:%M:%S')))
         slug = instructions['slug']
 
         ssh_dir = conf.ssh_keys_node.join(slug)
@@ -151,10 +157,13 @@ class PrepareSSHKey(CarpentryPipelineStep):
         public_key = instructions.get('id_rsa_public', None)
 
         id_rsa_private_key_path = render_string('{slug}-id_rsa', instructions)
-        id_rsa_public_key_path = render_string('{slug}-id_rsa.pub', instructions)
+        id_rsa_public_key_path = render_string(
+            '{slug}-id_rsa.pub', instructions)
 
-        instructions['id_rsa_private_key_path'] = os.path.join(ssh_dir, id_rsa_private_key_path)
-        instructions['id_rsa_public_key_path'] = os.path.join(ssh_dir, id_rsa_public_key_path)
+        instructions['id_rsa_private_key_path'] = os.path.join(
+            ssh_dir, id_rsa_private_key_path)
+        instructions['id_rsa_public_key_path'] = os.path.join(
+            ssh_dir, id_rsa_public_key_path)
 
         if not private_key:
             msg = render_string(
@@ -284,6 +293,7 @@ class PushKeyToGithub(CarpentryPipelineStep):
 
 
 class LocalRetrieve(CarpentryPipelineStep):
+
     def ensure_build_dir(self, build, instructions):
         slug = instructions['slug']
         path = os.path.join(slug, str(build['id']))
@@ -302,16 +312,19 @@ class LocalRetrieve(CarpentryPipelineStep):
         return build_dir, instructions
 
     def run_git_clone(self, build, build_dir, instructions):
-        git = render_string(conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
+        git = render_string(
+            conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
 
-        timeout_in_seconds = int(instructions.get('git_clone_timeout_in_seconds') or 0)
+        timeout_in_seconds = int(
+            instructions.get('git_clone_timeout_in_seconds') or 0)
         # TODO: sanitize the git url before using it, avoid shell injection :O
         process = run_command(git, chdir=build_dir, environment={
             # http://stackoverflow.com/questions/14220929/git-clone-with-custom-ssh-using-git-ssh-error/27607760#27607760
             'GIT_SSH_COMMAND': render_string(conf.ssh_executable_path + " -o StrictHostKeyChecking=no -i {id_rsa_private_key_path}", instructions),
         })
 
-        stdout, exit_code = stream_output(self, process, build, timeout_in_seconds=timeout_in_seconds)
+        stdout, exit_code = stream_output(
+            self, process, build, timeout_in_seconds=timeout_in_seconds)
         exit_code = int(exit_code)
         if exit_code != 0:
             msg = "Failed to {0}\n".format(git)
@@ -326,12 +339,14 @@ class LocalRetrieve(CarpentryPipelineStep):
     def switch_to_git_commit(self, build, build_dir, instructions):
         stdout = ''
         try:
-            stdout += check_output(conf.git_executable_path + render_string(' fetch origin {commit}', instructions))
+            stdout += check_output(conf.git_executable_path +
+                                   render_string(' fetch origin {commit}', instructions))
         except (CalledProcessError, OSError):
             exit_code = 1
 
         try:
-            stdout += check_output(conf.git_executable_path + ' reset --hard FETCH_ORIGIN')
+            stdout += check_output(conf.git_executable_path +
+                                   ' reset --hard FETCH_ORIGIN')
         except (CalledProcessError, OSError):
             exit_code = 1
 
@@ -343,7 +358,8 @@ class LocalRetrieve(CarpentryPipelineStep):
         build.append_to_stdout('\nretrieving repo...\n')
         build_dir, instructions = self.ensure_build_dir(build, instructions)
 
-        stdout, exit_code, instructions = self.run_git_clone(build, build_dir, instructions)
+        stdout, exit_code, instructions = self.run_git_clone(
+            build, build_dir, instructions)
 
         if int(exit_code) != 0:
             build.set_status('failed')
@@ -352,7 +368,8 @@ class LocalRetrieve(CarpentryPipelineStep):
 
         # checking out a specific commit
         if instructions.get('commit', False):
-            stdout, exit_code, instructions = self.switch_to_git_commit(build, build_dir, instructions)
+            stdout, exit_code, instructions = self.switch_to_git_commit(
+                build, build_dir, instructions)
             if exit_code != 0:
                 build.set_status('failed')
                 self.log('Git checkout failed {0}'.format(stdout))
@@ -398,6 +415,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
 
 class CheckAndLoadBuildFile(CarpentryPipelineStep):
+
     def consume(self, instructions):
         b = get_build_from_instructions(instructions)
         set_build_status(b, instructions, 'checking')
@@ -421,7 +439,8 @@ class CheckAndLoadBuildFile(CarpentryPipelineStep):
             }
             raw_yml = json.dumps(json_instructions)
             b.json_instructions = json.dumps(instructions['build'])
-            b.append_to_stdout('.carpentry.yml not found, using provided shell_script\n')
+            b.append_to_stdout(
+                '.carpentry.yml not found, using provided shell_script\n')
             return self.produce(instructions)
         else:
             raw_yml = b.builder.json_instructions or json.dumps({
@@ -443,9 +462,11 @@ class CheckAndLoadBuildFile(CarpentryPipelineStep):
 
 
 class DockerDependencyRunner(CarpentryPipelineStep):
+
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
-        set_build_status(build, instructions, 'running', 'looking for dependency docker images')
+        set_build_status(
+            build, instructions, 'running', 'looking for dependency docker images')
 
         build_info = instructions['build']
         if 'dependencies' not in build_info.keys():
@@ -488,10 +509,12 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             logging.info("docker pull {0}: {1}".format(image, line))
 
         hostname = dependency['hostname']
-        all_container_names = [extract_container_name(docker, c) for c in docker.containers()]
+        all_container_names = [
+            extract_container_name(docker, c) for c in docker.containers()]
 
         if hostname in all_container_names:
-            msg = render_string('dependency {image} is already running as {hostname}', dependency)
+            msg = render_string(
+                'dependency {image} is already running as {hostname}', dependency)
             build.append_to_stdout(msg)
             logging.warning(msg)
             return
@@ -514,7 +537,8 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             build.register_docker_status(line)
 
         container_name = extract_container_name(docker, container)
-        msg = '\n{1} is successfully running as {0}\n'.format(container_name, image)
+        msg = '\n{1} is successfully running as {0}\n'.format(
+            container_name, image)
         info['stream'] = msg
         line = json.dumps(info)
         build.register_docker_status(line)
@@ -526,6 +550,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
 
 class DockerDependencyStopper(CarpentryPipelineStep):
+
     @classmethod
     def do_stop_dependency_container(cls, build, container):
         docker = get_docker_client()
@@ -604,12 +629,14 @@ class DockerDependencyStopper(CarpentryPipelineStep):
                     container
                 )
             else:
-                logging.info("{0} does not conflict with {1}".format(container_name, name))
+                logging.info(
+                    "{0} does not conflict with {1}".format(container_name, name))
 
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
         if 'dependency_containers' not in instructions:
-            msg = render_string('skipping docker dependency stop for {name}', instructions)
+            msg = render_string(
+                'skipping docker dependency stop for {name}', instructions)
             logging.info(msg)
             build.append_to_stdout(msg)
             return self.produce(instructions)
@@ -622,6 +649,7 @@ class DockerDependencyStopper(CarpentryPipelineStep):
 
 
 class PrepareShellScript(CarpentryPipelineStep):
+
     def write_script_to_fd(self, fd, template, instructions):
         rendered = render_string(template, instructions)
         self.log(rendered.strip())
@@ -632,7 +660,8 @@ class PrepareShellScript(CarpentryPipelineStep):
         build = get_build_from_instructions(instructions)
         set_build_status(build, instructions, 'preparing')
         build_dir = instructions['build_dir']
-        shell_script_filename = render_string('.carpentry.{slug}.shell.sh', instructions)
+        shell_script_filename = render_string(
+            '.carpentry.{slug}.shell.sh', instructions)
         shell_script_path = os.path.join(build_dir, shell_script_filename)
         instructions['shell_script_filename'] = shell_script_filename
         instructions['shell_script_path'] = shell_script_path
@@ -649,7 +678,8 @@ class PrepareShellScript(CarpentryPipelineStep):
             self.write_script_to_fd(fd, shell_script, instructions)
 
         build.append_to_stdout('---------------------------\n')
-        build.append_to_stdout(render_string('{shell_script_filename}:\n', instructions))
+        build.append_to_stdout(
+            render_string('{shell_script_filename}:\n', instructions))
         build.append_to_stdout('---------------------------\n')
         build.append_to_stdout(shell_script)
         build.append_to_stdout('\n')
@@ -661,6 +691,7 @@ class PrepareShellScript(CarpentryPipelineStep):
 
 
 class RunBuild(CarpentryPipelineStep):
+
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
         set_build_status(build, instructions, 'running')
@@ -678,7 +709,8 @@ class RunBuild(CarpentryPipelineStep):
         build = get_build_from_instructions(instructions)
         image = instructions['build']['image']
 
-        dependency_containers = instructions.get('dependency_containers', []) or []
+        dependency_containers = instructions.get(
+            'dependency_containers', []) or []
         container_links = [(extract_container_name(docker, d['container']), d['hostname'])
                            for d in filter(bool, dependency_containers)]
         if container_links:
@@ -696,7 +728,8 @@ class RunBuild(CarpentryPipelineStep):
         build.append_to_stdout('\nrunning tests inside of {0}\n'.format(image))
         container = docker.create_container(
             image=image,
-            command=render_string('bash {shell_script_filename}', instructions),
+            command=render_string(
+                'bash {shell_script_filename}', instructions),
             environment=environment,
             volumes=['/carpentry-sandbox'],
             working_dir='/carpentry-sandbox',
@@ -715,17 +748,20 @@ class RunBuild(CarpentryPipelineStep):
         for line in docker.logs(container, stream=True, stdout=True, stderr=True):
             build.register_docker_status(line)
 
-        timeout_in_seconds = int(instructions.get('build_timeout_in_seconds') or conf.default_subprocess_timeout_in_seconds)
+        timeout_in_seconds = int(instructions.get(
+            'build_timeout_in_seconds') or conf.default_subprocess_timeout_in_seconds)
 
         build.code = docker.wait(container, timeout=timeout_in_seconds)
 
         if build.code == 0:
             build.append_to_stdout('\n\nCarpentry build succeeded :)\n\n')
-            set_build_status(build, instructions, 'succeeded', nice_current_time())
+            set_build_status(
+                build, instructions, 'succeeded', nice_current_time())
 
         else:
             build.append_to_stdout('\n\nCarpentry build Failed :\'(\n\n')
-            set_build_status(build, instructions, 'failed', nice_current_time())
+            set_build_status(
+                build, instructions, 'failed', nice_current_time())
 
         self.stop_and_remove_container(docker, container)
 
@@ -747,7 +783,8 @@ class RunBuild(CarpentryPipelineStep):
     def build_native(self, instructions):
         cmd = render_string('bash {shell_script_path}', instructions)
 
-        self.log(render_string("running: bash {shell_script_path}", instructions))
+        self.log(
+            render_string("running: bash {shell_script_path}", instructions))
         self.log(render_string("cwd: {build_dir}", instructions))
 
         process = run_command(cmd, chdir=instructions['build_dir'])
@@ -756,7 +793,8 @@ class RunBuild(CarpentryPipelineStep):
         b.append_to_stdout('\nrunning {0}...\n'.format(cmd))
 
         timeout_in_seconds = instructions.get('build_timeout_in_seconds')
-        stdout, exit_code = stream_output(self, process, b, timeout_in_seconds=timeout_in_seconds)
+        stdout, exit_code = stream_output(
+            self, process, b, timeout_in_seconds=timeout_in_seconds)
         b.append_to_stdout(force_unicode(stdout))
         b.code = int(exit_code)
         b.date_finished = datetime.utcnow()

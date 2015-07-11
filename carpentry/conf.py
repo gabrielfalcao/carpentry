@@ -36,15 +36,18 @@ def set_things(self, env):
     self.ssh_keys_node = self.workdir_node.cd('ssh-keys')
     self.GITHUB_CLIENT_ID = env.get('github_client_id')
     self.GITHUB_CLIENT_SECRET = env.get('github_client_secret')
-    self.allowed_github_organizations = env.get('allowed_github_organizations', ['cnry'])
+    self.allowed_github_organizations = env.get(
+        'allowed_github_organizations', ['cnry'])
     self.SECRET_KEY = env.get('secret_key')
 
-    self.default_subprocess_timeout_in_seconds = env.get('default_subprocess_timeout_in_seconds', 300 * 5)
+    self.default_subprocess_timeout_in_seconds = env.get(
+        'default_subprocess_timeout_in_seconds', 300 * 5)
 
     self.git_executable_path = env.get('git_executable_path', '/usr/bin/git')
     self.ssh_executable_path = env.get('ssh_executable_path', '/usr/bin/ssh')
 
-    self.get_full_url = lambda path: urlparse.urljoin(self.full_server_url, path)
+    self.get_full_url = lambda path: urlparse.urljoin(
+        self.full_server_url, path)
 
 
 def setup_from_config_path(self, path):
@@ -52,5 +55,6 @@ def setup_from_config_path(self, path):
     set_things(self, env)
 
 
-carpentry_config_path = os.getenv('CARPENTRY_CONFIG_PATH') or '/etc/carpentry.yml'
+carpentry_config_path = os.getenv(
+    'CARPENTRY_CONFIG_PATH') or '/etc/carpentry.yml'
 setup_from_config_path(self, carpentry_config_path)

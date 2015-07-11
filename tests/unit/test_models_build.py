@@ -142,7 +142,8 @@ def test_builder_property(Builder):
     b.builder.should.equal(Builder.get.return_value)
 
     # Then I see that it was retrieved using Builder.get(id=builder_id)
-    Builder.get.assert_called_once_with(id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'))
+    Builder.get.assert_called_once_with(
+        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'))
 
 
 @patch('carpentry.models.Build.save')
@@ -160,7 +161,8 @@ def test_append_to_stdout(force_unicode, save_build):
     # When I call append_to_stdout
     b.append_to_stdout('end')
 
-    # Then the stdout should have been concatenated with the result of force_unicode
+    # Then the stdout should have been concatenated with the result of
+    # force_unicode
     b.stdout.should.equal('[beginning][end]')
 
     # And Build.save was called

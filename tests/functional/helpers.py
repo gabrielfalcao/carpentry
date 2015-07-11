@@ -15,6 +15,7 @@ from carpentry import conf
 
 
 class GithubMocker(object):
+
     def __init__(self, user):
         self.user = user
 
@@ -61,7 +62,8 @@ def prepare_db(context):
     #        WITH REPLICATION =
     #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-    create_keyspace('carpentry', strategy_class='SimpleStrategy', replication_factor=3, durable_writes=True)
+    create_keyspace('carpentry', strategy_class='SimpleStrategy',
+                    replication_factor=3, durable_writes=True)
     httpretty.enable()
 
     for t in get_models():
@@ -75,7 +77,8 @@ def prepare_db(context):
 def prepare_http_client(context):
     context.web = Web()
     context.http = context.web.flask_app.test_client()
-    context.user = User(id=uuid.uuid1(), carpentry_token=uuid.uuid4(), github_access_token='Default:FAKE:Token')
+    context.user = User(id=uuid.uuid1(), carpentry_token=uuid.uuid4(
+    ), github_access_token='Default:FAKE:Token')
     context.user.save()
 
     context.github = GithubMocker(context.user)

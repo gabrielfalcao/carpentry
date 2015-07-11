@@ -29,6 +29,7 @@ def test_prepare_value_for_serialization_object_to_dict():
     ('carpentry.models.prepare_value_for_serialization() should be able to serialize an object that responds to to_dict')
 
     class FooBar(object):
+
         def to_dict(self):
             return {
                 'ohh': 'leh-leh'
@@ -65,7 +66,8 @@ def test_prepare_value_for_serialization_anything_else():
     ('carpentry.models.prepare_value_for_serialization() should return the original '
      'value if it is not one of the handled cases')
 
-    prepare_value_for_serialization('chuck-norris').should.equal('chuck-norris')
+    prepare_value_for_serialization(
+        'chuck-norris').should.equal('chuck-norris')
 
 
 def test_serialize_model_to_dict():

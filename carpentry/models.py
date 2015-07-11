@@ -49,7 +49,8 @@ GITHUB_STATUS_MAP = {
 }
 
 
-GITHUB_URI_REGEX = re.compile(r'github.com[:/](?P<owner>[\w_-]+)[/](?P<name>[\w_-]+)([.]git)?')
+GITHUB_URI_REGEX = re.compile(
+    r'github.com[:/](?P<owner>[\w_-]+)[/](?P<name>[\w_-]+)([.]git)?')
 
 redis_pool = redis.ConnectionPool(
     host=conf.redis_host,
@@ -96,7 +97,8 @@ class CarpentryBaseModel(Model):
         return model_to_dict(self)
 
     def prepare_github_request_headers(self, github_access_token=None):
-        github_access_token = github_access_token or getattr(self, 'github_access_token', None)
+        github_access_token = github_access_token or getattr(
+            self, 'github_access_token', None)
         headers = {
             'Authorization': 'token {0}'.format(github_access_token)
         }
@@ -116,8 +118,10 @@ class Builder(CarpentryBaseModel):
 
     creator_user_id = columns.UUID()
     github_hook_data = columns.Text()
-    git_clone_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
-    build_timeout_in_seconds = columns.Integer(default=conf.default_subprocess_timeout_in_seconds)
+    git_clone_timeout_in_seconds = columns.Integer(
+        default=conf.default_subprocess_timeout_in_seconds)
+    build_timeout_in_seconds = columns.Integer(
+        default=conf.default_subprocess_timeout_in_seconds)
 
     @property
     def creator(self):
@@ -132,7 +136,8 @@ class Builder(CarpentryBaseModel):
 
     def delete_single_github_hook(self, hook_id, github_access_token):
         headers = self.prepare_github_request_headers(github_access_token)
-        url = render_string('https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_repo_info)
+        url = render_string(
+            'https://api.github.com/repos/{{owner}}/{{name}}/hooks/{0}'.format(hook_id), self.github_repo_info)
         response = requests.delete(url, headers=headers)
         return response
 
@@ -341,7 +346,8 @@ class Build(CarpentryBaseModel):
 
     @property
     def url(self):
-        path = render_string('/#/builder/{builder_id}/build/{id}', model_to_dict(self))
+        path = render_string(
+            '/#/builder/{builder_id}/build/{id}', model_to_dict(self))
         return conf.get_full_url(path)
 
     @property
@@ -366,7 +372,8 @@ class Build(CarpentryBaseModel):
 
         headers = self.prepare_github_request_headers(
             github_access_token)
-        template_url = 'https://api.github.com/repos/{{owner}}/{{name}}/statuses/{0}'.format(self.commit)
+        template_url = 'https://api.github.com/repos/{{owner}}/{{name}}/statuses/{0}'.format(
+            self.commit)
         url = render_string(template_url, self.github_repo_info)
 
         request_payload = json.dumps({
@@ -536,6 +543,7 @@ class User(CarpentryBaseModel):
 
 
 class GithubRepository(CarpentryBaseModel):
+
     """holds an individual repo coming as json from the github api
     response, the `name`, `owner` and `git_uri` are stored as fields
     of this model, and the full `response_data` is also available as a

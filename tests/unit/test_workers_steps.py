@@ -96,7 +96,8 @@ def test_stream_output_stops_on_timeout(time):
 
     # And that process.stdout.readline returns a chunk of 512 bytes of
     # string
-    process.stdout.readline.side_effect = ['aaaa' * 128, 'bbbb' * 64, 'cccc' * 32, 'dddd' * 32]
+    process.stdout.readline.side_effect = [
+        'aaaa' * 128, 'bbbb' * 64, 'cccc' * 32, 'dddd' * 32]
 
     # When I call stream_output
     result = stream_output(
@@ -116,7 +117,8 @@ def test_stream_output_stops_on_timeout(time):
     )
 
     # And the build should have had its stdout updated
-    build.stdout.should.equal(('aaaa' * 128) + ('bbbb' * 64) + '\nBuild timed out by 50 seconds')
+    build.stdout.should.equal(
+        ('aaaa' * 128) + ('bbbb' * 64) + '\nBuild timed out by 50 seconds')
 
     # And the stderr should have been updated as well
     build.stderr.should.equal('\nBuild timed out by 50 seconds')
@@ -386,7 +388,8 @@ def test_prepare_ssh_key_consume_missing_private_key(get_build_from_instructions
     }
 
     # When I call consume with those instructions
-    step.consume.when.called_with(instructions).should.have.raised(RuntimeError)
+    step.consume.when.called_with(
+        instructions).should.have.raised(RuntimeError)
 
     # Then get_build_from_instructions should have been called with
     # the instructions
@@ -434,7 +437,8 @@ def test_prepare_ssh_key_consume_missing_public_key(get_build_from_instructions,
     }
 
     # When I call consume with those instructions
-    step.consume.when.called_with(instructions).should.have.raised(RuntimeError)
+    step.consume.when.called_with(
+        instructions).should.have.raised(RuntimeError)
 
     # Then get_build_from_instructions should have been called with
     # the instructions
@@ -471,7 +475,8 @@ def test_prepare_ssh_key_consume_ssh_add_failed(
     build = get_build_from_instructions.return_value
     datetime.utcnow.return_value = original_datetime(2015, 6, 27)
 
-    check_output.side_effect = CalledProcessError(1, 'ssh-add /path/to/key', 'boom')
+    check_output.side_effect = CalledProcessError(
+        1, 'ssh-add /path/to/key', 'boom')
 
     # Given a PrepareSSHKey Step instance
     step = prepare_step_instance(PrepareSSHKey)
@@ -507,6 +512,7 @@ def test_response_did_succeed_ok():
     ('response_did_succeed should return True if response is 200-ish')
 
     class Response:
+
         def __init__(self, status_code):
             self.status_code = status_code
 
@@ -755,7 +761,8 @@ def test_base_pipeline_handle_exception_twice(
     # And that I have an instance of an exception
     e1 = ValueError('boom 1')
 
-    # And that I have an instance of an exception for the dependency stop and removal
+    # And that I have an instance of an exception for the dependency stop and
+    # removal
     e2 = ValueError('boom 2')
 
     # And some build instructions
@@ -796,7 +803,8 @@ def test_base_pipeline_handle_exception_twice(
 @patch('carpentry.workers.steps.conf')
 def test_local_retrieve_ensure_build_dir(conf, shutil, os):
     ("LocalRetrieve#ensure_build_dir should remove the tree")
-    conf.build_node.join.side_effect = lambda path: "/srv/test/{0}".format(path)
+    conf.build_node.join.side_effect = lambda path: "/srv/test/{0}".format(
+        path)
     os.path.join.side_effect = lambda *args: "/".join(map(str, args))
     os.path.exists.return_value = False
 

@@ -80,10 +80,13 @@ def test_create_builder(context):
 
     # And that one result should match the created Builder
     builder = results[0]
-    builder.should.have.property('name').being.equal('Device Management [unit tests]')
-    builder.should.have.property('git_uri').being.equal('git@github.com:gabrielfalcao/lettuce.git')
+    builder.should.have.property('name').being.equal(
+        'Device Management [unit tests]')
+    builder.should.have.property('git_uri').being.equal(
+        'git@github.com:gabrielfalcao/lettuce.git')
     builder.should.have.property('shell_script').being.equal('make test')
-    builder.should.have.property('id_rsa_private').being.equal('the private key')
+    builder.should.have.property(
+        'id_rsa_private').being.equal('the private key')
     builder.should.have.property('id_rsa_public').being.equal('the public key')
     builder.should.have.property('status').being.equal('ready')
 
@@ -91,7 +94,6 @@ def test_create_builder(context):
 @api
 def test_set_preferences(context):
     ('POST to /api/preferences should set multiple preferences')
-
 
     # And I POST to /api/builders
     response = context.http.post(
@@ -145,7 +147,6 @@ def test_list_builders(context):
         git_uri='3-git-url-one',
         shell_script='make test',
     )
-
 
     # And I GET on /api/builders
     response = context.http.get(
@@ -218,10 +219,13 @@ def test_edit_builder(context):
 
     # And that one result should match the edited Builder
     builder = results[0]
-    builder.should.have.property('name').being.equal('Device Management [unit tests]')
-    builder.should.have.property('git_uri').being.equal('git@github.com:gabrielfalcao/lettuce.git')
+    builder.should.have.property('name').being.equal(
+        'Device Management [unit tests]')
+    builder.should.have.property('git_uri').being.equal(
+        'git@github.com:gabrielfalcao/lettuce.git')
     builder.should.have.property('shell_script').being.equal('make test')
-    builder.should.have.property('id_rsa_private').being.equal('the private key')
+    builder.should.have.property(
+        'id_rsa_private').being.equal('the private key')
     builder.should.have.property('id_rsa_public').being.equal('the public key')
     builder.should.have.property('status').being.equal('ready')
 

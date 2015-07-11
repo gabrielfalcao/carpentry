@@ -16,6 +16,7 @@ from carpentry.workers.steps import (
 
 
 class RunBuilder(Pipeline):
+
     """A very simple builder that just runs subprocesses in the
     machine where carpentry is installed.
     """
