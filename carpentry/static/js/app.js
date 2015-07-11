@@ -18,7 +18,29 @@ angular.module('CarpentryApp', [
     'CarpentryApp.UserProfile',
     'CarpentryApp.Docker',
     'CarpentryApp.Splash'
-]).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
+]).filter('truncate', function (){
+    return function (input, chars, breakOnWord) {
+        if (isNaN(chars)) return input;
+        if (chars <= 0) return '';
+        if (input && input.length > chars) {
+            input = input.substring(0, chars);
+
+            if (!breakOnWord) {
+                var lastspace = input.lastIndexOf(' ');
+                //get last space
+                if (lastspace !== -1) {
+                    input = input.substr(0, lastspace);
+                }
+            } else {
+                while(input.charAt(input.length-1) === ' '){
+                    input = input.substr(0, input.length -1);
+                }
+            }
+            return input;
+        }
+        return input;
+    };
+}).config(function ($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
     cfpLoadingBarProvider.includeBar = false;
     cfpLoadingBarProvider.includeSpinner = false;
     cfpLoadingBarProvider.latencyThreshold = 10;

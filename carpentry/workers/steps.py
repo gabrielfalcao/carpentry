@@ -323,13 +323,18 @@ class LocalRetrieve(CarpentryPipelineStep):
 
         return stdout, exit_code, instructions
 
-    def run_git_checkout(self, build, build_dir, instructions):
-        checkout = render_string(conf.git_executable_path + ' checkout {commit}', instructions)
-        process = run_command(checkout, chdir=build_dir)
+    def switch_to_git_commit(self, build, build_dir, instructions):
+        stdout = ''
+        try:
+            stdout += check_output(conf.git_executable_path + render_string(' fetch origin {commit}', instructions))
+        except (CalledProcessError, OSError):
+            exit_code = 1
 
-        timeout_in_seconds = int(instructions.get('git_clone_timeout_in_seconds') or 0)
+        try:
+            stdout += check_output(conf.git_executable_path + ' reset --hard FETCH_ORIGIN')
+        except (CalledProcessError, OSError):
+            exit_code = 1
 
-        stdout, exit_code = stream_output(self, process, build, timeout_in_seconds=timeout_in_seconds)
         return stdout, exit_code, instructions
 
     def consume(self, instructions):
@@ -347,7 +352,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
         # checking out a specific commit
         if instructions.get('commit', False):
-            stdout, exit_code, instructions = self.run_git_checkout(build, build_dir, instructions)
+            stdout, exit_code, instructions = self.switch_to_git_commit(build, build_dir, instructions)
             if exit_code != 0:
                 build.set_status('failed')
                 self.log('Git checkout failed {0}'.format(stdout))
