@@ -152,7 +152,10 @@ def test_append_to_stdout(force_unicode, save_build):
     force_unicode.side_effect = lambda x: "[{0}]".format(x)
 
     # Given an instance of build that has some stdout string already
-    b = Build(stdout='[beginning]')
+    b = Build(
+        stdout='[beginning]',
+        git_uri='git@github.com:gabrielfalcao/lettuce.git'
+    )
 
     # When I call append_to_stdout
     b.append_to_stdout('end')
@@ -208,7 +211,7 @@ def test_set_status_github(save_build,
     # And set_github_status should have been called
     set_github_status.assert_called_once_with(
         'test-token',
-        'error',
+        'pending',
         'oops'
     )
 

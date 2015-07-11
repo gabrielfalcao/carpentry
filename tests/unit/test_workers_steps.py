@@ -196,12 +196,11 @@ def test_get_build_from_instructions(Build):
         id='General-Lee')
 
 
-@patch('carpentry.workers.steps.get_build_from_instructions')
-def test_set_build_status(get_build_from_instructions):
+def test_set_build_status():
     ('set_build_status() should retrieve a build, set its status and save it')
 
-    # Given that get_build_from_instructions is mocked
-    build = get_build_from_instructions.return_value
+    # Given a mocked build
+    build = Mock(name='Build(id=1)')
 
     # And that I have a payload of build instructions
     instructions = {
@@ -211,14 +210,9 @@ def test_set_build_status(get_build_from_instructions):
     }
 
     # When I call set_build_status
-    set_build_status(instructions, 'running', 'geronimooooo')
+    set_build_status(build, instructions, 'running', 'geronimooooo')
 
-    # Then it should have called get_build_from_instructions
-    get_build_from_instructions.assert_called_once_with(
-        instructions
-    )
-
-    # And build.set_status should have been called with the
+    # Then build.set_status should have been called with the
     # github_access_token and the given description
     build.set_status.assert_called_once_with(
         u'running',
@@ -334,6 +328,7 @@ def test_prepare_ssh_key_consume(get_build_from_instructions,
                                  datetime):
     ('PrepareSSHKey#write_file should create the destination '
      'folder if it does not exist')
+    build = get_build_from_instructions.return_value
     datetime.utcnow.return_value = original_datetime(2015, 6, 27)
 
     # Given a PrepareSSHKey Step instance
@@ -359,6 +354,7 @@ def test_prepare_ssh_key_consume(get_build_from_instructions,
     # And set_build_status sets the build to "running" and provides a
     # description with the start time
     set_build_status.assert_called_once_with(
+        build,
         instructions,
         'running',
         'carpentry build started at 2015/06/27 00:00:00 UTC',
@@ -400,6 +396,7 @@ def test_prepare_ssh_key_consume_missing_private_key(get_build_from_instructions
     # And set_build_status sets the build to "running" and provides a
     # description with the start time
     set_build_status.assert_called_once_with(
+        build,
         instructions,
         'running',
         'carpentry build started at 2015/06/27 00:00:00 UTC',
@@ -447,6 +444,7 @@ def test_prepare_ssh_key_consume_missing_public_key(get_build_from_instructions,
     # And set_build_status sets the build to "running" and provides a
     # description with the start time
     set_build_status.assert_called_once_with(
+        build,
         instructions,
         'running',
         'carpentry build started at 2015/06/27 00:00:00 UTC',
@@ -470,6 +468,7 @@ def test_prepare_ssh_key_consume_ssh_add_failed(
         datetime):
     ('PrepareSSHKey#write_file should save the '
      'output of error details when ssh-add failed')
+    build = get_build_from_instructions.return_value
     datetime.utcnow.return_value = original_datetime(2015, 6, 27)
 
     check_output.side_effect = CalledProcessError(1, 'ssh-add /path/to/key', 'boom')
@@ -497,6 +496,7 @@ def test_prepare_ssh_key_consume_ssh_add_failed(
     # And set_build_status sets the build to "running" and provides a
     # description with the start time
     set_build_status.assert_called_once_with(
+        build,
         instructions,
         'running',
         'carpentry build started at 2015/06/27 00:00:00 UTC',
@@ -640,7 +640,7 @@ def test_push_key_consume_ok(
 
     build.append_to_stdout.assert_has_calls([
         call(u'pushing key to github...\n'),
-        call(u'Keys pushed to github successfully!!!!!')
+        call(u'Keys pushed to github successfully!!!!!\n'),
     ])
 
     pusher.produce.assert_called_once_with({
@@ -697,11 +697,12 @@ def test_push_key_consume_failed(
     )
 
 
+@patch('carpentry.workers.steps.set_build_status')
 @patch('carpentry.workers.steps.DockerDependencyStopper')
 @patch('carpentry.workers.steps.traceback')
 @patch('carpentry.workers.steps.get_build_from_instructions')
 def test_base_pipeline_handle_exception(
-        get_build_from_instructions, traceback, DockerDependencyStopper):
+        get_build_from_instructions, traceback, DockerDependencyStopper, set_build_status):
     ("CarpentryPipelineStep#handle_exception() should "
      "append the traceback to the stdout")
     build = get_build_from_instructions.return_value
@@ -721,7 +722,7 @@ def test_base_pipeline_handle_exception(
     step.handle_exception(e, instructions)
 
     # Then the build should have been set to failed
-    build.set_status.assert_called_once_with('failed')
+    set_build_status(build, instructions, 'failed')
 
     # And the traceback should have been appended to the output
     build.append_to_stdout.assert_called_once_with(
@@ -738,11 +739,12 @@ def test_base_pipeline_handle_exception(
     )
 
 
+@patch('carpentry.workers.steps.set_build_status')
 @patch('carpentry.workers.steps.DockerDependencyStopper')
 @patch('carpentry.workers.steps.traceback')
 @patch('carpentry.workers.steps.get_build_from_instructions')
 def test_base_pipeline_handle_exception_twice(
-        get_build_from_instructions, traceback, DockerDependencyStopper):
+        get_build_from_instructions, traceback, DockerDependencyStopper, set_build_status):
     ("CarpentryPipelineStep#handle_exception() should "
      "append the traceback to the stdout")
     build = get_build_from_instructions.return_value
@@ -769,7 +771,12 @@ def test_base_pipeline_handle_exception_twice(
     step.handle_exception(e1, instructions)
 
     # Then the build should have been set to failed
-    build.set_status.assert_called_once_with('failed')
+    set_build_status.assert_called_once_with(
+        build,
+        instructions,
+        'failed',
+        'carpentry server error: boom 1'
+    )
 
     # And the traceback should have been appended to the output
     build.append_to_stdout.assert_has_calls([
@@ -790,7 +797,7 @@ def test_base_pipeline_handle_exception_twice(
 def test_local_retrieve_ensure_build_dir(conf, shutil, os):
     ("LocalRetrieve#ensure_build_dir should remove the tree")
     conf.build_node.join.side_effect = lambda path: "/srv/test/{0}".format(path)
-
+    os.path.join.side_effect = lambda *args: "/".join(map(str, args))
     os.path.exists.return_value = False
 
     # Given an instance of LocalRetrieve
@@ -802,13 +809,15 @@ def test_local_retrieve_ensure_build_dir(conf, shutil, os):
     }
 
     # And a build instance mock
-    build = Mock(name='Build')
+    build = {
+        'id': '123'
+    }
 
     # When I call ensure_build_dir
     retriever.ensure_build_dir(build, instructions)
 
     # Then it should have created the build dir
     os.makedirs.assert_has_calls([
-        call('/srv/test/my-project'),
-        call('/srv/test/my-project'),
+        call(u'/srv/test/my-project/123'),
+        call(u'/srv/test/my-project/123'),
     ])

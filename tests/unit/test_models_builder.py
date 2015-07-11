@@ -237,7 +237,8 @@ def test_builder_to_dict(
         },
         'name': 'The Awesome Pr0JName',
         'slug': 'theawesomepr0jname',
-        'status': 'success'
+        'status': 'success',
+        'json_instructions': None,
     })
 
 
@@ -334,7 +335,8 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         'github_hook_data': None,
         'creator_user_id': None,
         'foo': 'bar',
-        'id': None
+        'id': None,
+        'json_instructions': None,
     })
 
 
