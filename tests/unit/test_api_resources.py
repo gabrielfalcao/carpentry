@@ -217,7 +217,11 @@ def test_get_build_ok(json_response, models, TokenAuthority, request):
 @patch('carpentry.api.resources.models')
 @patch('carpentry.api.resources.json_response')
 def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthority, request, ensure_json_request, generate_ssh_key_pair, uuid_mock):
-    ('POST /api/builder should ')
+    ('POST /api/builder should generate ssh keys')
+    user = TokenAuthority.return_value.get_user.return_value
+    user.github_access_token = 'lemmeingithub'
+    builder = models.Builder.create.return_value
+    builder.to_dict.return_value = {'foo': 'bar'}
 
     generate_ssh_key_pair.return_value = ('privte', 'public')
     ensure_json_request.return_value = {
@@ -225,9 +229,7 @@ def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthorit
         'git_uri': 'git@github.com:cnry/my-project.git',
         'shell_script': 'make',
         'json_instructions': '{}',
-        'id_rsa_private': 'private',
-        'id_rsa_public': 'public',
-        'generate_ssh_keys': 'keys',
+        'generate_ssh_keys': True,
     }
 
     # When I call create_builder
@@ -235,3 +237,169 @@ def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthorit
 
     # Then the response should be json
     response.should.equal(json_response.return_value)
+
+    builder.cleanup_github_hooks.assert_called_once_with()
+    builder.set_github_hook.assert_called_once_with(
+        'lemmeingithub'
+    )
+
+    json_response.assert_called_once_with(
+        {
+            'foo': 'bar'
+        },
+        status=200
+    )
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_retrieve_builder(json_response, models, TokenAuthority, request):
+    ('GET /api/builder/<id> should return a a builder')
+
+    # Given that Build.objects.get returns a mocked build
+    builder = models.Builder.objects.get.return_value
+    builder.to_dict.return_value = {'say': 'whaaaaat'}
+
+    # When I call retrieve_builder
+    response = retrieve_builder(id='someid')
+
+    # Then the response should be json
+    response.should.equal(json_response.return_value)
+    models.Builder.objects.get.assert_called_once_with(
+        id='someid')
+
+    json_response.assert_called_once_with({'say': 'whaaaaat'})
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_clear_builds(json_response, models, TokenAuthority, request):
+    ('DELETE /api/builder/:id/builds should delete all the '
+     'builds that are linked to the given builder')
+
+    class Build:
+        def __init__(self, x):
+            self.commit = str(x)[0] * 4
+
+    # Given that Build.objects.get returns a mocked build
+    builder = models.Builder.get.return_value
+    builder.clear_builds.return_value = [
+        Build(x) for x in range(10)]
+
+    # When I call clear_builds
+    response = clear_builds(id='someid')
+
+    # Then delete() was called
+    builder.clear_builds.assert_called_once_with()
+
+    # And the query was done appropriately
+    models.Builder.get.assert_called_once_with(
+        id='someid'
+    )
+
+    # And the response should be a json_response
+    response.should.equal(json_response.return_value)
+
+    # And the json response was called appropriately
+    json_response.assert_called_once_with(
+        {'total': 10}
+    )
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_clear_builds_empty(json_response, models, TokenAuthority, request):
+    ('DELETE /api/builder/:id/builds should return '
+     '0 when')
+
+    # Given that Build.objects.get returns a mocked build
+    builder = models.Builder.get.return_value
+    builder.clear_builds.return_value = []
+
+    # When I call clear_builds
+    response = clear_builds(id='someid')
+
+    # Then delete() was called
+    builder.clear_builds.assert_called_once_with()
+
+    # And the query was done appropriately
+    models.Builder.get.assert_called_once_with(
+        id='someid'
+    )
+
+    # And the response should be a json_response
+    response.should.equal(json_response.return_value)
+
+    # And the json response was called appropriately
+    json_response.assert_called_once_with(
+        {'total': 0}
+    )
+
+
+@patch('carpentry.api.core.ensure_json_request')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_edit_builder(json_response, models, TokenAuthority, request, ensure_json_request):
+    ('PUT /api/builder/<id> should edit the builder')
+
+    ensure_json_request.return_value = {
+        'name': 'my-project',
+        'git_uri': 'git@github.com:cnry/my-project.git',
+        'shell_script': 'make',
+        'json_instructions': None,
+    }
+
+    # Given that Build.objects.put returns a mocked build
+    builder = models.Builder.objects.get.return_value
+    builder.to_dict.return_value = {'say': 'whaaaaat'}
+
+    # When I call retrieve_builder
+    response = edit_builder(id='someid')
+
+    # Then the response should be json
+    response.should.equal(json_response.return_value)
+    models.Builder.objects.get.assert_called_once_with(
+        id='someid')
+
+    json_response.assert_called_once_with({'say': 'whaaaaat'})
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_list_builders(json_response, models, TokenAuthority, request):
+    ('GET /api/builder/<id> should list the builders')
+
+    builder1 = Mock(name='builder1')
+    builder1.to_dict.return_value = {'build': 1}
+    builder2 = Mock(name='builder2')
+    builder2.to_dict.return_value = {'build': 2}
+
+    # Given that Build.objects.put returns a mocked build
+    models.Builder.objects.all.return_value = [
+        builder1,
+        builder2,
+    ]
+
+    # When I call retrieve_builder
+    response = list_builders()
+
+    # Then the response should be json
+    response.should.equal(json_response.return_value)
+    json_response.assert_called_once_with([
+        {
+            'build': 1
+        },
+        {
+            'build': 2
+        }
+    ])

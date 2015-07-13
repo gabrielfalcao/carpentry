@@ -143,13 +143,10 @@ def edit_builder(user, id):
         'name': any,
         'git_uri': any,
         'shell_script': any,
-        'id_rsa_private': any,
-        'id_rsa_public': any,
+        'json_instructions': any,
     })
     item = models.Builder.objects.get(id=id)
     for attr, value in data.items():
-        if value is None:
-            continue
         setattr(item, attr, value)
 
     item.save()

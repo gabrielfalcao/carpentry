@@ -540,11 +540,10 @@ class DockerDependencyRunner(CarpentryPipelineStep):
                 detach=True,
             )
         except Exception as e:
-            if 'already in use by container' in str(e):
-                return
             logging.exception('failed to run container={0}:{1}'.format(image, hostname))
             tb = traceback.format_exc(e)
             build.append_to_stdout(tb)
+            build.set_status('failed', description=str(e))
 
         docker.start(container['Id'])
         info = {

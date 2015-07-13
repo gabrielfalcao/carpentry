@@ -29,5 +29,5 @@ class RunBuilder(Pipeline):
         PrepareShellScript,
         DockerDependencyRunner,
         RunBuild,
-        # DockerDependencyStopper,
+        DockerDependencyStopper,
     ]
