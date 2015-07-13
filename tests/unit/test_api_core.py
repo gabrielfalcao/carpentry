@@ -167,26 +167,3 @@ def test_authenticated_ok(TokenAuthority, request, json_response):
 
     # Then it should have returned a json_response
     result.should.equal('na-na-na-na-na-na-na-na batman')
-
-
-@patch('carpentry.api.core.request')
-def test_ensure_json_request(request):
-    ('@authenticated should return the result of the original decorated function')
-
-    TokenAuthority.return_value.get_user.return_value = 'na'
-
-    # Given some valid request headers
-    request.headers = {
-        'Authorization': 'Bearer: thetoken'
-    }
-
-    # And a function decorated with @authenticated
-    @authenticated
-    def yay(user):
-        return '-'.join([user] * 8) + ' batman'
-
-    # When I call it
-    result = yay()
-
-    # Then it should have returned a json_response
-    result.should.equal('na-na-na-na-na-na-na-na batman')

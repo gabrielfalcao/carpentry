@@ -17,11 +17,11 @@ def test_github_repository_store_one_from_dict(
      'should break down the parameters and '
      'create save a GithubRepository instance')
     uuid_mock.UUID = uuid.UUID
-    uuid_mock.uuid4.return_value = test_uuid
+    uuid_mock.uuid1.return_value = test_uuid
     # Given a valid item
     item = {
         'name': 'sure',
-        'git_uri': 'git@github.com:gabrielfalcao/sure.it',
+        'ssh_url': 'git@github.com:gabrielfalcao/sure.it',
         'owner': {
             'login': 'gabrielfalcao'
         }
@@ -39,7 +39,7 @@ def test_github_repository_store_one_from_dict(
         'id': 'a1ea566e-5608-4670-a215-60bc34311c65',
         'name': 'sure',
         'owner': 'gabrielfalcao',
-        'response_data': '{"git_uri": "git@github.com:gabrielfalcao/sure.it", "owner": {"login": "gabrielfalcao"}, "name": "sure"}'
+        'response_data': '{"owner": {"login": "gabrielfalcao"}, "name": "sure", "ssh_url": "git@github.com:gabrielfalcao/sure.it"}'
     })
 
     GithubOrganization.store_one_from_dict.assert_called_once_with({

@@ -579,14 +579,14 @@ class GithubRepository(CarpentryBaseModel):
     @classmethod
     def store_one_from_dict(cls, item):
         name = item['name']
-        git_uri = item['git_uri']
+        git_uri = item['ssh_url']
         owner_info = item['owner']
         owner = owner_info['login']
         GithubOrganization.store_one_from_dict(owner_info)
         response_data = json.dumps(item)
 
         model = cls(
-            id=uuid.uuid4(),
+            id=uuid.uuid1(),
             name=name,
             git_uri=git_uri,
             owner=owner,
@@ -615,7 +615,7 @@ class GithubOrganization(CarpentryBaseModel):
         response_data = json.dumps(item)
 
         model = cls(
-            id=uuid.uuid4(),
+            id=uuid.uuid1(),
             login=login,
             github_id=github_id,
             avatar_url=avatar_url,
