@@ -3,7 +3,8 @@
 #
 from __future__ import unicode_literals
 from mock import patch
-from carpentry.api.core import TokenAuthority, authenticated
+from collections import OrderedDict
+from carpentry.api.core import TokenAuthority, authenticated, ensure_json_request
 
 
 def test_authenticator_get_token():
@@ -167,3 +168,38 @@ def test_authenticated_ok(TokenAuthority, request, json_response):
 
     # Then it should have returned a json_response
     result.should.equal('na-na-na-na-na-na-na-na batman')
+
+
+@patch('carpentry.api.core.request')
+def test_ensure_json_request(request):
+        ('ensure_json_request()')
+        request.get_json.return_value = {
+            'foo': 'bar',
+            'chuck': 'norris',
+            'answer': '42',
+        }
+
+        result = ensure_json_request({
+            'foo': unicode,
+            'answer': int,
+            'chuck': any,
+        })
+
+        result.should.equal({u'answer': 42, u'chuck': u'norris', u'foo': u'bar'})
+
+
+@patch('carpentry.api.core.abort')
+@patch('carpentry.api.core.request')
+def test_ensure_json_request_abort(request, abort):
+        ('ensure_json_request() aborts when a value failed to validate')
+        request.get_json.return_value = {
+            'foo': 'bar',
+            'answer': '4232xx',
+        }
+
+        result = ensure_json_request(OrderedDict([
+            ('foo', unicode),
+            ('answer', int),
+        ]))
+
+        result.should.equal({u'foo': u'bar'})

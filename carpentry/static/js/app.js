@@ -179,7 +179,9 @@ angular.module('CarpentryApp', [
             })
             .error(function(data, status, headers, config) {
                 // console.log('failed to list docker images ');
-                notify('failed to list github repositories');
+                if (status >= 500) {
+                    notify('failed to list github repositories');
+                }
             });
     };
 

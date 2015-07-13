@@ -72,10 +72,6 @@ def authenticated(resource):
 
 def ensure_json_request(spec, fallback={}):
     data = request.get_json(silent=True) or fallback
-    if not data:
-        logging.error('missing json body')
-        abort(400)
-
     result = {}
     for key, validator in spec.items():
         value = data.get(key)

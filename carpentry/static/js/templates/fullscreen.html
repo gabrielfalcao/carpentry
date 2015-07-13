@@ -1,10 +1,10 @@
 <div class="container-fluid">
-  <div class="row">
-    <div class="alert alert-{{builder.css_status}} col-xs-2" ng-repeat="builder in builders" ng-if="builder.last_build.author_name">
+  <div class="row-fluid">
+    <div class="alert alert-{{builder.css_status}} col-md-2" ng-repeat="builder in builders" ng-if="builder.last_build.author_name">
       <a style="color:white; text-decoration:none;" ng-href="#/builder/{{builder.id}}/build/{{builder.last_build.id}}">
 
-        <img style="float:left;" class="avatar img-circle" width="200" height="200" ng-show="builder.last_build.author_gravatar_url" ng-src="{{builder.last_build.author_gravatar_url}}?s=200" alt="{{ builder.last_build.author_name }}" />
-        <div style="float:right;">
+        <img class="avatar img-circle" width="200" height="200" ng-show="builder.last_build.author_gravatar_url" ng-src="{{builder.last_build.author_gravatar_url}}?s=200" alt="{{ builder.last_build.author_name }}" />
+        <div>
         <h3>{{ builder.name }}</h3>
         <p ng-if="builder.last_build.author_name"><strong>Author Name</strong>&nbsp;<span ng-if="builder.last_build.author_name">{{ builder.last_build.author_name }}</span></p>
         <p ng-if="builder.last_build.author_email"><strong>Author Email</strong>&nbsp;<span ng-if="builder.last_build.author_email">{{ builder.last_build.author_email }}</span></p>
