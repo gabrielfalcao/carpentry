@@ -28,7 +28,7 @@ class TokenAuthority(object):
     def get_token_string(self):
         if not self.bearer:
             logging.info("Missing `Authorization` header %s", request.headers)
-            abort(400)
+            return abort(401)
         return self.parse_bearer_string(self.bearer)
 
     def get_token(self):
@@ -37,27 +37,24 @@ class TokenAuthority(object):
 
     def get_user(self):
         token = self.get_token()
-        if not token or token == 'None':
-            return
+        if not token:
+            return abort(401)
 
         g.user = result = User.from_carpentry_token(token)
         if not g.user:
             logging.debug(
                 "could not find a User in the database for the token %s, maybe the user was deleted :(", token)
-            return
-
-        user_organizations = [o['login']
-                              for o in g.user.retrieve_github_organizations()]
+            return abort(401)
 
         allowed = False
-        for user_org in user_organizations:
+        for user_org in g.user.organization_names:
             if user_org in conf.allowed_github_organizations:
                 allowed = True
 
         if not allowed:
             logging.error("User %s was not allowed in the organizations %s",
                           g.user, conf.allowed_github_organizations)
-            return None
+            return abort(401)
 
         return result
 
@@ -67,10 +64,6 @@ def authenticated(resource):
     def decorator(*args, **kw):
         auth = TokenAuthority(request.headers)
         user = auth.get_user()
-        if not user:
-            return json_response({
-                'error': 'not authorized'
-            }, status=401)
         kw['user'] = user
         return resource(*args, **kw)
 

@@ -222,7 +222,7 @@ def test_retrieve_and_cache_github_repositories(
      '')
     retrieve_organization_repos.return_value = [
         {
-            'owner': 'wlabs',
+            'owner': 'cnry',
             'name': 'bng1',
         }
     ]
@@ -238,7 +238,7 @@ def test_retrieve_and_cache_github_repositories(
 
     result.should.equal([
         {
-            'owner': 'wlabs',
+            'owner': 'cnry',
             'name': 'bng1'
         },
         {
@@ -295,7 +295,7 @@ def test_retrieve_github_organizations_cached(
      'a list of repos')
 
     get_github_metadata.return_value = {
-        'organizations': ['wlabs']
+        'organizations': ['cnry']
     }
     response = requests.get.return_value
     response.status_code = 200
@@ -307,6 +307,18 @@ def test_retrieve_github_organizations_cached(
         github_access_token='thetoken',
     )
 
-    result = u.retrieve_github_organizations()
+    u.organizations.should.equal(['cnry'])
 
-    result.should.equal(['wlabs'])
+
+@patch('carpentry.models.User.retrieve_github_organizations')
+@patch('carpentry.models.requests')
+def test_organization_names(
+        requests,
+        retrieve_github_organizations):
+    ('User.organization_names returns a list of all github organizations')
+    retrieve_github_organizations.return_value = [
+        {'login': 'cnry'}
+    ]
+    u = User()
+
+    u.organization_names.should.equal(['cnry'])

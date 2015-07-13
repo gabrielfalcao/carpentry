@@ -462,6 +462,18 @@ class User(CarpentryBaseModel):
     carpentry_token = columns.UUID(required=True, index=True)
     github_metadata = columns.Text()
 
+    @property
+    def organization_names(self):
+        self._organization_names = getattr(self, '_organization_names', None)
+        if not self._organization_names:
+            self._organization_names = [o['login'] for o in self.organizations]
+
+        return self._organization_names
+
+    @property
+    def organizations(self):
+        return self.retrieve_github_organizations()
+
     def to_dict(self):
         return model_to_dict(self, extra={
             'github': self.get_github_metadata(),

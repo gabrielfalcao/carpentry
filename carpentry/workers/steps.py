@@ -243,6 +243,10 @@ class PushKeyToGithub(CarpentryPipelineStep):
 
     def dump_error_into_build_output(self, build, response):
         msg = "%s: failed to push deploy key %s"
+        logging.warning(msg, response.status_code, response.text)
+        if 'key is already in use' in response.text:
+            return
+
         logging.error(msg, response.status_code, response.text)
         build.append_to_stdout('failed')
         build.append_to_stdout("\n--------------------\n")
@@ -337,20 +341,26 @@ class LocalRetrieve(CarpentryPipelineStep):
         return stdout, exit_code, instructions
 
     def switch_to_git_commit(self, build, build_dir, instructions):
-        stdout = ''
         try:
-            stdout += check_output(conf.git_executable_path +
-                                   render_string(' fetch origin {commit}', instructions))
+            command = (conf.git_executable_path + render_string(' fetch origin {commit}'))
+            build.append_to_stdout(command)
+            stdout = check_output(command, instructions)
+            build.append_to_stdout(stdout)
+
         except (CalledProcessError, OSError):
             exit_code = 1
+            build.append_to_stdout('failed')
+            return exit_code, instructions
 
         try:
-            stdout += check_output(conf.git_executable_path +
-                                   ' reset --hard FETCH_ORIGIN')
+            command = (conf.git_executable_path + ' reset --hard FETCH_ORIGIN')
+            stdout = check_output(command)
+            build.append_to_stdout(stdout)
         except (CalledProcessError, OSError):
             exit_code = 1
+            build.append_to_stdout('failed')
 
-        return stdout, exit_code, instructions
+        return exit_code, instructions
 
     def consume(self, instructions):
         build = get_build_from_instructions(instructions)
@@ -368,7 +378,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
         # checking out a specific commit
         if instructions.get('commit', False):
-            stdout, exit_code, instructions = self.switch_to_git_commit(
+            exit_code, instructions = self.switch_to_git_commit(
                 build, build_dir, instructions)
             if exit_code != 0:
                 build.set_status('failed')

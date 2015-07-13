@@ -9,7 +9,7 @@ export PYTHONPATH
 
 all: test
 
-test: lint unit functional
+test: unit functional
 
 gunicorn: assets
 	gunicorn carpentry.wsgi:application --bind 0.0.0.0:5000 --log-level debug --workers=10
