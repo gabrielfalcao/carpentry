@@ -1,0 +1,5 @@
+image: carpentryio/python
+
+shell: |
+  pip install -r development.txt
+  make unit
