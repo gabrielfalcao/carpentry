@@ -43,9 +43,6 @@ def get_models():
     return [v for (k, v) in inspect.getmembers(models) if is_model(v)]
 
 
-def autodatetime(s):
-    return s and parse_datetime(s) or None
-
 logger = logging.getLogger('carpentry')
 
 
@@ -64,11 +61,9 @@ def get_build(user, id):
     try:
         b = models.Build.get(id=id)
     except Exception as e:
-        return json_response({'error': str(e)}, status=400)
+        return json_response({'error': str(e)}, status=404)
 
-    builder = models.Builder.get(id=b.builder_id)
-
-    data = builder.to_dict()
+    data = b.builder.to_dict()
     data.update(b.to_dict())
 
     return json_response(data)
@@ -85,7 +80,6 @@ def create_builder(user):
         'id_rsa_private': any,
         'generate_ssh_keys': bool,
         'id_rsa_public': any,
-        'status': any,
     })
     data['id'] = uuid.uuid1()
     data['creator_user_id'] = user.id
@@ -183,9 +177,6 @@ def remove_builder(user, id):
 @authenticated
 def remove_build(user, id):
     item = models.Build.objects.get(id=id)
-    item.clear_builds()
-    item.cleanup_github_hooks(user.github_access_token)
-
     item.delete()
     logger.info('deleting build: %s', item.name)
     return json_response(item.to_dict())
