@@ -531,13 +531,20 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             logging.warning(msg)
             return
 
-        container = docker.create_container(
-            image=image,
-            name=hostname,
-            hostname=hostname,
-            environment=dependency.get('environment', {}),
-            detach=True,
-        )
+        try:
+            container = docker.create_container(
+                image=image,
+                name=hostname,
+                hostname=hostname,
+                environment=dependency.get('environment', {}),
+                detach=True,
+            )
+        except Exception as e:
+            if 'already in use by container' in str(e):
+                return
+            logging.exception('failed to run container={0}:{1}'.format(image, hostname))
+            tb = traceback.format_exc(e)
+            build.append_to_stdout(tb)
 
         docker.start(container['Id'])
         info = {
