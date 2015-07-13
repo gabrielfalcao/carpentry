@@ -13,7 +13,8 @@ from carpentry.models import CarpentryBaseModel
 from carpentry.workers import RunBuilder
 
 
-def test_get_pipeline():
+@patch('carpentry.models.JSONRedisBackend')
+def test_get_pipeline(JSONRedisBackend):
     ('carpentry.models.get_pipeline should return an instance of the RunBuilder pipeline')
 
     get_pipeline().should.be.a(RunBuilder)
