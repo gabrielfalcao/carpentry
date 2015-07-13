@@ -342,9 +342,9 @@ class LocalRetrieve(CarpentryPipelineStep):
 
     def switch_to_git_commit(self, build, build_dir, instructions):
         try:
-            command = (conf.git_executable_path + render_string(' fetch origin {commit}'))
+            command = (conf.git_executable_path + render_string(' fetch origin {commit}', instructions))
             build.append_to_stdout(command)
-            stdout = check_output(command, instructions)
+            stdout = check_output(command)
             build.append_to_stdout(stdout)
 
         except (CalledProcessError, OSError):
