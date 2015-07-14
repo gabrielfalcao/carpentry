@@ -289,7 +289,7 @@ class PushKeyToGithub(CarpentryPipelineStep):
         if response_did_succeed(response):
             instructions['github_deploy_key'] = response.json()
             build.append_to_stdout(
-                "Keys pushed to github successfully!!!!!\n")
+                "ssh keys pushed to github successfully!!!!!\n")
         else:
             self.dump_error_into_build_output(build, response)
 
@@ -381,7 +381,7 @@ class LocalRetrieve(CarpentryPipelineStep):
         git_show = conf.git_executable_path + ' show HEAD'
         try:
             git_show_stdout = check_output(git_show, cwd=build_dir, shell=True)
-            builvd.append_to_stdout(force_unicode(git_show_stdout))
+            build.append_to_stdout(force_unicode(git_show_stdout))
 
         except CalledProcessError as e:
             build.append_to_stdout(b'Failed to retrieve commit information\n')
