@@ -3,7 +3,7 @@
 #
 
 from __future__ import unicode_literals
-
+import types
 import uuid
 import logging
 import inspect
@@ -215,7 +215,10 @@ def set_preferences(user):
 @web.get('/api/conf')
 @authenticated
 def get_conf(user):
-    return json_response(dict([(attr, getattr(conf, attr)) for attr in dir(conf)]))
+    valid_base_types = types.StringTypes + (types.DictionaryType, types.ListType, types.TupleType, types.NoneType, types.IntType)
+    data = dict([(attr, getattr(conf, attr)) for attr in dir(conf)])
+    return json_response(
+        dict([(k, v) for k, v in data.items() if isinstance(v, valid_base_types) and not k.startswith('_')]))
 
 
 @web.post('/api/builder/<id>/build')
@@ -325,42 +328,6 @@ def remove_image(user, image_id):
         noprune=False
     )
     return json_response(data)
-
-
-@web.post('/api/docker/pull')
-@authenticated
-def docker_pull(user):
-    docker = get_docker_client()
-    data = ensure_json_request({
-        'repository': unicode,
-        'tag': any,
-    })
-    repository = data['repository']
-    tag = data.get('tag', 'latest')
-    data = docker.pull(repository, tag)
-    return json_response(data)
-
-
-@web.post('/api/docker/run')
-@authenticated
-def docker_run(user, image_id):
-    docker = get_docker_client()
-    data = ensure_json_request({
-        'imageName': unicode,
-        'hostname': unicode,
-    })
-    image_name = data['imageName']
-    hostname = data['hostname']
-
-    container = docker.create_container(
-        image=image_name,
-        name=hostname,
-        detach=True,
-        hostname=hostname)
-
-    docker.start(container['Id'])
-
-    return json_response(dict(container))
 
 
 @web.get('/api/github/repos')

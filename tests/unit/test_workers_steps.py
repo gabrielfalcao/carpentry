@@ -646,7 +646,7 @@ def test_push_key_consume_ok(
 
     build.append_to_stdout.assert_has_calls([
         call(u'pushing key to github...\n'),
-        call(u'Keys pushed to github successfully!!!!!\n'),
+        call(u'ssh keys pushed to github successfully!!!!!\n'),
     ])
 
     pusher.produce.assert_called_once_with({

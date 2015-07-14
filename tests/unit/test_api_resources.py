@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 #
 from __future__ import unicode_literals
-from mock import patch, Mock
+import os
+import uuid
+from os.path import join, abspath, dirname
+from mock import patch, Mock, call
 from carpentry.models import (
     Build,
     Builder,
@@ -16,7 +19,9 @@ from carpentry.models import CarpentryBaseModel
 from carpentry.api.resources import is_model
 from carpentry.api.resources import get_models
 from carpentry.api.resources import remove_build
+from carpentry.api.resources import create_build
 from carpentry.api.resources import create_builder
+from carpentry.api.resources import set_preferences
 from carpentry.api.resources import edit_builder
 from carpentry.api.resources import remove_builder
 from carpentry.api.resources import list_builders
@@ -24,7 +29,21 @@ from carpentry.api.resources import builds_from_builder
 from carpentry.api.resources import clear_builds
 from carpentry.api.resources import retrieve_builder
 from carpentry.api.resources import get_build
+from carpentry.api.resources import get_conf
+from carpentry.api.resources import get_user
 from carpentry.api.resources import generate_ssh_key_pair
+from carpentry.api.resources import trigger_builder_hook
+from carpentry.api.resources import list_images
+from carpentry.api.resources import list_containers
+from carpentry.api.resources import stop_container
+from carpentry.api.resources import remove_container
+from carpentry.api.resources import remove_image
+from carpentry.api.resources import get_github_repos
+
+
+local_file = lambda *path: abspath(join(dirname(__name__), *path))
+
+test_uuid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
 
 
 @patch('carpentry.api.core.request')
@@ -232,10 +251,10 @@ def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthorit
         'generate_ssh_keys': True,
     }
 
-    # When I call create_builder
+    # when i call create_builder
     response = create_builder()
 
-    # Then the response should be json
+    # then the response should be json
     response.should.equal(json_response.return_value)
 
     builder.cleanup_github_hooks.assert_called_once_with()
@@ -403,3 +422,356 @@ def test_list_builders(json_response, models, TokenAuthority, request):
             'build': 2
         }
     ])
+
+
+@patch('carpentry.api.resources.ensure_json_request')
+@patch('carpentry.api.resources.uuid')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_set_preferences(json_response, models, TokenAuthority, request, uuid_mock, ensure_json_request):
+    ('POST /api/preferences should set the values')
+    ensure_json_request.return_value = {
+        'global_id_rsa_private_key': 'private',
+        'global_id_rsa_public_key': 'public',
+        'docker_registry_url': None,
+    }
+    uuid_mock.uuid1.return_value = test_uuid
+
+    # When I call set_preferences
+    response = set_preferences()
+
+    # Then the response should be json
+    response.should.equal(json_response.return_value)
+    models.CarpentryPreference.create.assert_has_calls([
+        call(value=u'public', id=test_uuid, key=u'global_id_rsa_public_key'),
+        call(value=u'private', id=test_uuid, key=u'global_id_rsa_private_key')
+    ])
+    json_response.assert_called_once_with({
+        'global_id_rsa_public_key': 'public',
+        'global_id_rsa_private_key': 'private'
+    })
+
+
+@patch('carpentry.api.resources.ensure_json_request')
+@patch('carpentry.api.resources.uuid')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ensure_json_request):
+    ('POST /api/preferences should set the values')
+    ensure_json_request.return_value = {
+        'global_id_rsa_private_key': 'private',
+        'global_id_rsa_public_key': 'public',
+        'docker_registry_url': None,
+    }
+    uuid_mock.uuid1.return_value = test_uuid
+
+    # When I call get_conf
+    response = get_conf()
+
+    # Then the response should be json
+    response.should.equal(json_response.return_value)
+    json_response.assert_called_once_with({
+        'default_subprocess_timeout_in_seconds': 1500,
+        'DEFAULT_WORKDIR': '/tmp/carpentry',
+        'carpentry_config_path': os.environ['CARPENTRY_CONFIG_PATH'],
+        'workdir': 'sandbox',
+        'full_server_url': 'http://localhost:5000',
+        'ssh_executable_path': '/usr/bin/ssh',
+        'redis_host': 'localhost',
+        'hostname': 'localhost',
+        'cassandra_hosts': ['127.0.0.1', '0.0.0.0'],
+        'allowed_github_organizations': ['cnry'],
+        'GITHUB_CLIENT_SECRET': 'ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de',
+        'redis_db': 0,
+        'git_executable_path': '/usr/bin/git',
+        'redis_port': 6379,
+        'SECRET_KEY': None,
+        'port': 5000,
+        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039'
+    })
+
+
+@patch('carpentry.api.resources.uuid')
+@patch('carpentry.api.resources.generate_ssh_key_pair')
+@patch('carpentry.api.resources.ensure_json_request')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_create_build_generating_ssh_keys(json_response, models, TokenAuthority, request, ensure_json_request, generate_ssh_key_pair, uuid_mock):
+    ('POST /api/build should generate ssh keys')
+    user = TokenAuthority.return_value.get_user.return_value
+    user.github_access_token = 'lemmeingithub'
+    builder = models.Builder.objects.get.return_value
+    builder.branch = 'master'
+
+    generate_ssh_key_pair.return_value = ('privte', 'public')
+    ensure_json_request.return_value = {
+        'author_name': 'foo',
+        'author_email': 'bar',
+    }
+
+    # when i call create_build
+    response = create_build(id='builder-id')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    models.Builder.objects.get.assert_called_once_with(id='builder-id')
+    builder.trigger.assert_called_once_with(
+        user,
+        branch=builder.branch,
+        author_name='foo',
+        author_email='bar',
+    )
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_get_user(json_response, models, TokenAuthority, request):
+    ('POST /api/build should generate ssh keys')
+    user = TokenAuthority.return_value.get_user.return_value
+    user.get_github_metadata.return_value = {
+        'le': 'user'
+    }
+
+    # When i call create_build
+    response = get_user()
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+    json_response.assert_called_once_with({
+        'le': 'user'
+    }, status=200)
+
+
+@patch('carpentry.api.resources.uuid')
+@patch('carpentry.api.resources.generate_ssh_key_pair')
+@patch('carpentry.api.resources.ensure_json_request')
+@patch('carpentry.api.resources.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_trigger_builder_hook(json_response, models, TokenAuthority, request, ensure_json_request, generate_ssh_key_pair, uuid_mock):
+    ('POST /api/build should generate ssh keys')
+    request.get_json.return_value = {
+        'head_commit': {
+            'id': 'thecommithash',
+            'commiter': {
+                'author_name': 'The Name',
+                'author_email': 'the@name.com',
+            }
+        }
+    }
+    request.data = {'say': 'what'}
+    user = models.User.get.return_value
+    user.email = 'email@foo.com'
+    user.name = 'Mary Doe'
+    user.github_access_token = 'lemmeingithub'
+    builder = models.Builder.objects.get.return_value
+    builder.branch = 'master'
+
+    generate_ssh_key_pair.return_value = ('privte', 'public')
+    ensure_json_request.return_value = {
+        'author_name': 'foo',
+        'author_email': 'bar',
+    }
+
+    # when i call trigger_builder_hook
+    response = trigger_builder_hook(id='builder-id')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    models.Builder.objects.get.assert_called_once_with(id='builder-id')
+    builder.trigger.assert_called_once_with(
+        user,
+        author_email=u'email@foo.com',
+        commit=u'thecommithash',
+        github_webhook_data={u'say': u'what'},
+        author_name=u'Mary Doe',
+        branch='master',
+    )
+
+
+@patch('carpentry.api.resources.uuid')
+@patch('carpentry.api.resources.generate_ssh_key_pair')
+@patch('carpentry.api.resources.ensure_json_request')
+@patch('carpentry.api.resources.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_trigger_builder_hook_missing_builder(json_response, models, TokenAuthority, request, ensure_json_request, generate_ssh_key_pair, uuid_mock):
+    ('POST /api/build should generate ssh keys')
+    request.get_json.return_value = {
+        'head_commit': {
+            'id': 'thecommithash',
+            'commiter': {
+                'author_name': 'The Name',
+                'author_email': 'the@name.com',
+            }
+        }
+    }
+    request.data = {'say': 'what'}
+    user = models.User.get.return_value
+    user.email = 'email@foo.com'
+    user.name = 'Mary Doe'
+    user.github_access_token = 'lemmeingithub'
+    models.Builder.objects.get.side_effect = Exception('boom')
+
+    response = trigger_builder_hook(id='builder-id')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    models.Builder.objects.get.assert_called_once_with(
+        id='builder-id'
+    )
+    json_response.assert_called_once_with({}, status=404)
+
+
+@patch('carpentry.api.resources.get_docker_client')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_list_images(json_response, models, TokenAuthority, request, get_docker_client):
+    ('GET /api/docker/images should return a sorted list of images')
+    docker = get_docker_client.return_value
+    docker.images.return_value = [
+        {'Id': '4'},
+        {'Id': '1'},
+        {'Id': '2'},
+    ]
+    response = list_images()
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    json_response.assert_called_once_with([
+        {'Id': '1'},
+        {'Id': '2'},
+        {'Id': '4'},
+    ])
+
+
+@patch('carpentry.api.resources.get_docker_client')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_list_containers(json_response, models, TokenAuthority, request, get_docker_client):
+    ('GET /api/docker/containers should return a sorted list of containers')
+    docker = get_docker_client.return_value
+    docker.containers.return_value = [
+        {'Id': '4'},
+        {'Id': '1'},
+        {'Id': '2'},
+    ]
+    response = list_containers()
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    json_response.assert_called_once_with([
+        {'Id': '1'},
+        {'Id': '2'},
+        {'Id': '4'},
+    ])
+
+
+@patch('carpentry.api.resources.get_docker_client')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_stop_container(json_response, models, TokenAuthority, request, get_docker_client):
+    ('POST /api/docker/container/:id/stop should stop the given container')
+    docker = get_docker_client.return_value
+    docker.stop.return_value = {'stopped': 'ok'}
+
+    response = stop_container(container_id='thecontainerid')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    json_response.assert_called_once_with({
+        'stopped': 'ok'
+    })
+
+    docker.stop.assert_called_once_with('thecontainerid', 5)
+
+
+@patch('carpentry.api.resources.get_docker_client')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_remove_container(json_response, models, TokenAuthority, request, get_docker_client):
+    ('POST /api/docker/container/:id/remove should remove the given container')
+    docker = get_docker_client.return_value
+    docker.remove_container.return_value = {'removed': 'ok'}
+
+    response = remove_container(container_id='thecontainerid')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    json_response.assert_called_once_with({
+        'removed': 'ok'
+    })
+
+    docker.remove_container.assert_called_once_with('thecontainerid', v=True)
+
+
+@patch('carpentry.api.resources.get_docker_client')
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_remove_image(json_response, models, TokenAuthority, request, get_docker_client):
+    ('POST /api/docker/image/:id/remove should remove the given image')
+    docker = get_docker_client.return_value
+    docker.remove_image.return_value = {'removed': 'ok'}
+
+    response = remove_image(image_id='theimageid')
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+
+    json_response.assert_called_once_with({
+        'removed': 'ok'
+    })
+
+    docker.remove_image.assert_called_once_with(
+        'theimageid',
+        noprune=False,
+        force=True
+    )
+
+
+@patch('carpentry.api.core.request')
+@patch('carpentry.api.core.TokenAuthority')
+@patch('carpentry.api.resources.models')
+@patch('carpentry.api.resources.json_response')
+def test_get_github_repos(json_response, models, TokenAuthority, request):
+    ('POST /api/build should generate ssh keys')
+    user = TokenAuthority.return_value.get_user.return_value
+    user.retrieve_and_cache_github_repositories.return_value = {
+        'le': 'repositories'
+    }
+
+    # When i call create_build
+    response = get_github_repos()
+
+    # then the response should be json
+    response.should.equal(json_response.return_value)
+    json_response.assert_called_once_with({
+        'le': 'repositories'
+    })
