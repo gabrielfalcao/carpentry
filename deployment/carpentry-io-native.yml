@@ -39,8 +39,8 @@
       saved_caches_directory: '/var/lib/cassandra/saved_caches'
       log_level: 'info'
   roles:
-    # # disabling cassandra after it was already instaled once
-    # - cassandra
+    # disabling cassandra after it was already instaled once
+    - cassandra
     - carpentry
 
   tasks:

@@ -49,6 +49,7 @@ requirements = [
     'redis>=2.10.3',
     'requests>=2.7.0',
     'tumbler>=0.0.20',
+    'Flask-SocketIO>=0.6.0',
 ]
 
 
