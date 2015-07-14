@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="row-fluid">
-    <div class="alert alert-{{builder.css_status}} col-md-2" ng-repeat="builder in builders" ng-if="builder.last_build.author_name">
+    <div class="alert alert-{{builder.css_status}} col-md-4" ng-repeat="builder in builders" ng-if="builder.last_build.author_name">
       <a style="color:white; text-decoration:none;" ng-href="#/builder/{{builder.id}}/build/{{builder.last_build.id}}">
 
         <img class="avatar img-circle" width="200" height="200" ng-show="builder.last_build.author_gravatar_url" ng-src="{{builder.last_build.author_gravatar_url}}?s=200" alt="{{ builder.last_build.author_name }}" />
