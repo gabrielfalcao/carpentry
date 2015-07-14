@@ -341,26 +341,17 @@ class LocalRetrieve(CarpentryPipelineStep):
         return stdout, exit_code, instructions
 
     def switch_to_git_commit(self, build, build_dir, instructions):
-        return 0, instructions
-
         try:
-            command = (conf.git_executable_path + render_string(' fetch origin {commit}', instructions))
+            command = (conf.git_executable_path + render_string(' checkout -b {branch} origin/{branch} {commit}', instructions))
             build.append_to_stdout(command)
             stdout = check_output(command)
             build.append_to_stdout(stdout)
+            exit_code = 0
 
         except (CalledProcessError, OSError):
             exit_code = 1
             build.append_to_stdout('failed')
             return exit_code, instructions
-
-        try:
-            command = (conf.git_executable_path + ' reset --hard FETCH_ORIGIN')
-            stdout = check_output(command)
-            build.append_to_stdout(stdout)
-        except (CalledProcessError, OSError):
-            exit_code = 1
-            build.append_to_stdout('failed')
 
         return exit_code, instructions
 
@@ -390,7 +381,7 @@ class LocalRetrieve(CarpentryPipelineStep):
         git_show = conf.git_executable_path + ' show HEAD'
         try:
             git_show_stdout = check_output(git_show, cwd=build_dir, shell=True)
-            build.append_to_stdout(force_unicode(git_show_stdout))
+            builvd.append_to_stdout(force_unicode(git_show_stdout))
 
         except CalledProcessError as e:
             build.append_to_stdout(b'Failed to retrieve commit information\n')
