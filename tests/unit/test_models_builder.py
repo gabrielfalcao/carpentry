@@ -249,7 +249,10 @@ def test_determine_github_repo_from_git_uri_failing():
     result = Builder.determine_github_repo_from_git_uri(
         'git@gogs.io:owner/project.git'
     )
-    result.should.equal({})
+    result.should.equal({
+        'owner': None,
+        'name': None,
+    })
 
 
 def test_set_github_hook_cached():

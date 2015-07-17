@@ -197,7 +197,7 @@ class Builder(CarpentryBaseModel):
         if found:
             return found.groupdict()
 
-        return {}
+        return {'owner': None, 'name': None}
 
     @property
     def github_repo_info(self):
