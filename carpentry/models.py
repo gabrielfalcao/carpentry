@@ -173,6 +173,10 @@ class Builder(CarpentryBaseModel):
         )
 
         for hook in all_hooks:
+            if 'config' not in hook:
+                logger.warning("ignoring empty hook %s", hook)
+                continue
+            
             hook_config = hook['config']
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']

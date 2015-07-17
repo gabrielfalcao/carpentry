@@ -177,6 +177,9 @@ def test_buidler_cleanup_github_hooks(
                 'url': 'http://localhost:5000/foo',
             },
             'id': 22,
+        },
+        {
+            'empty': None
         }
     ]
 
