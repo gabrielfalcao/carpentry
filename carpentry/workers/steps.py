@@ -342,7 +342,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
     def switch_to_git_commit(self, build, build_dir, instructions):
         try:
-            command = (conf.git_executable_path + render_string(' checkout -b {branch} origin/{branch} {commit}', instructions))
+            command = (conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
             build.append_to_stdout(command)
             stdout = check_output(command)
             build.append_to_stdout(stdout)
