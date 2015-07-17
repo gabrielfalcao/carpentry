@@ -317,7 +317,7 @@ class LocalRetrieve(CarpentryPipelineStep):
 
     def run_git_clone(self, build, build_dir, instructions):
         git = render_string(
-            conf.git_executable_path + ' clone -b {branch} {git_uri} ' + build_dir, instructions)
+            conf.git_executable_path + ' clone {git_uri} ' + build_dir, instructions)
 
         timeout_in_seconds = int(
             instructions.get('git_clone_timeout_in_seconds') or 0)
@@ -342,14 +342,31 @@ class LocalRetrieve(CarpentryPipelineStep):
 
     def switch_to_git_commit(self, build, build_dir, instructions):
         try:
-            command = (conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
+            command = (conf.git_executable_path + render_string(' fetch -a', instructions))
             build.append_to_stdout(command)
+            build.append_to_stdout(":\n")
             stdout = check_output(command)
             build.append_to_stdout(stdout)
             exit_code = 0
 
-        except (CalledProcessError, OSError):
+        except (CalledProcessError, OSError) as e:
             exit_code = 1
+            tb = traceback.format_exc(e)
+            build.append_to_stdout(tb)
+            build.append_to_stdout('failed')
+        
+        try:
+            command = (conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
+            build.append_to_stdout(command)
+            build.append_to_stdout(":\n")
+            stdout = check_output(command)
+            build.append_to_stdout(stdout)
+            exit_code = 0
+
+        except (CalledProcessError, OSError) as e:
+            exit_code = 1
+            tb = traceback.format_exc(e)
+            build.append_to_stdout(tb)
             build.append_to_stdout('failed')
             return exit_code, instructions
 
