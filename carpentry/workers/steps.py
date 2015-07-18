@@ -732,7 +732,19 @@ class RunBuild(CarpentryPipelineStep):
 
         build.append_to_stdout('\nrunning tests inside of {0}\n'.format(image))
 
-        environment['SSH_AUTH_SOCK'] = '/ssh-agent'
+        binds = {
+            build_dir: {
+                'bind': '/carpentry-sandbox',
+                'mode': 'rw',
+            },
+        }
+        SSH_AUTH_SOCK = os.getenv('SSH_AUTH_SOCK')
+        if SSH_AUTH_SOCK:
+            environment['SSH_AUTH_SOCK'] = '/ssh-agent'            
+            binds[SSH_AUTH_SOCK] = {
+                'bind': '/ssh-agent',
+                'mode': 'rw',
+            }                    
 
         container = docker.create_container(
             image=image,
@@ -743,16 +755,7 @@ class RunBuild(CarpentryPipelineStep):
             working_dir='/carpentry-sandbox',
             host_config=create_host_config(
                 links=container_links,
-                binds={
-                    build_dir: {
-                        'bind': '/carpentry-sandbox',
-                        'mode': 'rw',
-                    },
-                    os.environ['SSH_AUTH_SOCK']: {
-                        'bind': '/ssh-agent',
-                        'mode': 'rw',
-                    }                    
-                }
+                binds=binds
             )
         )
         docker.start(container['Id'])
