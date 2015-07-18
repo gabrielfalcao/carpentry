@@ -194,29 +194,23 @@ class PrepareSSHKey(CarpentryPipelineStep):
             mode=0644
         )
 
-        command = render_string(
+        ssh_add = render_string(
             'ssh-add {id_rsa_private_key_path}',
             instructions
         )
+        process = run_command(ssh_add, chdir=build_dir, environment={})
+        stdout, exit_code = stream_output(
+            self, process, build, timeout_in_seconds=timeout_in_seconds)
 
-        try:
-            ssh_add_output = check_output(
-                command,
-                shell=True
-            )
-            b.append_to_stdout(command)
-            b.append_to_stdout('\n')
-            b.append_to_stdout(ssh_add_output)
-            b.append_to_stdout('\n')
-        except CalledProcessError as e:
-            tb = traceback.format_exc(e)
-            b.append_to_stdout('the ssh-agent is ready\n')
-            msg = "failed to run: {0}\n{1}\n".format(
-                command,
-                tb
-            )
-            logging.warning(msg)
 
+        ssh_t = render_string(
+            'ssh -T git@github.com',
+            instructions
+        )
+        process = run_command(ssh_t, chdir=build_dir, environment={})
+        stdout, exit_code = stream_output(
+            self, process, build, timeout_in_seconds=timeout_in_seconds)
+        
         self.produce(instructions)
 
 
