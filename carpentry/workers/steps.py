@@ -341,35 +341,14 @@ class LocalRetrieve(CarpentryPipelineStep):
         return stdout, exit_code, instructions
 
     def switch_to_git_commit(self, build, build_dir, instructions):
-        try:
-            command = (conf.git_executable_path + render_string(' fetch -a', instructions))
-            build.append_to_stdout(command)
-            build.append_to_stdout(":\n")
-            stdout = check_output(command)
-            build.append_to_stdout(stdout)
-            exit_code = 0
+        command = run_command(conf.git_executable_path + render_string(' fetch -a', instructions), instructions['build_dir'])
+        stdout, exit_code = stream_output(self, process, build)
+        exit_code = int(exit_code)
 
-        except (CalledProcessError, OSError) as e:
-            exit_code = 1
-            tb = traceback.format_exc(e)
-            build.append_to_stdout(tb)
-            build.append_to_stdout('failed')
+        command = run_command(conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
+        stdout, exit_code = stream_output(self, process, build)
+        exit_code = int(exit_code)
         
-        try:
-            command = (conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
-            build.append_to_stdout(command)
-            build.append_to_stdout(":\n")
-            stdout = check_output(command)
-            build.append_to_stdout(stdout)
-            exit_code = 0
-
-        except (CalledProcessError, OSError) as e:
-            exit_code = 1
-            tb = traceback.format_exc(e)
-            build.append_to_stdout(tb)
-            build.append_to_stdout('failed')
-            return exit_code, instructions
-
         return exit_code, instructions
 
     def consume(self, instructions):
