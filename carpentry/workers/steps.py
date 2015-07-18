@@ -733,7 +733,7 @@ class RunBuild(CarpentryPipelineStep):
         build.append_to_stdout('\nrunning tests inside of {0}\n'.format(image))
 
         environment['SSH_AUTH_SOCK'] = '/ssh-agent'
-        $SSH_AUTH_SOCK:/ssh-agent --env SSH_AUTH_SOCK=/ssh-agent
+
         container = docker.create_container(
             image=image,
             command=render_string(
