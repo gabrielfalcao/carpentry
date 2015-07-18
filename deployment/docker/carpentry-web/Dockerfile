@@ -28,7 +28,7 @@ RUN chmod +x /usr/bin/carpentry-web-run.sh
 RUN chmod +x /usr/bin/carpentry-web-boot.sh
 
 RUN pip install gunicorn
-RUN pip install carpentry-ci==0.2.46
+RUN pip install carpentry-ci==0.2.47
 RUN mkdir -p $CARPENTRY_WORKDIR
 
 # ENTRYPOINT carpentry-web-run.sh --bind $CARPENTRY_HTTP_HOST:$CARPENTRY_HTTP_PORT --log-level debug --workers=$CARPENTRY_TOTAL_WORKERS
