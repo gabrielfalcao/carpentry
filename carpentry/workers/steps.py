@@ -46,7 +46,7 @@ def extract_container_name(docker, container):
     return container['Name'].lstrip('/')
 
 
-def run_command(command, chdir, environment={}):
+def run_command(command, chdir=None, environment={}):
     try:
         return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
     except Exception:
@@ -198,18 +198,18 @@ class PrepareSSHKey(CarpentryPipelineStep):
             'ssh-add {id_rsa_private_key_path}',
             instructions
         )
-        process = run_command(ssh_add, chdir=build_dir, environment={})
+        process = run_command(ssh_add, environment={})
         stdout, exit_code = stream_output(
-            self, process, build, timeout_in_seconds=timeout_in_seconds)
+            self, process, b)
 
 
         ssh_t = render_string(
             'ssh -T git@github.com',
             instructions
         )
-        process = run_command(ssh_t, chdir=build_dir, environment={})
+        process = run_command(ssh_t, environment={})
         stdout, exit_code = stream_output(
-            self, process, build, timeout_in_seconds=timeout_in_seconds)
+            self, process, b)
         
         self.produce(instructions)
 

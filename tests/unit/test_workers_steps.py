@@ -8,6 +8,8 @@ from datetime import datetime as original_datetime
 from mock import Mock, patch, call
 from subprocess import STDOUT, PIPE
 from carpentry.workers.steps import run_command
+from carpentry.workers.steps import nice_current_time
+from carpentry.workers.steps import extract_container_name
 from carpentry.workers.steps import stream_output
 from carpentry.workers.steps import get_build_from_instructions
 from carpentry.workers.steps import set_build_status
@@ -829,3 +831,36 @@ def test_local_retrieve_ensure_build_dir(conf, shutil, os):
         call(u'/srv/test/my-project/123'),
         call(u'/srv/test/my-project/123'),
     ])
+
+
+@patch('carpentry.workers.steps.datetime')
+def test_nice_current_time(datetime):
+    ("nice_current_time() should return a Popen() object")
+
+    now = datetime.utcnow.return_value
+    now.strftime.return_value = 'yay'
+    # Given that I call nice_current_time
+    result = nice_current_time()
+
+    # When it should return the nice formated string
+    result.should.equal('yay')
+
+    # Then it also should have called strftime appropriately
+    now.strftime.assert_called_once_with('%Y/%m/%d - %H:%M:%S')
+    
+
+
+def test_extract_container_name():
+    ("extract_container_name() should inspect the container and return its name")
+
+    docker = Mock(name='docker')
+    container = 'what'
+
+    docker.inspect_container.return_value = {'Name': '/SassyNorris'}
+    
+    name = extract_container_name(docker, container)
+
+    name.should.equal('SassyNorris')
+
+    docker.inspect_container.assert_called_once_with('what')
+    
