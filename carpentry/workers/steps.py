@@ -335,11 +335,11 @@ class LocalRetrieve(CarpentryPipelineStep):
         return stdout, exit_code, instructions
 
     def switch_to_git_commit(self, build, build_dir, instructions):
-        command = run_command(conf.git_executable_path + render_string(' fetch -a', instructions), instructions['build_dir'])
+        process = run_command(conf.git_executable_path + render_string(' fetch -a', instructions), instructions['build_dir'])
         stdout, exit_code = stream_output(self, process, build)
         exit_code = int(exit_code)
 
-        command = run_command(conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
+        process = run_command(conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
         stdout, exit_code = stream_output(self, process, build)
         exit_code = int(exit_code)
         
