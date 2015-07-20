@@ -5,7 +5,7 @@
     <div class="row">
       <div class="col-lg-12">
         <h1>
-          <a ng-href="#/builder/{{builder.id}}">{{ builder.name }}</a>
+          <a ng-href="#/builder/{{build.builder_id}}">{{ build.name }}</a>
         </h1>
       </div>
     </div>
@@ -45,11 +45,11 @@
 
         </div>
       </div>
-      <button class="btn btn-warning btn-large" ng-click="go('/builder/' + builder.id)">
+      <button class="btn btn-warning btn-large" ng-click="go('/builder/' + build.builder_id)">
         <i class="fa fa-arrow-left"></i> back to builder</button>
-        <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+builder.id+'/edit')">
+        <button ng-if="builder" class="btn btn-large btn-primary" ng-click="go('/builder/'+build.builder_id+'/edit')">
           <i class="fa fa-pencil"></i> edit builder</button>
-          <button ng-if="builder" class="btn btn-large btn-info" ng-click="triggerBuild(builder)">
+          <button ng-if="builder" class="btn btn-large btn-info" ng-click="triggerBuild(build.builder_id)">
             <i class="fa fa-play-circle"></i> rebuild now
           <button ng-if="builder" class="btn btn-large btn-danger" ng-click="deleteBuild(build)">
             <i class="fa fa-play-recycle"></i> delete build

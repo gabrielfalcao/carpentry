@@ -32,7 +32,7 @@ make
 
 def main():
     connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-    for name in ['client-api', 'birdseed', 'birdseye', 'cauldron', 'bunny']:
+    for name in ['client-api', 'viks', 'cauldron', 'moorhen']:
         Builder.create(
             id=uuid1(),
             name=name,

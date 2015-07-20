@@ -1,6 +1,5 @@
 FROM golang
 
 ENV GOPATH /gopath
-ENV PATH $PATH:/gopath/bin
-
+ENV PATH /gopath/bin:$PATH
 RUN mkdir /gopath

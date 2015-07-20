@@ -520,13 +520,17 @@ class DockerDependencyRunner(CarpentryPipelineStep):
                 environment=dependency.get('environment', {}),
                 detach=True,
             )
+            
         except Exception as e:
+            container = {}
             logging.exception('failed to run container={0}:{1}'.format(image, hostname))
             tb = traceback.format_exc(e)
             build.append_to_stdout(tb)
             build.set_status('failed', description=str(e))
 
-        docker.start(container['Id'])
+        if 'Id' in container:
+            docker.start(container['Id'])                
+
         info = {
             "status": render_string("running image {image}:{hostname}", dependency),
         }

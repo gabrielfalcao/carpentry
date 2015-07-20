@@ -249,11 +249,11 @@ angular.module('CarpentryApp', [
         location.href='/';
     }
 
-    $rootScope.refresh = function(){
+    $rootScope.refresh = function(ok){
         $http.get("/api/builders").
             success(function(data, status, headers, config) {
                 $rootScope.builders = Builder.fromList(data);
-                //console.log("OK", $rootScope.builders);
+                ok(data, status, headers, config);
             }).error($rootScope.defaultErrorHandler);
     };
 
