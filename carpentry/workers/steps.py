@@ -534,6 +534,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         info = {
             "status": render_string("running image {image}:{hostname}", dependency),
         }
+        
         for wait in range(1, 4):
             info['stream'] = 'waiting {0}/3'.format(wait)
             line = json.dumps(info)
@@ -541,7 +542,9 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         container_name = extract_container_name(docker, container)
         msg = '\n{1} is successfully running as {0}\n'.format(
-            container_name, image)
+            container_name,
+            image
+        )
         info['stream'] = msg
         line = json.dumps(info)
         build.register_docker_status(line)
@@ -553,7 +556,6 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
 
 class DockerDependencyStopper(CarpentryPipelineStep):
-
     @classmethod
     def do_stop_dependency_container(cls, build, container):
         docker = get_docker_client()
