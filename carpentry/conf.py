@@ -11,6 +11,13 @@ from milieu import Environment
 self = sys.modules[__name__]
 DEFAULT_WORKDIR = os.getenv('CARPENTRY_WORKDIR') or '/tmp/carpentry'
 
+SUPPORTED_CONFIG_PATHS = [
+    '/etc/carpentry.yml',
+    os.path.expanduser('~/carpentry.yml'),
+    os.path.expanduser('~/.carpentry.yml'),
+    os.path.join(os.getcwd(), 'carpentry.yml'),
+]
+
 
 def get_env(path):
     if os.path.exists(path):
@@ -54,7 +61,13 @@ def setup_from_config_path(self, path):
     env = get_env(path)
     set_things(self, env)
 
+fallback_config_path = '/etc/carpentry.yml'
+
+for config_path in SUPPORTED_CONFIG_PATHS:
+    if os.path.exists(config_path):
+        fallback_config_path = config_path
 
 carpentry_config_path = os.getenv(
-    'CARPENTRY_CONFIG_PATH') or '/etc/carpentry.yml'
+    'CARPENTRY_CONFIG_PATH') or fallback_config_path
+
 setup_from_config_path(self, carpentry_config_path)
