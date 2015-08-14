@@ -41,7 +41,8 @@ from carpentry.api.resources import remove_image
 from carpentry.api.resources import get_github_repos
 
 
-local_file = lambda *path: abspath(join(dirname(__name__), *path))
+local_file = lambda *path: abspath(join(dirname(__file__), *path))
+PROJECT_FILE = lambda *path: abspath(local_file('..', '..', *path))
 
 test_uuid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
 
@@ -474,13 +475,20 @@ def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ens
 
     # Then the response should be json
     response.should.equal(json_response.return_value)
-    json_response.assert_called_once_with({
+    json_response.call_args[0][0].should.equal({
         'default_subprocess_timeout_in_seconds': 1500,
         'DEFAULT_WORKDIR': '/tmp/carpentry',
-        'carpentry_config_path': os.environ['CARPENTRY_CONFIG_PATH'],
+        'carpentry_config_path': PROJECT_FILE('tests/carpentry.yml'),
         'workdir': 'sandbox',
+        'SUPPORTED_CONFIG_PATHS': [
+            '/etc/carpentry.yml',
+            os.path.expanduser('~/carpentry.yml'),
+            os.path.expanduser('~/.carpentry.yml'),
+            PROJECT_FILE('carpentry.yml'),
+        ],
         'full_server_url': 'http://localhost:5000',
         'ssh_executable_path': '/usr/bin/ssh',
+        'config_path': PROJECT_FILE('carpentry.yml'),
         'redis_host': 'localhost',
         'hostname': 'localhost',
         'cassandra_hosts': ['127.0.0.1', '0.0.0.0'],
@@ -490,8 +498,9 @@ def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ens
         'git_executable_path': '/usr/bin/git',
         'redis_port': 6379,
         'SECRET_KEY': None,
+        'fallback_config_path': '/etc/carpentry.yml',
         'port': 5000,
-        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039'
+        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039',
     })
 
 
