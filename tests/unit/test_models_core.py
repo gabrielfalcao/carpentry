@@ -9,7 +9,7 @@ from carpentry.models import get_pipeline
 from carpentry.models import slugify
 from carpentry.models import model_to_dict
 from carpentry.models import GithubOrganization
-from carpentry.models import CarpentryBaseModel
+from carpentry.models import CarpentryBaseActiveRecord
 from carpentry.workers import RunBuilder
 
 
@@ -91,15 +91,15 @@ def test_serialize_model_to_dict():
 
 
 ###########################
-# CarpentryBaseModel model tests
+# CarpentryBaseActiveRecord model tests
 
 @patch('carpentry.models.model_to_dict')
 def test_carpentry_base_model_to_dict(model_to_dict):
-    ('CarpentryBaseModel.to_dict should default to '
+    ('CarpentryBaseActiveRecord.to_dict should default to '
      'return model_to_dict(self)')
 
-    # Given a dummy CarpentryBaseModel instance
-    dummy = CarpentryBaseModel()
+    # Given a dummy CarpentryBaseActiveRecord instance
+    dummy = CarpentryBaseActiveRecord()
 
     # When I call to_dict
     result = dummy.to_dict()

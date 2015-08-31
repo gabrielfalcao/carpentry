@@ -8,12 +8,12 @@ import requests
 import hashlib
 import logging
 import datetime
-import traceback
+
 # from dateutil.parser import parse as parse_datetime
 from lineup import JSONRedisBackend
 
-from cqlengine import columns
-from cqlengine.models import Model
+from repocket import attributes
+from repocket import ActiveRecord
 from carpentry.util import render_string, force_unicode, response_did_succeed
 from carpentry import conf
 
@@ -90,7 +90,7 @@ def model_to_dict(instance, extra={}):
     return data
 
 
-class CarpentryBaseModel(Model):
+class CarpentryBaseActiveRecord(ActiveRecord):
     __abstract__ = True
 
     def to_dict(self):
@@ -105,22 +105,22 @@ class CarpentryBaseModel(Model):
         return headers
 
 
-class Builder(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    name = columns.Text(required=True)
-    git_uri = columns.Text(index=True)
-    shell_script = columns.Text(required=True)
-    json_instructions = columns.Text()
-    id_rsa_private = columns.Text(required=True)
-    id_rsa_public = columns.Text(required=True)
-    status = columns.Text(default='ready')
-    branch = columns.Text(default='master')
+class Builder(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    name = attributes.Unicode()
+    git_uri = attributes.Unicode()
+    shell_script = attributes.Unicode()
+    json_instructions = attributes.Unicode()
+    id_rsa_private = attributes.Unicode()
+    id_rsa_public = attributes.Unicode()
+    status = attributes.Unicode()
+    branch = attributes.Unicode()
 
-    creator_user_id = columns.UUID()
-    github_hook_data = columns.Text()
-    git_clone_timeout_in_seconds = columns.Integer(
+    creator_user_id = attributes.UUID()
+    github_hook_data = attributes.Unicode()
+    git_clone_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
-    build_timeout_in_seconds = columns.Integer(
+    build_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
 
     @property
@@ -176,7 +176,7 @@ class Builder(CarpentryBaseModel):
             if 'config' not in hook:
                 logger.warning("ignoring empty hook %s", hook)
                 continue
-            
+
             hook_config = hook['config']
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']
@@ -315,30 +315,30 @@ class Builder(CarpentryBaseModel):
         return result
 
 
-class CarpentryPreference(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    key = columns.Text(required=True)
-    value = columns.Text(required=True)
+class CarpentryPreference(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    key = attributes.Unicode()
+    value = attributes.Unicode()
 
 
-class Build(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    builder_id = columns.TimeUUID(required=True, index=True)
-    git_uri = columns.Text()
-    branch = columns.Text(required=True)
-    stdout = columns.Text()
-    stderr = columns.Text()
-    author_name = columns.Text()
-    author_email = columns.Text(index=True)
-    commit = columns.Text()
-    commit_message = columns.Text()
-    code = columns.Integer()
-    status = columns.Text(default='ready')
-    date_created = columns.DateTime()
-    date_finished = columns.DateTime()
-    github_status_data = columns.Text()
-    github_webhook_data = columns.Text()
-    docker_status = columns.Text()
+class Build(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    builder_id = attributes.UUID()
+    git_uri = attributes.Unicode()
+    branch = attributes.Unicode()
+    stdout = attributes.Unicode()
+    stderr = attributes.Unicode()
+    author_name = attributes.Unicode()
+    author_email = attributes.Unicode()
+    commit = attributes.Unicode()
+    commit_message = attributes.Unicode()
+    code = attributes.Integer()
+    status = attributes.Unicode()
+    date_created = attributes.DateTime()
+    date_finished = attributes.DateTime()
+    github_status_data = attributes.Unicode()
+    github_webhook_data = attributes.Unicode()
+    docker_status = attributes.Unicode()
 
     @property
     def author_gravatar_url(self):
@@ -458,13 +458,13 @@ class Build(CarpentryBaseModel):
             self.append_to_stdout(line)
 
 
-class User(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    github_access_token = columns.Text(index=True)
-    name = columns.Text()
-    email = columns.Text()
-    carpentry_token = columns.UUID(required=True, index=True)
-    github_metadata = columns.Text()
+class User(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    github_access_token = attributes.Unicode()
+    name = attributes.Unicode()
+    email = attributes.Unicode()
+    carpentry_token = attributes.UUID()
+    github_metadata = attributes.Unicode()
 
     @property
     def organization_names(self):
@@ -558,18 +558,18 @@ class User(CarpentryBaseModel):
         return organizations
 
 
-class GithubRepository(CarpentryBaseModel):
+class GithubRepository(CarpentryBaseActiveRecord):
 
     """holds an individual repo coming as json from the github api
     response, the `name`, `owner` and `git_uri` are stored as fields
     of this model, and the full `response_data` is also available as a
     raw json value
     """
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    name = columns.Text(required=True)
-    owner = columns.Text(required=True)
-    git_uri = columns.Text(required=True, index=True)
-    response_data = columns.Text(required=True)
+    id = attributes.AutoUUID()
+    name = attributes.Unicode()
+    owner = attributes.Unicode()
+    git_uri = attributes.Unicode()
+    response_data = attributes.Unicode()
 
     @classmethod
     def store_many_from_list(cls, items):
@@ -600,14 +600,14 @@ class GithubRepository(CarpentryBaseModel):
         return model
 
 
-class GithubOrganization(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    login = columns.Text(required=True)
-    github_id = columns.Integer()
-    avatar_url = columns.Text()
-    url = columns.Text()
-    html_url = columns.Text()
-    response_data = columns.Text()
+class GithubOrganization(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    login = attributes.Unicode()
+    github_id = attributes.Integer()
+    avatar_url = attributes.Unicode()
+    url = attributes.Unicode()
+    html_url = attributes.Unicode()
+    response_data = attributes.Unicode()
 
     @classmethod
     def store_one_from_dict(cls, item):

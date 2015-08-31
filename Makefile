@@ -36,7 +36,7 @@ lint:
 	flake8 .
 
 unit:
-	nosetests -v -s --rednose --with-coverage --cover-erase --cover-package=carpentry tests/unit
+	nosetests -x -v -s --rednose --with-coverage --cover-erase --cover-package=carpentry tests/unit
 
 functional:
 	nosetests --stop --logging-level=INFO -v -s --with-coverage --cover-erase --cover-package=carpentry --rednose tests/functional

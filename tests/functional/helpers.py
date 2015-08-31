@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import httpretty
-import logging
+
 import uuid
 import json
 from sure import scenario
 
 from tumbler.core import Web
-from cqlengine import connection
-from cqlengine.management import sync_table, drop_table, create_keyspace
-from carpentry.api.resources import get_models
-from carpentry.models import User, get_pipeline
-from carpentry import conf
+from repocket import configure
+
+from carpentry.models import User
 
 
 class GithubMocker(object):
@@ -57,21 +55,17 @@ class GithubMocker(object):
         )
 
 
-def prepare_db(context):
-    # CREATE KEYSPACE carpentry
-    #        WITH REPLICATION =
-    #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-    create_keyspace('carpentry', strategy_class='SimpleStrategy',
-                    replication_factor=3, durable_writes=True)
-    httpretty.enable()
+def prepare_redis(context):
+    context.pool = configure.connection_pool(
+        hostname='localhost',
+        port=6379
+    )
+    context.connection = context.pool.get_connection()
+    sweep_redis(context)
 
-    for t in get_models():
-        try:
-            drop_table(t)
-            sync_table(t)
-        except Exception:
-            logging.exception('Failed to drop/sync %s', t)
+
+def sweep_redis(context):
+    context.connection.flushall()
 
 
 def prepare_http_client(context):
@@ -94,14 +88,5 @@ def prepare_http_client(context):
     }
 
 
-def clean_db(context):
-    redis = get_pipeline().get_backend().redis
-    redis.flushall()
-    httpretty.disable()
-    httpretty.reset()
-
-    for t in get_models():
-        sync_table(t)
-
-safe_db = scenario(prepare_db, clean_db)
-api = scenario([prepare_db, prepare_http_client], [clean_db])
+safe_db = scenario(prepare_redis, sweep_redis)
+api = scenario([prepare_redis, prepare_http_client], [sweep_redis])

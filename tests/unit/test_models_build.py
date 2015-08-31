@@ -218,7 +218,7 @@ def test_set_status_github(save_build,
     )
 
 
-@patch('carpentry.models.CarpentryBaseModel.save')
+@patch('carpentry.models.CarpentryBaseActiveRecord.save')
 @patch('carpentry.models.Builder.get')
 def test_build_save(get_builder, base_save):
     ('Build.save should set the status of the '

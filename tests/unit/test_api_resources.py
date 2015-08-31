@@ -14,7 +14,7 @@ from carpentry.models import (
     GithubRepository,
     User,
 )
-from carpentry.models import CarpentryBaseModel
+from carpentry.models import CarpentryBaseActiveRecord
 
 from carpentry.api.resources import is_model
 from carpentry.api.resources import get_models
@@ -141,7 +141,7 @@ def test_is_model():
 
     is_model(User).should.be.true
     is_model(object).should.be.false
-    is_model(CarpentryBaseModel).should.be.false
+    is_model(CarpentryBaseActiveRecord).should.be.false
 
 
 def test_get_models():
