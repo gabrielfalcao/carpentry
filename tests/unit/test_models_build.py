@@ -3,6 +3,7 @@
 #
 import uuid
 import json
+from datetime import datetime
 from mock import patch
 from carpentry.models import Build
 
@@ -68,39 +69,42 @@ def test_build_set_github_status(requests, save):
     save.assert_called_once_with()
 
 
-def test_build_to_dict():
-    ('Build.to_dict returns a dict')
+def test_build_to_dictionary():
+    ('Build.to_dictionary returns a dict')
+
     b = Build(
         id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         builder_id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
-        commit='commit1'
+        commit='commit1',
+        date_created=datetime(2015, 9, 1),
+        date_finished=datetime(2015, 9, 2),
     )
 
-    b.to_dict().should.equal({
-        'author_email': None,
+    b.to_dictionary().should.equal({
+        'author_email': u'',
         'author_gravatar_url': 'https://s.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e',
-        'author_name': None,
-        'branch': None,
+        'author_name': u'',
+        'branch': u'',
         'builder_id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
-        'code': None,
+        'code': 0,
         'commit': 'commit1',
-        'commit_message': None,
+        'commit_message': u'',
         'css_status': 'warning',
-        'date_created': None,
-        'date_finished': None,
+        'date_created': '2015-09-01 00:00:00',
+        'date_finished': '2015-09-02 00:00:00',
         'docker_status': {},
         'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
         'github_repo_info': {
             'name': 'lettuce',
-            'owner': 'gabrielfalcao'
+            'owner': 'gabrielfalcao',
         },
-        'github_status_data': None,
-        'github_webhook_data': None,
+        'github_status_data': u'',
+        'github_webhook_data': u'',
         'id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
-        'status': None,
-        'stderr': None,
-        'stdout': None,
+        'status': u'',
+        'stderr': u'',
+        'stdout': u''
     })
 
 
@@ -239,7 +243,7 @@ def test_build_save(get_builder, base_save):
     parent_builder.save.assert_called_once_with()
 
 
-def test_build_to_dict_bad_docker_status():
+def test_build_to_dictionary_bad_docker_status():
     ('Build.save should set the status of the '
      'parent builder as well')
     brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
@@ -249,18 +253,20 @@ def test_build_to_dict_bad_docker_status():
         docker_status='B@D',
         status='success',
         builder_id=brid,
-        git_uri='git@github.com:gabrielfalcao/lettuce.git'
+        git_uri='git@github.com:gabrielfalcao/lettuce.git',
+        date_created='',
+        date_finished='',
     )
 
-    b.to_dict().should.equal({
-        'author_email': None,
+    b.to_dictionary().should.equal({
+        'author_email': '',
         'author_gravatar_url': 'https://s.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e',
-        'author_name': None,
-        'branch': None,
+        'author_name': '',
+        'branch': '',
         'builder_id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
-        'code': None,
-        'commit': None,
-        'commit_message': None,
+        'code': 0,
+        'commit': '',
+        'commit_message': '',
         'css_status': 'warning',
         'date_created': None,
         'date_finished': None,
@@ -270,12 +276,12 @@ def test_build_to_dict_bad_docker_status():
             'name': 'lettuce',
             'owner': 'gabrielfalcao'
         },
-        'github_status_data': None,
-        'github_webhook_data': None,
-        'id': None,
+        'github_status_data': '',
+        'github_webhook_data': '',
+        'id': '',
         'status': 'success',
-        'stderr': None,
-        'stdout': None
+        'stderr': '',
+        'stdout': ''
     })
 
 

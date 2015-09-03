@@ -7,7 +7,7 @@ from datetime import datetime, date, time
 from carpentry.models import prepare_value_for_serialization
 from carpentry.models import get_pipeline
 from carpentry.models import slugify
-from carpentry.models import model_to_dict
+from carpentry.models import model_to_dictionary
 from carpentry.models import GithubOrganization
 from carpentry.models import CarpentryBaseActiveRecord
 from carpentry.workers import RunBuilder
@@ -26,12 +26,12 @@ def test_slugify():
     slugify("Carpentry CI").should.equal('carpentryci')
 
 
-def test_prepare_value_for_serialization_object_to_dict():
-    ('carpentry.models.prepare_value_for_serialization() should be able to serialize an object that responds to to_dict')
+def test_prepare_value_for_serialization_object_to_dictionary():
+    ('carpentry.models.prepare_value_for_serialization() should be able to serialize an object that responds to to_dictionary')
 
     class FooBar(object):
 
-        def to_dict(self):
+        def to_dictionary(self):
             return {
                 'ohh': 'leh-leh'
             }
@@ -71,41 +71,20 @@ def test_prepare_value_for_serialization_anything_else():
         'chuck-norris').should.equal('chuck-norris')
 
 
-def test_serialize_model_to_dict():
-    ('carpentry.models.model_to_dict() should return awesomeness')
+def test_serialize_model_to_dictionary():
+    ('carpentry.models.model_to_dictionary() should return awesomeness')
 
     org = GithubOrganization(
         id=uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65'),
         login='chucknorris',
     )
 
-    model_to_dict(org).should.equal({
-        'avatar_url': None,
-        'github_id': None,
-        'html_url': None,
+    model_to_dictionary(org).should.equal({
+        'avatar_url': '',
+        'github_id': 0,
+        'html_url': '',
         'id': 'a1ea566e-5608-4670-a215-60bc34311c65',
         'login': 'chucknorris',
-        'response_data': None,
-        'url': None
+        'response_data': '',
+        'url': ''
     })
-
-
-###########################
-# CarpentryBaseActiveRecord model tests
-
-@patch('carpentry.models.model_to_dict')
-def test_carpentry_base_model_to_dict(model_to_dict):
-    ('CarpentryBaseActiveRecord.to_dict should default to '
-     'return model_to_dict(self)')
-
-    # Given a dummy CarpentryBaseActiveRecord instance
-    dummy = CarpentryBaseActiveRecord()
-
-    # When I call to_dict
-    result = dummy.to_dict()
-
-    # Then it should have returned the result from model_to_dict
-    result.should.equal(model_to_dict.return_value)
-
-    # And and model_to_dict was called appropriately
-    model_to_dict.assert_called_once_with(dummy)

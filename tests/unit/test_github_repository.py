@@ -34,9 +34,9 @@ def test_github_repository_store_one_from_dict(
     result.should.be.a(GithubRepository)
 
     # And it has the values well broken down
-    result.to_dict().should.equal({
+    result.to_dict(simple=True).should.equal({
         'git_uri': 'git@github.com:gabrielfalcao/sure.it',
-        'id': 'a1ea566e-5608-4670-a215-60bc34311c65',
+        'id': uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65'),
         'name': 'sure',
         'owner': 'gabrielfalcao',
         'response_data': '{"owner": {"login": "gabrielfalcao"}, "name": "sure", "ssh_url": "git@github.com:gabrielfalcao/sure.it"}'

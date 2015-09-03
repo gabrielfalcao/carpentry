@@ -74,7 +74,7 @@ def test_remove_build(json_response, models, TokenAuthority, request):
 
     # And the json response was called appropriately
     json_response.assert_called_once_with(
-        build.to_dict.return_value,
+        build.to_dictionary.return_value,
     )
 
 
@@ -105,7 +105,7 @@ def test_remove_builder(json_response, models, TokenAuthority, request):
 
     # And the json response was called appropriately
     json_response.assert_called_once_with(
-        builder.to_dict.return_value
+        builder.to_dictionary.return_value
     )
 
 
@@ -117,10 +117,10 @@ def test_builds_from_builder(json_response, models, TokenAuthority, request):
     ('GET /api/builder/<id>/builds should retrieve list of builds')
 
     build1 = Mock(name='build1')
-    build1.to_dict.return_value = {'build': 1}
+    build1.to_dictionary.return_value = {'build': 1}
 
     build2 = Mock(name='build2')
-    build2.to_dict.return_value = {'build': 2}
+    build2.to_dictionary.return_value = {'build': 2}
 
     models.Builds.objects.filter.return_value = [build1, build2]
 
@@ -211,8 +211,8 @@ def test_get_build_ok(json_response, models, TokenAuthority, request):
 
     # Given that Build.objects.get returns a mocked build
     build = models.Build.get.return_value
-    build.to_dict.return_value = {'build': 'me'}
-    build.builder.to_dict.return_value = {'builder': 'too'}
+    build.to_dictionary.return_value = {'build': 'me'}
+    build.builder.to_dictionary.return_value = {'builder': 'too'}
 
     # When I call retrieve_build
     response = get_build(id='someid')
@@ -241,7 +241,7 @@ def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthorit
     user = TokenAuthority.return_value.get_user.return_value
     user.github_access_token = 'lemmeingithub'
     builder = models.Builder.create.return_value
-    builder.to_dict.return_value = {'foo': 'bar'}
+    builder.to_dictionary.return_value = {'foo': 'bar'}
 
     generate_ssh_key_pair.return_value = ('privte', 'public')
     ensure_json_request.return_value = {
@@ -280,7 +280,7 @@ def test_retrieve_builder(json_response, models, TokenAuthority, request):
 
     # Given that Build.objects.get returns a mocked build
     builder = models.Builder.objects.get.return_value
-    builder.to_dict.return_value = {'say': 'whaaaaat'}
+    builder.to_dictionary.return_value = {'say': 'whaaaaat'}
 
     # When I call retrieve_builder
     response = retrieve_builder(id='someid')
@@ -379,7 +379,7 @@ def test_edit_builder(json_response, models, TokenAuthority, request, ensure_jso
 
     # Given that Build.objects.put returns a mocked build
     builder = models.Builder.objects.get.return_value
-    builder.to_dict.return_value = {'say': 'whaaaaat'}
+    builder.to_dictionary.return_value = {'say': 'whaaaaat'}
 
     # When I call retrieve_builder
     response = edit_builder(id='someid')
@@ -400,9 +400,9 @@ def test_list_builders(json_response, models, TokenAuthority, request):
     ('GET /api/builder/<id> should list the builders')
 
     builder1 = Mock(name='builder1')
-    builder1.to_dict.return_value = {'build': 1}
+    builder1.to_dictionary.return_value = {'build': 1}
     builder2 = Mock(name='builder2')
-    builder2.to_dict.return_value = {'build': 2}
+    builder2.to_dictionary.return_value = {'build': 2}
 
     # Given that Build.objects.put returns a mocked build
     models.Builder.objects.all.return_value = [

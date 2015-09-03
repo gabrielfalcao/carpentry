@@ -62,8 +62,8 @@ def get_build(user, id):
     except Exception as e:
         return json_response({'error': str(e)}, status=404)
 
-    data = b.builder.to_dict()
-    data.update(b.to_dict())
+    data = b.builder.to_dictionary()
+    data.update(b.to_dictionary())
 
     return json_response(data)
 
@@ -97,7 +97,7 @@ def create_builder(user):
 
     logger.info('setting github hook: %s', hook)
 
-    payload = builder.to_dict()
+    payload = builder.to_dictionary()
     return json_response(payload, status=200)
 
 
@@ -106,7 +106,7 @@ def create_builder(user):
 def retrieve_builder(user, id):
     item = models.Builder.objects.get(id=id)
     logger.info('show builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/builder/<id>/builds')
@@ -132,7 +132,7 @@ def clear_builds(user, id):
 @authenticated
 def builds_from_builder(user, id):
     items = models.Build.objects.filter(builder_id=id)
-    return json_response([item.to_dict() for item in items])
+    return json_response([item.to_dictionary() for item in items])
 
 
 @web.put('/api/builder/<id>')
@@ -154,7 +154,7 @@ def edit_builder(user, id):
     item.set_github_hook(user.github_access_token)
 
     logger.info('edit builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/builder/<id>')
@@ -166,7 +166,7 @@ def remove_builder(user, id):
 
     item.delete()
     logger.info('deleting builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/build/<id>')
@@ -175,13 +175,13 @@ def remove_build(user, id):
     item = models.Build.objects.get(id=id)
     item.delete()
     logger.info('deleting build: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):
-    items = [b.to_dict() for b in models.Builder.objects.all()]
+    items = [b.to_dictionary() for b in models.Builder.objects.all()]
     return json_response(items)
 
 
@@ -236,7 +236,7 @@ def create_build(user, id):
     )
     builder = models.Builder.objects.get(id=id)
     item = builder.trigger(user, branch=builder.branch, **data)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.get('/api/user')
@@ -273,7 +273,7 @@ def trigger_builder_hook(id):
         author_email=author_email,
         github_webhook_data=request.data
     )
-    return json_response(build.to_dict())
+    return json_response(build.to_dictionary())
 
 
 @web.get('/api/docker/images')

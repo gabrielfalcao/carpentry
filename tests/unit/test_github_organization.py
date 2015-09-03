@@ -34,4 +34,4 @@ def test_github_organization_store_one_from_dict(
     result.should.be.a(GithubOrganization)
 
     # And it has the values well broken down
-    result.to_dict().should.equal({'avatar_url': 'fine', 'github_id': 42, 'html_url': 'you also know', 'id': 'a1ea566e-5608-4670-a215-60bc34311c65', 'login': 'gabrielfalcao', 'response_data': '{"url": "you know", "html_url": "you also know", "avatar_url": "fine", "ssh_url": "foo.com", "login": "gabrielfalcao", "id": "42"}', 'url': 'you know'})
+    result.to_dict(simple=True).should.equal({'avatar_url': 'fine', 'github_id': '42', 'html_url': 'you also know', 'id': uuid.UUID('a1ea566e-5608-4670-a215-60bc34311c65'), 'login': 'gabrielfalcao', 'response_data': '{"url": "you know", "html_url": "you also know", "avatar_url": "fine", "ssh_url": "foo.com", "login": "gabrielfalcao", "id": "42"}', 'url': 'you know'})

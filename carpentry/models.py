@@ -73,17 +73,17 @@ def prepare_value_for_serialization(value):
         result = str(value)
     elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         result = str(value)
-    elif hasattr(value, 'to_dict'):
-        result = value.to_dict()
+    elif hasattr(value, 'to_dictionary'):
+        result = value.to_dictionary()
     else:
         result = value
 
     return result
 
 
-def model_to_dict(instance, extra={}):
+def model_to_dictionary(instance, extra={}):
     data = {}
-    for key, value in instance.items():
+    for key, value in instance.to_dict(simple=True).items():
         data[key] = prepare_value_for_serialization(value)
 
     data.update(extra)
@@ -91,10 +91,6 @@ def model_to_dict(instance, extra={}):
 
 
 class CarpentryBaseActiveRecord(ActiveRecord):
-    __abstract__ = True
-
-    def to_dict(self):
-        return model_to_dict(self)
 
     def prepare_github_request_headers(self, github_access_token=None):
         github_access_token = github_access_token or getattr(
@@ -271,12 +267,12 @@ class Builder(CarpentryBaseActiveRecord):
             commit=commit
         )
         pipeline = get_pipeline()
-        payload = self.to_dict()
+        payload = self.to_dict(simple=True)
         payload['id_rsa_public'] = self.id_rsa_public
         payload['id_rsa_private'] = self.id_rsa_private
-        payload.pop('last_build')
-        payload.update(build.to_dict())
-        payload['user'] = user.to_dict()
+        payload.pop('last_build', None)
+        payload.update(build.to_dictionary())
+        payload['user'] = user.to_dictionary()
 
         pipeline.input.put(payload)
         logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
@@ -297,14 +293,14 @@ class Builder(CarpentryBaseActiveRecord):
 
         return results[0]
 
-    def to_dict(self):
+    def to_dictionary(self):
         last_build = self.get_last_build()
 
         serialized_build = None
         if last_build:
-            serialized_build = last_build.to_dict()
+            serialized_build = last_build.to_dictionary()
 
-        result = model_to_dict(self, {
+        result = model_to_dictionary(self, {
             'slug': slugify(self.name).lower(),
             'css_status': STATUS_MAP.get(self.status, 'success'),
             'last_build': serialized_build,
@@ -351,7 +347,7 @@ class Build(CarpentryBaseActiveRecord):
     @property
     def url(self):
         path = render_string(
-            '/#/builder/{builder_id}/build/{id}', model_to_dict(self))
+            '/#/builder/{builder_id}/build/{id}', model_to_dictionary(self))
         return conf.get_full_url(path)
 
     @property
@@ -432,8 +428,8 @@ class Build(CarpentryBaseActiveRecord):
         builder.save()
         return super(Build, self).save()
 
-    def to_dict(self):
-        result = model_to_dict(self, {
+    def to_dictionary(self):
+        result = model_to_dictionary(self, {
             'github_repo_info': self.github_repo_info,
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'author_gravatar_url': self.author_gravatar_url
@@ -478,8 +474,8 @@ class User(CarpentryBaseActiveRecord):
     def organizations(self):
         return self.retrieve_github_organizations()
 
-    def to_dict(self):
-        return model_to_dict(self, extra={
+    def to_dictionary(self):
+        return model_to_dictionary(self, extra={
             'github': self.get_github_metadata(),
         })
 
