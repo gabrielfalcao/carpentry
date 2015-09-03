@@ -2,7 +2,7 @@
 #
 import re
 import json
-import redis
+
 import uuid
 import requests
 import hashlib
@@ -14,6 +14,7 @@ from lineup import JSONRedisBackend
 
 from repocket import attributes
 from repocket import ActiveRecord
+from repocket import configure
 from carpentry.util import render_string, force_unicode, response_did_succeed
 from carpentry import conf
 
@@ -52,8 +53,9 @@ GITHUB_STATUS_MAP = {
 GITHUB_URI_REGEX = re.compile(
     r'github.com[:/](?P<owner>[\w_-]+)[/](?P<name>[\w_-]+)([.]git)?')
 
-redis_pool = redis.ConnectionPool(
-    host=conf.redis_host,
+
+redis_pool = configure.connection_pool(
+    hostname=conf.redis_host,
     port=conf.redis_port,
     db=conf.redis_db
 )

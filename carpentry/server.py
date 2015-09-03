@@ -44,7 +44,6 @@ class CarpentryHttpServer(Web):
         return self.websockets
 
     def setup_github_authentication(self):
-
         @self.flask_app.before_request
         def prepare_user():
             carpentry_token = request.cookies.get('carpentry_token')

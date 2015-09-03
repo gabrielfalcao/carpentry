@@ -476,31 +476,31 @@ def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ens
     # Then the response should be json
     response.should.equal(json_response.return_value)
     json_response.call_args[0][0].should.equal({
-        'default_subprocess_timeout_in_seconds': 1500,
         'DEFAULT_WORKDIR': '/tmp/carpentry',
-        'carpentry_config_path': PROJECT_FILE('tests/carpentry.yml'),
-        'workdir': 'sandbox',
+        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039',
+        'GITHUB_CLIENT_SECRET': 'ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de',
+        'SECRET_KEY': None,
         'SUPPORTED_CONFIG_PATHS': [
-            '/etc/carpentry.yml',
+            os.path.expanduser('/etc/carpentry.yml'),
             os.path.expanduser('~/carpentry.yml'),
             os.path.expanduser('~/.carpentry.yml'),
-            PROJECT_FILE('carpentry.yml'),
+            os.path.expanduser('~/projects/personal/carpentry/carpentry.yml')
         ],
-        'full_server_url': 'http://localhost:5000',
-        'ssh_executable_path': '/usr/bin/ssh',
-        'config_path': PROJECT_FILE('carpentry.yml'),
-        'redis_host': 'localhost',
-        'hostname': 'localhost',
-        'cassandra_hosts': ['127.0.0.1', '0.0.0.0'],
         'allowed_github_organizations': ['cnry'],
-        'GITHUB_CLIENT_SECRET': 'ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de',
-        'redis_db': 0,
-        'git_executable_path': '/usr/bin/git',
-        'redis_port': 6379,
-        'SECRET_KEY': None,
+        'carpentry_config_path': '/Users/gabrielfalcao/projects/personal/carpentry/tests/carpentry.yml',
+        'cassandra_hosts': None,
+        'config_path': '/Users/gabrielfalcao/projects/personal/carpentry/carpentry.yml',
+        'default_subprocess_timeout_in_seconds': 1500,
         'fallback_config_path': '/etc/carpentry.yml',
+        'full_server_url': 'http://localhost:5000',
+        'git_executable_path': '/usr/bin/git',
+        'hostname': 'localhost',
         'port': 5000,
-        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039',
+        'redis_db': 0,
+        'redis_host': 'localhost',
+        'redis_port': 6379,
+        'ssh_executable_path': '/usr/bin/ssh',
+        'workdir': 'sandbox'
     })
 
 

@@ -23,6 +23,16 @@ from carpentry import models
 
 from carpentry.api import web
 from ansi2html import Ansi2HTMLConverter
+from repocket import configure
+
+
+pool = configure.connection_pool(
+    hostname='localhost',
+    port=6379
+)
+
+connection = pool.get_connection()
+
 
 
 conv = Ansi2HTMLConverter()
@@ -231,7 +241,6 @@ def create_build(user, id):
         {
             'author_name': user.name,
             'author_email': user.email,
-
         }
     )
     builder = models.Builder.objects.get(id=id)

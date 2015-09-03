@@ -308,6 +308,7 @@ def test_create_build_instance_from_builder(context):
         headers=context.headers,
     )
 
+    print '/api/builder/{0}/build'.format(bd1.id)
     # Then the response should be 200
     response.status_code.should.equal(200)
 
