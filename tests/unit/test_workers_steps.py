@@ -377,12 +377,13 @@ def test_prepare_ssh_key_consume_missing_private_key(get_build_from_instructions
     datetime.utcnow.return_value = original_datetime(2015, 6, 27)
 
     build = get_build_from_instructions.return_value
+
     # Given a PrepareSSHKey Step instance
     step = prepare_step_instance(PrepareSSHKey)
-
+    step.parent.get_name.return_value = 'foo'
     # And some instructions with ssh info
     instructions = {
-        'builder_id': 'my-happy-builder',
+        'builder': {'id': 'my-happy-builder'},
         'slug': 'foobar',
         'id_rsa_public': 'the public key',
         'id_rsa_private_key_path': 'id_rsa_chucknorris',
@@ -431,7 +432,7 @@ def test_prepare_ssh_key_consume_missing_public_key(get_build_from_instructions,
 
     # And some instructions with ssh info
     instructions = {
-        'builder_id': 'my-happy-builder',
+        'builder': {'id': 'my-happy-builder'},
         'slug': 'foobar',
         'id_rsa_private': 'the private key',
         'id_rsa_private_key_path': 'id_rsa_chucknorris',
@@ -847,7 +848,7 @@ def test_nice_current_time(datetime):
 
     # Then it also should have called strftime appropriately
     now.strftime.assert_called_once_with('%Y/%m/%d - %H:%M:%S')
-    
+
 
 
 def test_extract_container_name():
@@ -857,10 +858,9 @@ def test_extract_container_name():
     container = 'what'
 
     docker.inspect_container.return_value = {'Name': '/SassyNorris'}
-    
+
     name = extract_container_name(docker, container)
 
     name.should.equal('SassyNorris')
 
     docker.inspect_container.assert_called_once_with('what')
-    

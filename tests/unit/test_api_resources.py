@@ -128,8 +128,8 @@ def test_builds_from_builder(json_response, models, TokenAuthority, request):
     response = builds_from_builder(id='someid')
 
     # Then the query was done appropriately
-    models.Build.objects.filter.assert_called_once_with(
-        builder_id='someid'
+    models.Builder.objects.get.assert_called_once_with(
+        id='someid'
     )
 
     # And the response should be a json_response

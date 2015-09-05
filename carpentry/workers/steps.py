@@ -26,9 +26,11 @@ from carpentry.util import render_string, get_docker_client, response_did_succee
 from carpentry.models import Build
 # import unicodedata
 
+logger = logging.getLogger("carpentry.workers.steps")
+
 
 AUTHOR_REGEX = re.compile(
-    r'Author: (?P<name>[^<]+\s*)[<](?P<email>[^>]+)[>]')
+    r'.*Author: (?P<name>[^<]+\s*)[<](?P<email>[^>]+)[>]', re.DOTALL | re.M)
 
 COMMIT_REGEX = re.compile(
     r'commit\s*(?P<commit>\w+)', re.I)
@@ -167,7 +169,7 @@ class PrepareSSHKey(CarpentryPipelineStep):
 
         if not private_key:
             msg = render_string(
-                'the builder {builder_id} does not have a private_key set',
+                'the builder {builder[id]} does not have a private_key set',
                 instructions
             )
             b.append_to_stdout(msg)
@@ -175,7 +177,7 @@ class PrepareSSHKey(CarpentryPipelineStep):
 
         if not public_key:
             msg = render_string(
-                'the builder {builder_id} does not have a public_key set',
+                'the builder {builder[id]} does not have a public_key set',
                 instructions
             )
             b.append_to_stdout(msg)
@@ -392,8 +394,8 @@ class LocalRetrieve(CarpentryPipelineStep):
             meta.update(commit.groupdict())
 
         if author:
-            build.author_name = author.group('name')
-            build.author_email = author.group('email')
+            build.author_name = author.group('name').decode('utf-8')
+            build.author_email = author.group('email').decode('utf-8')
             meta.update(author.groupdict())
 
         if message:
@@ -507,12 +509,13 @@ class DockerDependencyRunner(CarpentryPipelineStep):
 
         if hostname in all_container_names:
             msg = render_string(
-                'dependency {image} is already running as {hostname}', dependency)
+                '\ndependency {image} is already running as {hostname}', dependency)
             build.append_to_stdout(msg)
             logging.warning(msg)
             return
 
         try:
+            logger.warning("Image %s", image)
             container = docker.create_container(
                 image=image,
                 name=hostname,
@@ -527,6 +530,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             tb = traceback.format_exc(e)
             build.append_to_stdout(tb)
             build.set_status('failed', description=str(e))
+            raise
 
         if 'Id' in container:
             docker.start(container['Id'])
@@ -578,6 +582,7 @@ class DockerDependencyStopper(CarpentryPipelineStep):
             info["stream"] = '{0} failed to stop'.format(container_name)
             line = json.dumps(info)
             build.register_docker_status(line)
+            raise
 
     @classmethod
     def do_remove_dependency_container(cls, build, container):
@@ -601,6 +606,7 @@ class DockerDependencyStopper(CarpentryPipelineStep):
             info["stream"] = '{0} failed to remove'.format(container_name)
             line = json.dumps(info)
             build.register_docker_status(line)
+            raise
 
     @classmethod
     def stop_and_remove_dependency_containers(cls, build, instructions):

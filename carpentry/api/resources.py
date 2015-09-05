@@ -139,7 +139,8 @@ def clear_builds(user, id):
 @web.get('/api/builder/<id>/builds')
 @authenticated
 def builds_from_builder(user, id):
-    items = models.Build.objects.filter(builder_id=id)
+    builder = models.Builder.objects.get(id=id)
+    items = builder.get_all_builds()
     return json_response([item.to_dictionary() for item in items])
 
 

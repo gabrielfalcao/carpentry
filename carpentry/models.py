@@ -128,6 +128,9 @@ class Builder(CarpentryBaseActiveRecord):
     def get_fallback_github_access_token(self):
         return self.creator.github_access_token
 
+    def get_all_builds(self):
+        return Build.objects.filter(builder=self)
+
     @property
     def github_access_token(self):
         return self.get_fallback_github_access_token()
