@@ -39,7 +39,7 @@ requirements = [
     'repocket>=0.1.17',
     'GitHub-Flask>=2.0.1',
     'jsmin>=2.1.1',
-    'lineup>=0.1.7',
+    'lineup>=0.1.8',
     'docker-py==1.2.3',
     'milieu>=0.1.7',
     'plant>=0.1.2',

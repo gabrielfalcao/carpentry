@@ -7,7 +7,7 @@ cffi>=1.1.2
 coloredlogs>=1.0.1
 repocket==0.1.17
 GitHub-Flask>=2.0.1
-lineup>=0.1.7
+lineup>=0.1.8
 milieu>=0.1.7
 plant>=0.1.2
 pycrypto>=2.6

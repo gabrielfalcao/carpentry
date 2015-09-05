@@ -75,8 +75,8 @@ def prepare_value_for_serialization(value):
         result = str(value)
     elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         result = str(value)
-    elif hasattr(value, 'to_dictionary'):
-        result = value.to_dictionary()
+    elif hasattr(value, 'to_dict'):
+        result = value.to_dict(simple=True)
     else:
         result = value
 

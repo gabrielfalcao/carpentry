@@ -31,14 +31,16 @@ def test_prepare_value_for_serialization_object_to_dictionary():
 
     class FooBar(object):
 
-        def to_dictionary(self):
+        def to_dict(self, simple=False):
             return {
-                'ohh': 'leh-leh'
+                'ohh': 'leh-leh',
+                'simple': simple
             }
 
     foo = FooBar()
     prepare_value_for_serialization(foo).should.equal({
-        'ohh': 'leh-leh'
+        'ohh': 'leh-leh',
+        'simple': True
     })
 
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 import uuid
+from uuid import UUID
 import json
 from datetime import datetime
 from mock import patch
@@ -9,7 +10,7 @@ from carpentry.models import Build, Builder
 
 
 STUB_BUILDER = Builder(
-    id=uuid.UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+    id=UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
     name=u'Device Management [unit tests]',
     git_uri='git@github.com:gabrielfalcao/lettuce.git',
     shell_script='make test',
@@ -26,10 +27,10 @@ def test_build_author_gravatar_url():
 def test_build_url():
     ('Build.url returns a valid url')
     b = Build(
-        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
+        id=UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         author_email='foo@bar.com',
         builder=Builder(
-            id=uuid.UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+            id=UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
             name=u'Device Management [unit tests]',
             git_uri='git@github.com:gabrielfalcao/lettuce.git',
             shell_script='make test',
@@ -42,7 +43,7 @@ def test_build_url():
 def test_build_github_repo_info():
     ('Build.github_repo_info returns a valid url')
     b = Build(
-        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
+        id=UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
 
     )
@@ -57,7 +58,7 @@ def test_build_github_repo_info():
 def test_build_set_github_status(requests, save):
     ('Build.github_repo_info returns a valid url')
     b = Build(
-        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
+        id=UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         builder=STUB_BUILDER,
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         commit='commit1'
@@ -86,7 +87,7 @@ def test_build_to_dictionary():
     ('Build.to_dictionary returns a dict')
 
     b = Build(
-        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
+        id=UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         builder=STUB_BUILDER,
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         commit='commit1',
@@ -99,23 +100,19 @@ def test_build_to_dictionary():
         'author_gravatar_url': 'https://s.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e',
         'author_name': u'',
         'branch': u'',
-        'builder': {
-            'branch': u'',
-            'build_timeout_in_seconds': 0,
-            'creator_user_id': '',
-            'css_status': 'success',
-            'git_clone_timeout_in_seconds': 0,
-            'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-            'github_hook_data': u'',
-            'github_hook_url': 'http://localhost:5000/api/hooks/4b1d90f0-96c2-40cd-9c21-35eee1f243d3',
-            'id': '4b1d90f0-96c2-40cd-9c21-35eee1f243d3',
-            'json_instructions': u'',
-            'last_build': None,
-            'name': u'Device Management [unit tests]',
-            'shell_script': 'make test',
-            'slug': u'devicemanagementunittests',
-            'status': u''
-        },
+        'builder': {'branch': u'',
+        'build_timeout_in_seconds': 0,
+        'creator_user_id': '',
+        'git_clone_timeout_in_seconds': 0,
+        'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
+        'github_hook_data': u'',
+        'id': UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+        'id_rsa_private': u'',
+        'id_rsa_public': u'',
+        'json_instructions': u'',
+        'name': u'Device Management [unit tests]',
+        'shell_script': 'make test',
+        'status': u''},
         'code': 0,
         'commit': 'commit1',
         'commit_message': u'',
@@ -124,10 +121,8 @@ def test_build_to_dictionary():
         'date_finished': '2015-09-02 00:00:00',
         'docker_status': {},
         'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-        'github_repo_info': {
-            'name': 'lettuce',
-            'owner': 'gabrielfalcao'
-        },
+        'github_repo_info': {'name': 'lettuce',
+        'owner': 'gabrielfalcao'},
         'github_status_data': u'',
         'github_webhook_data': u'',
         'id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
@@ -243,7 +238,7 @@ def test_build_save(get_builder, base_save):
     ('Build.save should set the status of the '
      'parent builder as well')
     parent_builder = Builder(
-        id=uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
+        id=UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3'),
         name=u'Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         shell_script='make test',
@@ -265,7 +260,7 @@ def test_build_save(get_builder, base_save):
 def test_build_to_dictionary_bad_docker_status():
     ('Build.save should set the status of the '
      'parent builder as well')
-    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+    brid = UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
 
     # Given a build instance
     b = Build(
@@ -307,7 +302,7 @@ def test_build_to_dictionary_bad_docker_status():
 @patch('carpentry.models.Build.save')
 def test_register_docker_status_json_ok(save_build):
     ('Build.register_docker_status sets the docker_status and saves when receiving a valid json')
-    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+    brid = UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
 
     # Given a build instance
     b = Build(
@@ -327,7 +322,7 @@ def test_register_docker_status_json_ok(save_build):
 def test_register_docker_status_json_failing(save_build, append_to_stdout):
     ('Build.register_docker_status skips setting the status '
      'when the given line is not a json object')
-    brid = uuid.UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
+    brid = UUID('4b1d90f0-aaaa-40cd-9c21-35eee1f243d3')
 
     # Given a build instance
     b = Build(
