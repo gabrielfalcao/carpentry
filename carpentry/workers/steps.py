@@ -210,7 +210,7 @@ class PrepareSSHKey(CarpentryPipelineStep):
         process = run_command(ssh_t, environment={})
         stdout, exit_code = stream_output(
             self, process, b)
-        
+
         self.produce(instructions)
 
 
@@ -342,7 +342,7 @@ class LocalRetrieve(CarpentryPipelineStep):
         process = run_command(conf.git_executable_path + render_string(' checkout -b {id} origin/{branch} {commit}', instructions))
         stdout, exit_code = stream_output(self, process, build)
         exit_code = int(exit_code)
-        
+
         return exit_code, instructions
 
     def consume(self, instructions):
@@ -465,7 +465,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
         if 'dependencies' not in build_info.keys():
             tmpl = 'not running docker dependencies because they were not set in {0}'
             msg = tmpl.format(json.dumps(build_info, indent=2))
-            logging.warning(msg, msg)
+            logging.warning(msg)
             build.append_to_stdout(msg)
             return self.produce(instructions)
 
@@ -520,7 +520,7 @@ class DockerDependencyRunner(CarpentryPipelineStep):
                 environment=dependency.get('environment', {}),
                 detach=True,
             )
-            
+
         except Exception as e:
             container = {}
             logging.exception('failed to run container={0}:{1}'.format(image, hostname))
@@ -529,12 +529,12 @@ class DockerDependencyRunner(CarpentryPipelineStep):
             build.set_status('failed', description=str(e))
 
         if 'Id' in container:
-            docker.start(container['Id'])                
+            docker.start(container['Id'])
 
         info = {
             "status": render_string("running image {image}:{hostname}", dependency),
         }
-        
+
         for wait in range(1, 4):
             info['stream'] = 'waiting {0}/3'.format(wait)
             line = json.dumps(info)
@@ -740,11 +740,11 @@ class RunBuild(CarpentryPipelineStep):
         }
         SSH_AUTH_SOCK = os.getenv('SSH_AUTH_SOCK')
         if SSH_AUTH_SOCK:
-            environment['SSH_AUTH_SOCK'] = '/ssh-agent'            
+            environment['SSH_AUTH_SOCK'] = '/ssh-agent'
             binds[SSH_AUTH_SOCK] = {
                 'bind': '/ssh-agent',
                 'mode': 'rw',
-            }                    
+            }
 
         container = docker.create_container(
             image=image,
@@ -804,7 +804,7 @@ class RunBuild(CarpentryPipelineStep):
 
         process = run_command(cmd, chdir=instructions['build_dir'])
 
-        b = Build.get(id=instructions['id'])
+        b = Build.objects.get(id=instructions['id'])
         b.append_to_stdout('\nrunning {0}...\n'.format(cmd))
 
         timeout_in_seconds = instructions.get('build_timeout_in_seconds')

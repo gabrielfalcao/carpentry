@@ -15,7 +15,7 @@ def test_builder_get_fallback_access_token(User):
     ('Builder.get_fallback_github_access_token returns the token from the user who created the builder')
     # Given that User is mocked to return an object with a valid string as
     # github_access_token
-    creator = User.get.return_value
+    creator = User.objects.get.return_value
     creator.github_access_token = 'free-pass-to-github-yay'
 
     # And a valid UUID
@@ -33,7 +33,7 @@ def test_builder_get_fallback_access_token(User):
     result.should.equal('free-pass-to-github-yay')
 
     # And User.get should have been called with the creator_user_id as id
-    User.get.assert_called_once_with(id=user_uuid)
+    User.objects.get.assert_called_once_with(id=user_uuid)
 
     # And the property github_access_token returns the same
     instance1.github_access_token.should.equal(
@@ -326,6 +326,7 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
     )
     pipeline.input.put.assert_called_once_with({
         'status': u'',
+        'css_status': 'success',
         'name': 'Awesome Project 1',
         'id_rsa_private': u'',
         'json_instructions': u'',
@@ -333,13 +334,15 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         'id_rsa_public': u'',
         'shell_script': u'',
         'git_clone_timeout_in_seconds': 0,
+        'slug': 'awesomeproject1',
         'git_uri': 'git@github.com:gabrielfalcao/go-horse.git',
+        'github_hook_url': 'http://localhost:5000/api/hooks/',
         'user': {'user': 1},
         'branch': u'',
         'github_hook_data': u'',
         'creator_user_id': '',
         'foo': 'bar',
-        'id': ''
+        'id': '',
     })
 
 
@@ -364,7 +367,7 @@ def test_clear_builds(Build):
 
     result.should.equal([build1, build2])
     Build.objects.filter.assert_called_once_with(
-        builder_id=uuid.UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+        builder=builder
     )
 
 

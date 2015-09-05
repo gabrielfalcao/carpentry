@@ -33,8 +33,6 @@ pool = configure.connection_pool(
 
 connection = pool.get_connection()
 
-
-
 conv = Ansi2HTMLConverter()
 
 TIMEOUT_BEFORE_SIGKILL = 5  # seconds
@@ -52,7 +50,7 @@ def get_models():
     return [v for (k, v) in inspect.getmembers(models) if is_model(v)]
 
 
-logger = logging.getLogger('carpentry')
+logger = logging.getLogger('carpentry.resources')
 
 
 def generate_ssh_key_pair(length=2048):
@@ -68,7 +66,7 @@ def generate_ssh_key_pair(length=2048):
 @authenticated
 def get_build(user, id):
     try:
-        b = models.Build.get(id=id)
+        b = models.Build.objects.get(id=id)
     except Exception as e:
         return json_response({'error': str(e)}, status=404)
 
@@ -122,7 +120,7 @@ def retrieve_builder(user, id):
 @web.delete('/api/builder/<id>/builds')
 @authenticated
 def clear_builds(user, id):
-    builder = models.Builder.get(id=id)
+    builder = models.Builder.objects.get(id=id)
     deleted_builds = builder.clear_builds()
     if not deleted_builds:
         return json_response({'total': 0})
@@ -262,7 +260,7 @@ def trigger_builder_hook(id):
         logger.exception("Failed to retrieve builder of id: %s", id)
         return json_response({}, status=404)
 
-    user = models.User.get(id=item.creator_user_id)
+    user = models.User.objects.get(id=item.creator_user_id)
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}
     head_commit = request_data.get('head_commit', {})

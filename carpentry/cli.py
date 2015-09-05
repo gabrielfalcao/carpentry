@@ -11,8 +11,6 @@ import logging
 import argparse
 import warnings
 import coloredlogs
-from cqlengine import connection
-from cqlengine.management import sync_table, drop_table, create_keyspace
 
 from plant import Node
 from lineup import JSONRedisBackend
@@ -138,7 +136,6 @@ def carpentry_run_local_pipeline():
         description='waiting for jobs')
 
     parser.parse_args(get_remaining_sys_argv())
-    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
 
     print LOGO
     pipeline = RunBuilder(JSONRedisBackend)
@@ -158,37 +155,14 @@ def carpentry_run_local_pipeline():
 def carpentry_setup():
     parser = argparse.ArgumentParser(
         prog='carpentry setup',
-        description='sets up the cassandra database')
-    parser.add_argument('--drop', action='store_true',
-                        default=False, help='drop any existing tables before syncing')
-    parser.add_argument('--flush-redis', action='store_true',
-                        default=False, help='flush all carpentry-related redis keys')
+        description='sets up the redis database')
     setup_logging(logging.INFO)
-    args = parser.parse_args(get_remaining_sys_argv())
     coloredlogs.install(logging.INFO)
 
     print LOGO
-    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-
-    create_keyspace('carpentry', strategy_class='SimpleStrategy',
-                    replication_factor=3, durable_writes=True)
     pipeline = RunBuilder(JSONRedisBackend)
     backend = pipeline.get_backend()
-    if args.flush_redis:
-        for key in backend.redis.keys('carpentry*'):
-            logging.warning("redis: deleting key %s", key)
-            backend.redis.delete(key)
-
-    for t in reversed(get_models()):
-        try:
-            if args.drop:
-                logging.warning("cassandra: dropping table %s", t)
-                drop_table(t)
-
-            logging.info("cassandra: creating table %s", t)
-            sync_table(t)
-        except Exception:
-            logging.exception('Failed to drop/sync %s', t)
+    backend.redis.flushall()
 
 
 def main():

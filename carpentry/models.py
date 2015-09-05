@@ -18,7 +18,7 @@ from repocket import configure
 from carpentry.util import render_string, force_unicode, response_did_succeed
 from carpentry import conf
 
-logger = logging.getLogger('carpentry')
+logger = logging.getLogger('carpentry.models')
 
 BUILD_STATUSES = [
     'ready',      # no builds scheduled
@@ -123,7 +123,7 @@ class Builder(CarpentryBaseActiveRecord):
 
     @property
     def creator(self):
-        return User.get(id=self.creator_user_id)
+        return User.objects.get(id=self.creator_user_id)
 
     def get_fallback_github_access_token(self):
         return self.creator.github_access_token
@@ -260,7 +260,7 @@ class Builder(CarpentryBaseActiveRecord):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
-            builder_id=self.id,
+            builder=self,
             branch=branch or self.branch or 'master',
             author_name=author_name,
             author_email=author_email,
@@ -269,7 +269,7 @@ class Builder(CarpentryBaseActiveRecord):
             commit=commit
         )
         pipeline = get_pipeline()
-        payload = self.to_dict(simple=True)
+        payload = self.to_dictionary()
         payload['id_rsa_public'] = self.id_rsa_public
         payload['id_rsa_private'] = self.id_rsa_private
         payload.pop('last_build', None)
@@ -282,14 +282,14 @@ class Builder(CarpentryBaseActiveRecord):
 
     def clear_builds(self):
         deleted_builds = []
-        for build in Build.objects.filter(builder_id=self.id):
+        for build in Build.objects.filter(builder=self):
             deleted_builds.append(build)
             build.delete()
 
         return deleted_builds
 
     def get_last_build(self):
-        results = Build.objects.filter(builder_id=self.id)
+        results = Build.objects.filter(builder=self)
         if not results:
             return None
 
@@ -321,7 +321,7 @@ class CarpentryPreference(CarpentryBaseActiveRecord):
 
 class Build(CarpentryBaseActiveRecord):
     id = attributes.AutoUUID()
-    builder_id = attributes.UUID()
+    builder = attributes.Pointer(Builder)
     git_uri = attributes.Unicode()
     branch = attributes.Unicode()
     stdout = attributes.Unicode()
@@ -348,8 +348,11 @@ class Build(CarpentryBaseActiveRecord):
 
     @property
     def url(self):
+        if not self.builder:
+            logger.error("Could not calculate build url because its parent builder is None: %s", self.to_dict(simple=True))
+            return None
         path = render_string(
-            '/#/builder/{builder_id}/build/{id}', model_to_dictionary(self))
+            '/#/builder/{builder[id]}/build/{id}', model_to_dictionary(self))
         return conf.get_full_url(path)
 
     @property
@@ -392,21 +395,11 @@ class Build(CarpentryBaseActiveRecord):
 
         return response.json()
 
-    @property
-    def builder(self):
-        self._cached_builder = getattr(self, '_cached_builder', None)
-        if not self._cached_builder:
-            self._cached_builder = Builder.get(id=self.builder_id)
-
-        return self._cached_builder
-
     def append_to_stdout(self, string):
         value = force_unicode(string)
+        self.append_to_bytestream('stdout', value)
         msg = '{0} {1}'.format(self.github_repo_info, value).strip()
         logger.info(msg)
-        self.stdout = self.stdout or u''
-        self.stdout += value
-        self.save()
 
     def set_status(self, status, description=None, github_access_token=None):
         self.status = status
@@ -462,7 +455,7 @@ class User(CarpentryBaseActiveRecord):
     name = attributes.Unicode()
     email = attributes.Unicode()
     carpentry_token = attributes.UUID()
-    github_metadata = attributes.Unicode()
+    github_metadata = attributes.JSON()
 
     @property
     def organization_names(self):
@@ -488,7 +481,7 @@ class User(CarpentryBaseActiveRecord):
         headers = self.prepare_github_request_headers()
         response = requests.get('https://api.github.com/user', headers=headers)
         metadata = response.json()
-        self.github_metadata = response.text
+        self.github_metadata = metadata
         self.save()
         return metadata
 
@@ -501,7 +494,12 @@ class User(CarpentryBaseActiveRecord):
         if not carpentry_token:
             return
 
-        users = cls.objects.filter(carpentry_token=carpentry_token)
+        try:
+            token = uuid.UUID(bytes(carpentry_token))
+        except TypeError:
+            logger.exception("Failed to query user by the carpentry_token: %s", carpentry_token)
+
+        users = cls.objects.filter(carpentry_token=token)
         if len(users) > 0:
             return users[0]
 

@@ -11,7 +11,7 @@ from .helpers import safe_db
 def test_create_builder(context):
     ('Creating builders in cassandra should work')
     # Given that I create a Builder
-    builder = Builder.create(
+    builder = Builder.objects.create(
         id=uuid.uuid1(),
         name=u'Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',

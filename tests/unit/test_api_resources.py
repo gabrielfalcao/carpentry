@@ -184,13 +184,13 @@ def test_get_build_failed(json_response, models, TokenAuthority, request):
      'an exception happens')
 
     # Given that Build.objects.get returns a mocked build
-    models.Build.get.side_effect = RuntimeError('boom')
+    models.Build.objects.get.side_effect = RuntimeError('boom')
 
     # When I call retrieve_build
     response = get_build(id='someid')
 
     # Then get() was called
-    models.Build.get.assert_called_once_with(id='someid')
+    models.Build.objects.get.assert_called_once_with(id='someid')
 
     # And the response should be a json_response
     response.should.equal(json_response.return_value)
@@ -210,7 +210,7 @@ def test_get_build_ok(json_response, models, TokenAuthority, request):
      'an exception happens')
 
     # Given that Build.objects.get returns a mocked build
-    build = models.Build.get.return_value
+    build = models.Build.objects.get.return_value
     build.to_dictionary.return_value = {'build': 'me'}
     build.builder.to_dictionary.return_value = {'builder': 'too'}
 
@@ -218,7 +218,7 @@ def test_get_build_ok(json_response, models, TokenAuthority, request):
     response = get_build(id='someid')
 
     # Then get() was called
-    models.Build.get.assert_called_once_with(id='someid')
+    models.Build.objects.get.assert_called_once_with(id='someid')
 
     # And the response should be a json_response
     response.should.equal(json_response.return_value)
@@ -306,7 +306,7 @@ def test_clear_builds(json_response, models, TokenAuthority, request):
             self.commit = str(x)[0] * 4
 
     # Given that Build.objects.get returns a mocked build
-    builder = models.Builder.get.return_value
+    builder = models.Builder.objects.get.return_value
     builder.clear_builds.return_value = [
         Build(x) for x in range(10)]
 
@@ -317,7 +317,7 @@ def test_clear_builds(json_response, models, TokenAuthority, request):
     builder.clear_builds.assert_called_once_with()
 
     # And the query was done appropriately
-    models.Builder.get.assert_called_once_with(
+    models.Builder.objects.get.assert_called_once_with(
         id='someid'
     )
 
@@ -339,7 +339,7 @@ def test_clear_builds_empty(json_response, models, TokenAuthority, request):
      '0 when')
 
     # Given that Build.objects.get returns a mocked build
-    builder = models.Builder.get.return_value
+    builder = models.Builder.objects.get.return_value
     builder.clear_builds.return_value = []
 
     # When I call clear_builds
@@ -349,7 +349,7 @@ def test_clear_builds_empty(json_response, models, TokenAuthority, request):
     builder.clear_builds.assert_called_once_with()
 
     # And the query was done appropriately
-    models.Builder.get.assert_called_once_with(
+    models.Builder.objects.get.assert_called_once_with(
         id='someid'
     )
 
@@ -579,7 +579,7 @@ def test_trigger_builder_hook(json_response, models, TokenAuthority, request, en
         }
     }
     request.data = {'say': 'what'}
-    user = models.User.get.return_value
+    user = models.User.objects.get.return_value
     user.email = 'email@foo.com'
     user.name = 'Mary Doe'
     user.github_access_token = 'lemmeingithub'

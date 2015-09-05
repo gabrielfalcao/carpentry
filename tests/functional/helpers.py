@@ -71,10 +71,11 @@ def sweep_redis(context):
 def prepare_http_client(context):
     context.web = Web()
     context.http = context.web.flask_app.test_client()
-    context.user = User(id=uuid.uuid1(), carpentry_token=uuid.uuid4(
-    ), github_access_token='Default:FAKE:Token')
+    context.user = User(
+        carpentry_token=uuid.uuid4(),
+        github_access_token='Default:FAKE:Token'
+    )
     context.user.save()
-
     context.github = GithubMocker(context.user)
     context.github.on_get('/user/orgs', body=json.dumps([
         {
