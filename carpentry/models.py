@@ -551,8 +551,9 @@ class User(CarpentryBaseActiveRecord):
         url = render_string('https://api.github.com/user/orgs', github)
         response = requests.get(url, headers=headers)
         organizations = response.json()
+        import ipdb;ipdb.set_trace()
         github['organizations'] = organizations
-        self.github_metadata = json.dumps(github)
+        self.github_metadata = github
         self.save()
         return organizations
 

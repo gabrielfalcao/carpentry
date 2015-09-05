@@ -8,11 +8,12 @@ from sure import scenario
 
 from tumbler.core import Web
 from repocket import configure
-
+from carpentry.api import resources
 from carpentry.models import User
 
 
 class GithubMocker(object):
+    resources  # dummy line
 
     def __init__(self, user):
         self.user = user
@@ -76,12 +77,15 @@ def prepare_http_client(context):
         github_access_token='Default:FAKE:Token'
     )
     context.user.save()
+
+    httpretty.enable()
     context.github = GithubMocker(context.user)
-    context.github.on_get('/user/orgs', body=json.dumps([
-        {
-            'login': 'cnry'
-        }
-    ]))
+    context.github.on_get('/user/orgs', body=json.dumps(
+        [
+            {'login': 'cnry'},
+        ]
+    ))
+
 
     context.headers = {
         'Content-Type': 'application/json',
@@ -89,5 +93,8 @@ def prepare_http_client(context):
     }
 
 
+def disable_httpretty(context):
+    httpretty.disable()
+
 safe_db = scenario(prepare_redis, sweep_redis)
-api = scenario([prepare_redis, prepare_http_client], [sweep_redis])
+api = scenario([prepare_redis, prepare_http_client], [sweep_redis, disable_httpretty])
