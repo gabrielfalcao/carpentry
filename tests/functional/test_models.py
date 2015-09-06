@@ -9,7 +9,7 @@ from .helpers import safe_db
 
 @safe_db
 def test_create_builder(context):
-    ('Creating builders in cassandra should work')
+    ('Creating builders with repocket should work')
     # Given that I create a Builder
     builder = Builder.objects.create(
         id=uuid.uuid1(),

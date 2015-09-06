@@ -31,7 +31,6 @@ def set_things(self, env):
     self.redis_host = env.get('redis_host', 'localhost')
     self.redis_port = env.get_int('redis_port', 6379)
     self.redis_db = env.get_int('redis_db', 0)
-    self.cassandra_hosts = env.get('cassandra_hosts')
 
     self.workdir = env.get('workdir', DEFAULT_WORKDIR)
     self.full_server_url = env.get('full_server_url')

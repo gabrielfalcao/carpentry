@@ -12,18 +12,12 @@ respawn limit 5 60
 # pre-stop exec docker rm -f carpentry-workers-{{ item }}
 
 script
-    until /bin/nc -z 127.0.0.1 9042; do
-            echo "Waiting for cassandra to listen on 127.0.0.1:9042"
-            exec /bin/sleep 5
-    done
-
     exec docker run \
         --name carpentry-workers-{{ item }} \
         --rm --net=host \
         -v /srv/carpentry/builds \
         -v /srv/carpentry/ssh-keys \
         -v /var/log/carpentry-workers:/var/log \
-        -e CARPENTRY_CASSANDRA_HOST=localhost \
         -e CARPENTRY_REDIS_HOST=localhost \
         -e CARPENTRY_GITHUB_CLIEND_ID={{ carpentry_github_client_id }} \
         -e CARPENTRY_GITHUB_CLIENT_SECRET={{ carpentry_github_client_secret }} \

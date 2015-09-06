@@ -488,7 +488,6 @@ def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ens
         ],
         'allowed_github_organizations': ['cnry'],
         'carpentry_config_path': '/Users/gabrielfalcao/projects/personal/carpentry/tests/carpentry.yml',
-        'cassandra_hosts': None,
         'config_path': '/Users/gabrielfalcao/projects/personal/carpentry/carpentry.yml',
         'default_subprocess_timeout_in_seconds': 1500,
         'fallback_config_path': '/etc/carpentry.yml',

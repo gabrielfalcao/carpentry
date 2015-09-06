@@ -3,8 +3,7 @@
 Quickstart
 ==========
 
-1. you will need a `cassandra`_ instance or cluster running
-2. also a `redis`_ instance available for the workers :+1:
+1. you will need a `redis`_ server
 
 .. highlight:: bash
 
@@ -18,7 +17,7 @@ Perhaps you want to create a `virtualenv`_ first.
    $ pip install carpentry
 
 
-Step 2: Prepare a local cassandra and redis
+Step 2: Prepare a local redis
 -------------------------------------------
 
 **This is going to be easier than you think**
@@ -28,7 +27,6 @@ On Mac OSX
 """"""""""
 You will need `homebrew`_ installed in your Mac::
 
-  $ brew install cassandra
   $ brew install redis
 
 
@@ -36,7 +34,6 @@ On Linux
 """"""""
 The easiest way is through `docker`_::
 
-  $ docker run -d --net=host cassandra
   $ docker run -d --net=host redis
 
 
@@ -70,8 +67,6 @@ order:
     carpentry_secret_key: something secret
     github_client_id: go to githup and create an app
     github_client_secret: then put the credentials here
-    cassandra_hosts:
-      - 127.0.0.1
 
     # only users from the organizations below will have access at all
     allowed_github_organizations:
@@ -82,22 +77,8 @@ order:
 
 .. highlight:: bash
 
-Step 4: Prepare cassandra and redis
------------------------------------
 
-This will create the cassandra keyspace ``carpentry`` and flush the redis db
-
-::
-
-    export CARPENTRY_CONFIG_PATH=/srv/carpentry.yml
-
-    $ carpentry db --drop --flush-redis
-
-.. note::
-   Ensure that the redis instance is dedicated to carpentry before doing a ``--flush-redis``
-
-
-Step 5: Run the server
+Step 4: Run the server
 ----------------------
 
 ::
@@ -105,7 +86,7 @@ Step 5: Run the server
     $ carpentry run
 
 
-Step 6: Run the workers
+Step 5: Run the workers
 -----------------------
 
 ::
@@ -115,9 +96,7 @@ Step 6: Run the workers
 .. note::
    pro tip: if you run multiple workers in your machine your builds will run faster
 
-.. _cassandra: http://cassandra.apache.org/
 .. _redis: http://redis.io/
 .. _bower: http://bower.io/
 .. _homebrew: http://brew.sh
-.. _docker: https://registry.hub.docker.com/_/cassandra/
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/

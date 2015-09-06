@@ -20,9 +20,7 @@ help anyone in the world have a simple and functional CI server with
 almost no effort.
 
 
-.. _cassandra: http://cassandra.apache.org/
 .. _redis: http://redis.io/
 .. _bower: http://bower.io/
 .. _homebrew: http://brew.sh
-.. _docker: https://registry.hub.docker.com/_/cassandra/
 .. _virtualenv: https://virtualenvwrapper.readthedocs.org/

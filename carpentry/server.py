@@ -123,7 +123,6 @@ def setup_logging(level):
         'werkzeug',
         'repocket',
         'requests.packages.urllib3.connectionpool',
-        'cassandra.io.asyncorereactor'
     ]
 
     for name in WARNING_ONLY_HANDLERS:

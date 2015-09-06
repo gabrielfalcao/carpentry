@@ -15,32 +15,11 @@
     carpentry_http_port: 5000
     carpentry_web_processes: 4
     carpentry_worker_processes: 10
-    cassandra:
-      version: '2.0.1'
-      version_branch: '2.0'
-
-      repo_key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x4BD736A82B5C1B00'
-      repo_key_file: '4BD736A82B5C1B00.gpg'
-      dependencies:
-        - 'openjdk-7-jre'
-        - 'openjdk-7-jdk'
-
-    cassandra_1_2:
-      repo: 'deb http://www.apache.org/dist/cassandra/debian 12x main'
-
-    cassandra_2_0:
-      repo: 'deb http://www.apache.org/dist/cassandra/debian 20x main'
 
     config:
-      cluster_name: 'MyCluster'
-      data_file_directories:
-        - '/var/lib/cassandra/data'
-      commitlog_directory: '/var/lib/cassandra/commitlog'
-      saved_caches_directory: '/var/lib/cassandra/saved_caches'
       log_level: 'info'
+
   roles:
-    # disabling cassandra after it was already instaled once
-    - cassandra
     - carpentry
 
   tasks:
@@ -81,8 +60,8 @@
       tags:
         - restart
 
-    - name: cleanup and recreate full cassandra db and flush worker redis queues
-      shell: /srv/carpentry/venv/bin/carpentry setup --drop --flush-redis
+    - name: flush redis
+      shell: /srv/carpentry/venv/bin/carpentry setup
       when: carpentry_flush_all_data
       tags:
         - flush
