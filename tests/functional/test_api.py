@@ -59,7 +59,57 @@ def test_create_builder(context):
     data.should.equal({
         u'branch': u'',
         u'build_timeout_in_seconds': 0,
-        u'creator_user_id': context.user.id,
+        u'creator': {
+            u'carpentry_token': bytes(context.user.carpentry_token),
+            u'email': u'',
+            u'github_access_token': u'Default:FAKE:Token',
+            u'github_metadata': {
+                u'avatar_url': u'https://github.com/images/error/octocat_happy.gif',
+                u'bio': u'There once was...',
+                u'blog': u'https://github.com/blog',
+                u'collaborators': 8,
+                u'company': u'GitHub',
+                u'created_at': u'2008-01-14T04:33:35Z',
+                u'disk_usage': 10000,
+                u'email': u'octocat@github.com',
+                u'events_url': u'https://api.github.com/users/octocat/events{/privacy}',
+                u'followers': 20,
+                u'followers_url': u'https://api.github.com/users/octocat/followers',
+                u'following': 0,
+                u'following_url': u'https://api.github.com/users/octocat/following{/other_user}',
+                u'gists_url': u'https://api.github.com/users/octocat/gists{/gist_id}',
+                u'gravatar_id': u'',
+                u'hireable': False,
+                u'html_url': u'https://github.com/octocat',
+                u'id': 1,
+                u'location': u'San Francisco',
+                u'login': u'octocat',
+                u'name': u'monalisa octocat',
+                u'organizations': [{u'login': u'cnry'}],
+                u'organizations_url': u'https://api.github.com/users/octocat/orgs',
+                u'owned_private_repos': 100,
+                u'plan': {
+                    u'collaborators': 0,
+                    u'name': u'Medium',
+                    u'private_repos': 20,
+                    u'space': 400
+                },
+                u'private_gists': 81,
+                u'public_gists': 1,
+                u'public_repos': 2,
+                u'received_events_url': u'https://api.github.com/users/octocat/received_events',
+                u'repos_url': u'https://api.github.com/users/octocat/repos',
+                u'site_admin': False,
+                u'starred_url': u'https://api.github.com/users/octocat/starred{/owner}{/repo}',
+                u'subscriptions_url': u'https://api.github.com/users/octocat/subscriptions',
+                u'total_private_repos': 100,
+                u'type': u'User',
+                u'updated_at': u'2008-01-14T04:33:35Z',
+                u'url': u'https://api.github.com/users/octocat'
+            },
+            u'id': bytes(context.user.id),
+            u'name': u''
+        },
         u'css_status': u'success',
         u'git_clone_timeout_in_seconds': 0,
         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
@@ -196,7 +246,6 @@ def test_delete_builder(context):
     data.should.equal({
         'branch': u'',
         u'build_timeout_in_seconds': 0,
-        u'creator_user_id': str(context.user.id),
         u'css_status': u'success',
         u'git_clone_timeout_in_seconds': 0,
         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
@@ -207,7 +256,8 @@ def test_delete_builder(context):
         u'name': u'Device Management [unit tests]',
         u'shell_script': u'make test',
         u'slug': u'devicemanagementunittests',
-        u'status': u''
+        u'status': u'',
+        'creator': None
     })
     builder_id.should_not.be.none
 
@@ -236,6 +286,7 @@ def test_create_build_instance_from_builder(context):
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
         shell_script='make test',
         status='ready',
+        creator=context.user,
     )
 
     # And I POST on /api/builder/uuid/build
@@ -265,7 +316,14 @@ def test_create_build_instance_from_builder(context):
         u'builder': {
             u'branch': u'',
             u'build_timeout_in_seconds': 0,
-            u'creator_user_id': u'',
+            u'creator': {
+                u'carpentry_token': bytes(context.user.carpentry_token),
+                u'email': u'',
+                u'github_access_token': u'Default:FAKE:Token',
+                u'github_metadata': u'',
+                u'id': bytes(context.user.id),
+                u'name': u'',
+            },
             u'git_clone_timeout_in_seconds': 0,
             u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',
             u'github_hook_data': u'',
@@ -364,7 +422,7 @@ def test_edit_builder(context):
     data.should.equal({
         u'branch': u'',
         u'build_timeout_in_seconds': 0,
-        u'creator_user_id': u'',
+        u'creator': None,
         u'css_status': u'success',
         u'git_clone_timeout_in_seconds': 0,
         u'git_uri': u'git@github.com:gabrielfalcao/lettuce.git',

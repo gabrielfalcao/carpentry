@@ -89,7 +89,7 @@ def create_builder(user):
         'id_rsa_public': any,
     })
     data['id'] = uuid.uuid1()
-    data['creator_user_id'] = user.id
+    data['creator'] = user
     data['status'] = 'ready'
     should_generate_ssh_keys = data.pop('generate_ssh_keys')
 
@@ -265,7 +265,7 @@ def trigger_builder_hook(id):
         logger.exception("Failed to retrieve builder of id: %s", id)
         return json_response({}, status=404)
 
-    user = models.User.objects.get(id=item.creator_user_id)
+    user = item.creator
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}
     head_commit = request_data.get('head_commit', {})

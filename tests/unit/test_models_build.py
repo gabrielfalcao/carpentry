@@ -100,19 +100,21 @@ def test_build_to_dictionary():
         'author_gravatar_url': 'https://s.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e',
         'author_name': u'',
         'branch': u'',
-        'builder': {'branch': u'',
-        'build_timeout_in_seconds': 0,
-        'creator_user_id': '',
-        'git_clone_timeout_in_seconds': 0,
-        'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-        'github_hook_data': u'',
-        'id': UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
-        'id_rsa_private': u'',
-        'id_rsa_public': u'',
-        'json_instructions': u'',
-        'name': u'Device Management [unit tests]',
-        'shell_script': 'make test',
-        'status': u''},
+        'builder': {
+            'branch': u'',
+            'build_timeout_in_seconds': 0,
+            'creator': None,
+            'git_clone_timeout_in_seconds': 0,
+            'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
+            'github_hook_data': u'',
+            'id': UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+            'id_rsa_private': u'',
+            'id_rsa_public': u'',
+            'json_instructions': u'',
+            'name': u'Device Management [unit tests]',
+            'shell_script': 'make test',
+            'status': u''
+        },
         'code': 0,
         'commit': 'commit1',
         'commit_message': u'',
@@ -121,8 +123,10 @@ def test_build_to_dictionary():
         'date_finished': '2015-09-02 00:00:00',
         'docker_status': {},
         'git_uri': 'git@github.com:gabrielfalcao/lettuce.git',
-        'github_repo_info': {'name': 'lettuce',
-        'owner': 'gabrielfalcao'},
+        'github_repo_info': {
+            'name': 'lettuce',
+            'owner': 'gabrielfalcao'
+        },
         'github_status_data': u'',
         'github_webhook_data': u'',
         'id': '4b1d90f0-aaaa-40cd-9c21-35eee1f243d3',
@@ -130,6 +134,7 @@ def test_build_to_dictionary():
         'stderr': u'',
         'stdout': u''
     })
+
 
 def test_github_status_info_ok():
     ('Build.github_status_info should return the deserialized json when available')

@@ -136,15 +136,13 @@ class User(CarpentryBaseActiveRecord):
         })
 
     def get_github_metadata(self):
-        if self.github_metadata:
-            return self.github_metadata
-
         headers = self.prepare_github_request_headers()
         response = requests.get('https://api.github.com/user', headers=headers)
-        metadata = response.json()
-        self.github_metadata = metadata
-        self.save()
-        return metadata
+        if response.status_code == 200:
+            self.github_metadata = response.json()
+            self.save()
+
+        return self.github_metadata
 
     def reset_token(self):
         self.carpentry_token = uuid.uuid4()
@@ -300,16 +298,12 @@ class Builder(CarpentryBaseActiveRecord):
     status = attributes.Unicode()
     branch = attributes.Unicode()
 
-    creator_user_id = attributes.UUID()
+    creator = attributes.Pointer(User)
     github_hook_data = attributes.Unicode()
     git_clone_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
     build_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
-
-    @property
-    def creator(self):
-        return User.objects.get(id=self.creator_user_id)
 
     def get_fallback_github_access_token(self):
         return self.creator.github_access_token

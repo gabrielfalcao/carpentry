@@ -578,12 +578,13 @@ def test_trigger_builder_hook(json_response, models, TokenAuthority, request, en
         }
     }
     request.data = {'say': 'what'}
-    user = models.User.objects.get.return_value
+    builder = models.Builder.objects.get.return_value
+    builder.branch = 'master'
+
+    user = builder.creator
     user.email = 'email@foo.com'
     user.name = 'Mary Doe'
     user.github_access_token = 'lemmeingithub'
-    builder = models.Builder.objects.get.return_value
-    builder.branch = 'master'
 
     generate_ssh_key_pair.return_value = ('privte', 'public')
     ensure_json_request.return_value = {

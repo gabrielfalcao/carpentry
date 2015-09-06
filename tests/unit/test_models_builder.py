@@ -23,7 +23,7 @@ def test_builder_get_fallback_access_token(User):
 
     # And an instance of builder with a valid user uuid
     instance1 = Builder(
-        creator_user_id=user_uuid
+        creator=creator
     )
 
     # When I call get_fallback_github_access_token
@@ -31,9 +31,6 @@ def test_builder_get_fallback_access_token(User):
 
     # And it should have returned
     result.should.equal('free-pass-to-github-yay')
-
-    # And User.get should have been called with the creator_user_id as id
-    User.objects.get.assert_called_once_with(id=user_uuid)
 
     # And the property github_access_token returns the same
     instance1.github_access_token.should.equal(
@@ -229,7 +226,7 @@ def test_builder_to_dictionary(
         'shell_script': '',
         'branch': '',
         'build_timeout_in_seconds': 0,
-        'creator_user_id': '',
+        'creator': None,
         'css_status': 'success',
         'git_clone_timeout_in_seconds': 0,
         'github_hook_data': '',
@@ -327,9 +324,10 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         'css_status': 'success',
         'name': 'Awesome Project 1',
         'id_rsa_private': u'',
-        'json_instructions': u'',
+        'creator': None,
         'build_timeout_in_seconds': 0,
         'id_rsa_public': u'',
+        'json_instructions': u'',
         'shell_script': u'',
         'git_clone_timeout_in_seconds': 0,
         'slug': 'awesomeproject1',
@@ -338,9 +336,8 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         'user': {'user': 1},
         'branch': u'',
         'github_hook_data': u'',
-        'creator_user_id': '',
         'foo': 'bar',
-        'id': '',
+        'id': ''
     })
 
 

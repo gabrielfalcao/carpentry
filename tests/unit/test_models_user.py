@@ -30,12 +30,13 @@ def test_user_get_github_metadata(requests, save):
     response = requests.get.return_value
     response.text = '{"foo": "bar"}'
     response.json.return_value = {"foo": "bar"}
+    response.status_code = 200
 
     # Given a user with a valid json meta
     u = User(
         github_access_token='test-token',
         carpentry_token=uuid.UUID(
-            '4b1d90f0-96c2-40cd-9c21-35eee1f243d3')
+            '4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
     )
 
     # When I call get_github_metadata
