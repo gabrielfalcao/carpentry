@@ -62,7 +62,7 @@ setup(
     },
     author='Gabriel Falcao',
     author_email='gabriel@nacaolivre.org',
-    url='http://falcao.it/carpentry',
+    url='http://carpentry-ci.readthedocs.org/',
     packages=find_packages(exclude=['*tests*']),
     # package_data={'carpentry': [
     #     'recursive-include carpentry/templates *'
