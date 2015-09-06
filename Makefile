@@ -19,6 +19,7 @@ assets:
 	python carpentry/cli.py static
 
 run:
+	reset
 	python carpentry/cli.py run
 
 dependencies:
