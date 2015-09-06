@@ -253,8 +253,6 @@ def test_determine_github_repo_from_git_uri_failing():
         'git@gogs.io:owner/project.git'
     )
     result.should.equal({
-        'owner': None,
-        'name': None,
     })
 
 

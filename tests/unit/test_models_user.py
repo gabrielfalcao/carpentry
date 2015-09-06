@@ -13,7 +13,7 @@ def test_user_get_github_metadata_cached():
      'data when available')
 
     # Given a user with a valid json meta
-    u = User(github_metadata='{"foo": "bar"}')
+    u = User(github_metadata={"foo": "bar"})
 
     # When I call get_github_metadata
     result = u.get_github_metadata()

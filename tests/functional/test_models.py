@@ -19,7 +19,7 @@ def test_create_builder(context):
     )
 
     # When I get all results
-    results = list(Builder.all())
+    results = list(Builder.objects.all())
 
     # Then it should have one result
     results.should.have.length_of(1)

@@ -90,6 +90,7 @@ def create_builder(user):
     })
     data['id'] = uuid.uuid1()
     data['creator_user_id'] = user.id
+    data['status'] = 'ready'
     should_generate_ssh_keys = data.pop('generate_ssh_keys')
 
     if should_generate_ssh_keys:
@@ -152,10 +153,13 @@ def edit_builder(user, id):
         'git_uri': any,
         'shell_script': any,
         'json_instructions': any,
+        'id_rsa_public': any,
+        'id_rsa_private': any,
     })
     item = models.Builder.objects.get(id=id)
     for attr, value in data.items():
-        setattr(item, attr, value)
+        if value:
+            item.set(attr, value)
 
     item.save()
 
