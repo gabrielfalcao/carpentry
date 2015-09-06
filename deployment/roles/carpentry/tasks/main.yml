@@ -49,7 +49,7 @@
     - carpentry
 
 - name: add docker repository key
-  apt_key: url=https://get.docker.io/gpg state=present
+  apt_key: data="{{ lookup('file', 'docker.gpg') }}" state=present
   tags:
     - carpentry
 
