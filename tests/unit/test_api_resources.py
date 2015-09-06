@@ -14,7 +14,7 @@ from carpentry.models import (
     GithubRepository,
     User,
 )
-from carpentry.models import CarpentryBaseModel
+from carpentry.models import CarpentryBaseActiveRecord
 
 from carpentry.api.resources import is_model
 from carpentry.api.resources import get_models
@@ -74,7 +74,7 @@ def test_remove_build(json_response, models, TokenAuthority, request):
 
     # And the json response was called appropriately
     json_response.assert_called_once_with(
-        build.to_dict.return_value,
+        build.to_dictionary.return_value,
     )
 
 
@@ -105,7 +105,7 @@ def test_remove_builder(json_response, models, TokenAuthority, request):
 
     # And the json response was called appropriately
     json_response.assert_called_once_with(
-        builder.to_dict.return_value
+        builder.to_dictionary.return_value
     )
 
 
@@ -117,10 +117,10 @@ def test_builds_from_builder(json_response, models, TokenAuthority, request):
     ('GET /api/builder/<id>/builds should retrieve list of builds')
 
     build1 = Mock(name='build1')
-    build1.to_dict.return_value = {'build': 1}
+    build1.to_dictionary.return_value = {'build': 1}
 
     build2 = Mock(name='build2')
-    build2.to_dict.return_value = {'build': 2}
+    build2.to_dictionary.return_value = {'build': 2}
 
     models.Builds.objects.filter.return_value = [build1, build2]
 
@@ -128,8 +128,8 @@ def test_builds_from_builder(json_response, models, TokenAuthority, request):
     response = builds_from_builder(id='someid')
 
     # Then the query was done appropriately
-    models.Build.objects.filter.assert_called_once_with(
-        builder_id='someid'
+    models.Builder.objects.get.assert_called_once_with(
+        id='someid'
     )
 
     # And the response should be a json_response
@@ -141,7 +141,7 @@ def test_is_model():
 
     is_model(User).should.be.true
     is_model(object).should.be.false
-    is_model(CarpentryBaseModel).should.be.false
+    is_model(CarpentryBaseActiveRecord).should.be.false
 
 
 def test_get_models():
@@ -184,13 +184,13 @@ def test_get_build_failed(json_response, models, TokenAuthority, request):
      'an exception happens')
 
     # Given that Build.objects.get returns a mocked build
-    models.Build.get.side_effect = RuntimeError('boom')
+    models.Build.objects.get.side_effect = RuntimeError('boom')
 
     # When I call retrieve_build
     response = get_build(id='someid')
 
     # Then get() was called
-    models.Build.get.assert_called_once_with(id='someid')
+    models.Build.objects.get.assert_called_once_with(id='someid')
 
     # And the response should be a json_response
     response.should.equal(json_response.return_value)
@@ -210,15 +210,15 @@ def test_get_build_ok(json_response, models, TokenAuthority, request):
      'an exception happens')
 
     # Given that Build.objects.get returns a mocked build
-    build = models.Build.get.return_value
-    build.to_dict.return_value = {'build': 'me'}
-    build.builder.to_dict.return_value = {'builder': 'too'}
+    build = models.Build.objects.get.return_value
+    build.to_dictionary.return_value = {'build': 'me'}
+    build.builder.to_dictionary.return_value = {'builder': 'too'}
 
     # When I call retrieve_build
     response = get_build(id='someid')
 
     # Then get() was called
-    models.Build.get.assert_called_once_with(id='someid')
+    models.Build.objects.get.assert_called_once_with(id='someid')
 
     # And the response should be a json_response
     response.should.equal(json_response.return_value)
@@ -241,7 +241,7 @@ def test_create_builder_generating_ssh_keys(json_response, models, TokenAuthorit
     user = TokenAuthority.return_value.get_user.return_value
     user.github_access_token = 'lemmeingithub'
     builder = models.Builder.create.return_value
-    builder.to_dict.return_value = {'foo': 'bar'}
+    builder.to_dictionary.return_value = {'foo': 'bar'}
 
     generate_ssh_key_pair.return_value = ('privte', 'public')
     ensure_json_request.return_value = {
@@ -280,7 +280,7 @@ def test_retrieve_builder(json_response, models, TokenAuthority, request):
 
     # Given that Build.objects.get returns a mocked build
     builder = models.Builder.objects.get.return_value
-    builder.to_dict.return_value = {'say': 'whaaaaat'}
+    builder.to_dictionary.return_value = {'say': 'whaaaaat'}
 
     # When I call retrieve_builder
     response = retrieve_builder(id='someid')
@@ -306,7 +306,7 @@ def test_clear_builds(json_response, models, TokenAuthority, request):
             self.commit = str(x)[0] * 4
 
     # Given that Build.objects.get returns a mocked build
-    builder = models.Builder.get.return_value
+    builder = models.Builder.objects.get.return_value
     builder.clear_builds.return_value = [
         Build(x) for x in range(10)]
 
@@ -317,7 +317,7 @@ def test_clear_builds(json_response, models, TokenAuthority, request):
     builder.clear_builds.assert_called_once_with()
 
     # And the query was done appropriately
-    models.Builder.get.assert_called_once_with(
+    models.Builder.objects.get.assert_called_once_with(
         id='someid'
     )
 
@@ -339,7 +339,7 @@ def test_clear_builds_empty(json_response, models, TokenAuthority, request):
      '0 when')
 
     # Given that Build.objects.get returns a mocked build
-    builder = models.Builder.get.return_value
+    builder = models.Builder.objects.get.return_value
     builder.clear_builds.return_value = []
 
     # When I call clear_builds
@@ -349,7 +349,7 @@ def test_clear_builds_empty(json_response, models, TokenAuthority, request):
     builder.clear_builds.assert_called_once_with()
 
     # And the query was done appropriately
-    models.Builder.get.assert_called_once_with(
+    models.Builder.objects.get.assert_called_once_with(
         id='someid'
     )
 
@@ -379,7 +379,7 @@ def test_edit_builder(json_response, models, TokenAuthority, request, ensure_jso
 
     # Given that Build.objects.put returns a mocked build
     builder = models.Builder.objects.get.return_value
-    builder.to_dict.return_value = {'say': 'whaaaaat'}
+    builder.to_dictionary.return_value = {'say': 'whaaaaat'}
 
     # When I call retrieve_builder
     response = edit_builder(id='someid')
@@ -400,9 +400,9 @@ def test_list_builders(json_response, models, TokenAuthority, request):
     ('GET /api/builder/<id> should list the builders')
 
     builder1 = Mock(name='builder1')
-    builder1.to_dict.return_value = {'build': 1}
+    builder1.to_dictionary.return_value = {'build': 1}
     builder2 = Mock(name='builder2')
-    builder2.to_dict.return_value = {'build': 2}
+    builder2.to_dictionary.return_value = {'build': 2}
 
     # Given that Build.objects.put returns a mocked build
     models.Builder.objects.all.return_value = [
@@ -476,31 +476,30 @@ def test_get_conf(json_response, models, TokenAuthority, request, uuid_mock, ens
     # Then the response should be json
     response.should.equal(json_response.return_value)
     json_response.call_args[0][0].should.equal({
-        'default_subprocess_timeout_in_seconds': 1500,
         'DEFAULT_WORKDIR': '/tmp/carpentry',
-        'carpentry_config_path': PROJECT_FILE('tests/carpentry.yml'),
-        'workdir': 'sandbox',
+        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039',
+        'GITHUB_CLIENT_SECRET': 'ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de',
+        'SECRET_KEY': None,
         'SUPPORTED_CONFIG_PATHS': [
-            '/etc/carpentry.yml',
+            os.path.expanduser('/etc/carpentry.yml'),
             os.path.expanduser('~/carpentry.yml'),
             os.path.expanduser('~/.carpentry.yml'),
-            PROJECT_FILE('carpentry.yml'),
+            os.path.expanduser('~/projects/personal/carpentry/carpentry.yml')
         ],
-        'full_server_url': 'http://localhost:5000',
-        'ssh_executable_path': '/usr/bin/ssh',
-        'config_path': PROJECT_FILE('carpentry.yml'),
-        'redis_host': 'localhost',
-        'hostname': 'localhost',
-        'cassandra_hosts': ['127.0.0.1', '0.0.0.0'],
         'allowed_github_organizations': ['cnry'],
-        'GITHUB_CLIENT_SECRET': 'ec27a8f0e4a436c3cd6c846c377ef18e4bc4b0de',
-        'redis_db': 0,
-        'git_executable_path': '/usr/bin/git',
-        'redis_port': 6379,
-        'SECRET_KEY': None,
+        'carpentry_config_path': '/Users/gabrielfalcao/projects/personal/carpentry/tests/carpentry.yml',
+        'config_path': '/Users/gabrielfalcao/projects/personal/carpentry/carpentry.yml',
+        'default_subprocess_timeout_in_seconds': 1500,
         'fallback_config_path': '/etc/carpentry.yml',
+        'full_server_url': 'http://localhost:5000',
+        'git_executable_path': '/usr/bin/git',
+        'hostname': 'localhost',
         'port': 5000,
-        'GITHUB_CLIENT_ID': 'd4d5fd91b48e183de039',
+        'redis_db': 0,
+        'redis_host': 'localhost',
+        'redis_port': 6379,
+        'ssh_executable_path': '/usr/bin/ssh',
+        'workdir': 'sandbox'
     })
 
 
@@ -579,7 +578,7 @@ def test_trigger_builder_hook(json_response, models, TokenAuthority, request, en
         }
     }
     request.data = {'say': 'what'}
-    user = models.User.get.return_value
+    user = models.User.objects.get.return_value
     user.email = 'email@foo.com'
     user.name = 'Mary Doe'
     user.github_access_token = 'lemmeingithub'

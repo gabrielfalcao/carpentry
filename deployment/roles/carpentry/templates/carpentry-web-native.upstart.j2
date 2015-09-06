@@ -7,7 +7,6 @@ respawn limit 5 60
 
 env CARPENTRY_CONFIG_PATH=/etc/carpentry.yml
 env CARPENTRY_HTTP_HOST=0.0.0.0
-env CARPENTRY_CASSANDRA_HOST=localhost
 env CARPENTRY_REDIS_HOST=localhost
 env CARPENTRY_SERVER_URL={{ full_server_url }}
 env CARPENTRY_GITHUB_CLIEND_ID={{ carpentry_github_client_id }}
@@ -17,11 +16,5 @@ env PYTHONPATH=/srv/carpentry/venv/lib/python2.7/site-packages
 env VIRTUAL_ENV=/srv/carpentry/venv
 
 script
-    until /bin/nc -z 127.0.0.1 9042; do
-            echo "Waiting for cassandra to listen on 127.0.0.1:9042"
-            exec /bin/sleep 5
-    done
-
-exec /srv/carpentry/venv/bin/gunicorn carpentry.wsgi:application --bind 0.0.0.0:{{ carpentry_http_port }} --log-level debug --workers={{ carpentry_web_processes }}
-
+  exec /srv/carpentry/venv/bin/gunicorn carpentry.wsgi:application --bind 0.0.0.0:{{ carpentry_http_port }} --log-level debug --workers={{ carpentry_web_processes }}
 end script

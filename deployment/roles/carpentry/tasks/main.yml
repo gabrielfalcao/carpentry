@@ -135,13 +135,6 @@
   tags:
     - carpentry
 
-- name: ensure cassandra is running
-  service: name="cassandra" state=started
-
-  tags:
-    - carpentry
-    - upstart
-
 - name: restart carpentry-web
   service: name=carpentry-web state=restarted
   tags:

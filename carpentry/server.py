@@ -9,7 +9,7 @@ from flask import g, redirect, request
 from carpentry import conf
 from flask.ext.github import GitHub
 from carpentry.models import User
-from cqlengine import connection
+from uuid import UUID
 from flask_socketio import SocketIO
 from carpentry.registry import WEBSOCKET_HANDLERS
 
@@ -32,8 +32,6 @@ class CarpentryHttpServer(Web):
         # self.collect_websocket_modules()
         self.collect_modules()
 
-        connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-
     def collect_websocket_modules(self):
         self.socket_io = SocketIO(self.flask_app)
         self.websockets = []
@@ -44,7 +42,6 @@ class CarpentryHttpServer(Web):
         return self.websockets
 
     def setup_github_authentication(self):
-
         @self.flask_app.before_request
         def prepare_user():
             carpentry_token = request.cookies.get('carpentry_token')
@@ -79,7 +76,7 @@ class CarpentryHttpServer(Web):
                     carpentry_token=uuid.uuid4(),
                     github_access_token=access_token
                 )
-                logger.info("created new user", g.user)
+                logger.info("created new user %s", g.user)
             else:
                 logger.info(
                     "User already exists with github_access_token %s %s", access_token, g.user)
@@ -123,10 +120,9 @@ def setup_logging(level):
     ]
 
     WARNING_ONLY_HANDLERS = [
-        'cqlengine.cql',
         'werkzeug',
+        'repocket',
         'requests.packages.urllib3.connectionpool',
-        'cassandra.io.asyncorereactor'
     ]
 
     for name in WARNING_ONLY_HANDLERS:

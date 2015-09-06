@@ -2,22 +2,24 @@
 #
 import re
 import json
-import redis
+
 import uuid
 import requests
 import hashlib
 import logging
 import datetime
-import traceback
+
 # from dateutil.parser import parse as parse_datetime
 from lineup import JSONRedisBackend
 
-from cqlengine import columns
-from cqlengine.models import Model
+from repocket import attributes
+from repocket import ActiveRecord
+from repocket import configure
+from repocket.util import is_null
 from carpentry.util import render_string, force_unicode, response_did_succeed
 from carpentry import conf
 
-logger = logging.getLogger('carpentry')
+logger = logging.getLogger('carpentry.models')
 
 BUILD_STATUSES = [
     'ready',      # no builds scheduled
@@ -52,8 +54,9 @@ GITHUB_STATUS_MAP = {
 GITHUB_URI_REGEX = re.compile(
     r'github.com[:/](?P<owner>[\w_-]+)[/](?P<name>[\w_-]+)([.]git)?')
 
-redis_pool = redis.ConnectionPool(
-    host=conf.redis_host,
+
+redis_pool = configure.connection_pool(
+    hostname=conf.redis_host,
     port=conf.redis_port,
     db=conf.redis_db
 )
@@ -74,27 +77,23 @@ def prepare_value_for_serialization(value):
     elif isinstance(value, (datetime.datetime, datetime.date, datetime.time)):
         result = str(value)
     elif hasattr(value, 'to_dict'):
-        result = value.to_dict()
+        result = value.to_dict(simple=True)
     else:
         result = value
 
     return result
 
 
-def model_to_dict(instance, extra={}):
+def model_to_dictionary(instance, extra={}):
     data = {}
-    for key, value in instance.items():
+    for key, value in instance.to_dict(simple=True).items():
         data[key] = prepare_value_for_serialization(value)
 
     data.update(extra)
     return data
 
 
-class CarpentryBaseModel(Model):
-    __abstract__ = True
-
-    def to_dict(self):
-        return model_to_dict(self)
+class CarpentryBaseActiveRecord(ActiveRecord):
 
     def prepare_github_request_headers(self, github_access_token=None):
         github_access_token = github_access_token or getattr(
@@ -105,30 +104,218 @@ class CarpentryBaseModel(Model):
         return headers
 
 
-class Builder(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    name = columns.Text(required=True)
-    git_uri = columns.Text(index=True)
-    shell_script = columns.Text(required=True)
-    json_instructions = columns.Text()
-    id_rsa_private = columns.Text(required=True)
-    id_rsa_public = columns.Text(required=True)
-    status = columns.Text(default='ready')
-    branch = columns.Text(default='master')
+class CarpentryPreference(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    key = attributes.Unicode()
+    value = attributes.Unicode()
 
-    creator_user_id = columns.UUID()
-    github_hook_data = columns.Text()
-    git_clone_timeout_in_seconds = columns.Integer(
+
+class User(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    github_access_token = attributes.Unicode()
+    name = attributes.Unicode()
+    email = attributes.Unicode()
+    carpentry_token = attributes.UUID()
+    github_metadata = attributes.JSON()
+
+    @property
+    def organization_names(self):
+        self._organization_names = getattr(self, '_organization_names', None)
+        if not self._organization_names:
+            self._organization_names = [o['login'] for o in self.organizations]
+
+        return self._organization_names
+
+    @property
+    def organizations(self):
+        return self.retrieve_github_organizations()
+
+    def to_dictionary(self):
+        return model_to_dictionary(self, extra={
+            'github': self.get_github_metadata(),
+        })
+
+    def get_github_metadata(self):
+        if self.github_metadata:
+            return self.github_metadata
+
+        headers = self.prepare_github_request_headers()
+        response = requests.get('https://api.github.com/user', headers=headers)
+        metadata = response.json()
+        self.github_metadata = metadata
+        self.save()
+        return metadata
+
+    def reset_token(self):
+        self.carpentry_token = uuid.uuid4()
+        self.save()
+
+    @classmethod
+    def from_carpentry_token(cls, carpentry_token):
+        if not carpentry_token:
+            return
+
+        try:
+            token = uuid.UUID(bytes(carpentry_token))
+        except TypeError:
+            logger.exception("Failed to query user by the carpentry_token: %s", carpentry_token)
+
+        users = cls.objects.filter(carpentry_token=token)
+        if len(users) > 0:
+            return users[0]
+
+    def retrieve_organization_repos(self, name):
+        headers = self.prepare_github_request_headers()
+        url = 'https://api.github.com/orgs/{0}/repos'.format(name)
+        response = requests.get(url, headers=headers)
+        if not response_did_succeed(response):
+            logger.info('[{0} repos] failed to retrieve {1}'.format(name, url))
+            return []
+
+        metadata = response.json()
+        return metadata
+
+    def retrieve_user_repos(self):
+        headers = self.prepare_github_request_headers()
+        url = 'https://api.github.com/user/repos'
+        response = requests.get(url, headers=headers)
+        if not response_did_succeed(response):
+            logger.info('[user repos] failed to retrieve {0}'.format(url))
+            return []
+
+        metadata = response.json()
+        return metadata
+
+    def retrieve_and_cache_github_repositories(self):
+        personal_repos = self.retrieve_user_repos()
+        organization_repos = []
+        for organization_name in conf.allowed_github_organizations:
+            repos = self.retrieve_organization_repos(organization_name)
+            organization_repos.extend(repos)
+
+        all_repos = organization_repos + personal_repos
+        GithubRepository.store_many_from_list(all_repos)
+        return all_repos
+
+    def retrieve_github_organizations(self):
+        github = self.get_github_metadata()
+        organizations = github.get('organizations', None)
+        if organizations:
+            return organizations
+
+        headers = {
+            'Authorization': 'token {0}'.format(self.github_access_token)
+        }
+        url = render_string('https://api.github.com/user/orgs', github)
+        response = requests.get(url, headers=headers)
+        organizations = response.json()
+
+        github['organizations'] = organizations
+        self.github_metadata = github
+        self.save()
+        return organizations
+
+
+class GithubRepository(CarpentryBaseActiveRecord):
+
+    """holds an individual repo coming as json from the github api
+    response, the `name`, `owner` and `git_uri` are stored as fields
+    of this model, and the full `response_data` is also available as a
+    raw json value
+    """
+    id = attributes.AutoUUID()
+    name = attributes.Unicode()
+    owner = attributes.Unicode()
+    git_uri = attributes.Unicode()
+    response_data = attributes.Unicode()
+
+    @classmethod
+    def store_many_from_list(cls, items):
+        results = []
+        for item in items:
+            r = cls.store_one_from_dict(item)
+            results.append(r)
+
+        return results
+
+    @classmethod
+    def store_one_from_dict(cls, item):
+        name = item['name']
+        git_uri = item['ssh_url']
+        owner_info = item['owner']
+        owner = owner_info['login']
+        GithubOrganization.store_one_from_dict(owner_info)
+        response_data = json.dumps(item)
+
+        model = cls(
+            id=uuid.uuid1(),
+            name=name,
+            git_uri=git_uri,
+            owner=owner,
+            response_data=response_data
+        )
+        model.save()
+        return model
+
+
+class GithubOrganization(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    login = attributes.Unicode()
+    github_id = attributes.Integer()
+    avatar_url = attributes.Unicode()
+    url = attributes.Unicode()
+    html_url = attributes.Unicode()
+    response_data = attributes.Unicode()
+
+    @classmethod
+    def store_one_from_dict(cls, item):
+        login = item['login']
+        github_id = item['id']
+        avatar_url = item['avatar_url']
+        url = item['url']
+        html_url = item['html_url']
+        response_data = json.dumps(item)
+
+        model = cls(
+            id=uuid.uuid1(),
+            login=login,
+            github_id=github_id,
+            avatar_url=avatar_url,
+            url=url,
+            html_url=html_url,
+            response_data=response_data
+        )
+        model.save()
+        return model
+
+
+class Builder(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    name = attributes.Unicode()
+    git_uri = attributes.Bytes()
+    shell_script = attributes.Unicode()
+    json_instructions = attributes.Unicode()
+    id_rsa_private = attributes.Unicode()
+    id_rsa_public = attributes.Unicode()
+    status = attributes.Unicode()
+    branch = attributes.Unicode()
+
+    creator_user_id = attributes.UUID()
+    github_hook_data = attributes.Unicode()
+    git_clone_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
-    build_timeout_in_seconds = columns.Integer(
+    build_timeout_in_seconds = attributes.Integer(
         default=conf.default_subprocess_timeout_in_seconds)
 
     @property
     def creator(self):
-        return User.get(id=self.creator_user_id)
+        return User.objects.get(id=self.creator_user_id)
 
     def get_fallback_github_access_token(self):
         return self.creator.github_access_token
+
+    def get_all_builds(self):
+        return Build.objects.filter(builder=self)
 
     @property
     def github_access_token(self):
@@ -145,12 +332,13 @@ class Builder(CarpentryBaseModel):
         headers = self.prepare_github_request_headers(
             github_access_token
         )
+
         url = render_string(
             'https://api.github.com/repos/{owner}/{name}/hooks',
             self.github_repo_info
         )
-
         response = requests.get(url, headers=headers)
+
         try:
             all_hooks = response.json()
         except ValueError:
@@ -176,7 +364,7 @@ class Builder(CarpentryBaseModel):
             if 'config' not in hook:
                 logger.warning("ignoring empty hook %s", hook)
                 continue
-            
+
             hook_config = hook['config']
             hook_url = hook_config.get('url', None)
             hook_id = hook['id']
@@ -197,11 +385,11 @@ class Builder(CarpentryBaseModel):
 
     @classmethod
     def determine_github_repo_from_git_uri(self, git_uri):
-        found = GITHUB_URI_REGEX.search(git_uri)
+        found = not is_null(git_uri) and GITHUB_URI_REGEX.search(git_uri)
         if found:
             return found.groupdict()
 
-        return {'owner': None, 'name': None}
+        return {}
 
     @property
     def github_repo_info(self):
@@ -262,21 +450,22 @@ class Builder(CarpentryBaseModel):
         build = Build.create(
             id=uuid.uuid1(),
             date_created=datetime.datetime.utcnow(),
-            builder_id=self.id,
+            builder=self,
             branch=branch or self.branch or 'master',
             author_name=author_name,
             author_email=author_email,
             git_uri=self.git_uri,
             github_webhook_data=github_webhook_data,
-            commit=commit
+            commit=commit,
+            status='ready',
         )
         pipeline = get_pipeline()
-        payload = self.to_dict()
+        payload = self.to_dictionary()
         payload['id_rsa_public'] = self.id_rsa_public
         payload['id_rsa_private'] = self.id_rsa_private
-        payload.pop('last_build')
-        payload.update(build.to_dict())
-        payload['user'] = user.to_dict()
+        payload.pop('last_build', None)
+        payload.update(build.to_dictionary())
+        payload['user'] = user.to_dictionary()
 
         pipeline.input.put(payload)
         logger.info("Scheduling builder: %s %s", self.name, self.git_uri)
@@ -284,27 +473,27 @@ class Builder(CarpentryBaseModel):
 
     def clear_builds(self):
         deleted_builds = []
-        for build in Build.objects.filter(builder_id=self.id):
+        for build in Build.objects.filter(builder=self):
             deleted_builds.append(build)
             build.delete()
 
         return deleted_builds
 
     def get_last_build(self):
-        results = Build.objects.filter(builder_id=self.id)
+        results = Build.objects.filter(builder=self)
         if not results:
             return None
 
         return results[0]
 
-    def to_dict(self):
+    def to_dictionary(self):
         last_build = self.get_last_build()
 
         serialized_build = None
         if last_build:
-            serialized_build = last_build.to_dict()
+            serialized_build = last_build.to_dictionary()
 
-        result = model_to_dict(self, {
+        result = model_to_dictionary(self, {
             'slug': slugify(self.name).lower(),
             'css_status': STATUS_MAP.get(self.status, 'success'),
             'last_build': serialized_build,
@@ -315,30 +504,24 @@ class Builder(CarpentryBaseModel):
         return result
 
 
-class CarpentryPreference(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    key = columns.Text(required=True)
-    value = columns.Text(required=True)
-
-
-class Build(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    builder_id = columns.TimeUUID(required=True, index=True)
-    git_uri = columns.Text()
-    branch = columns.Text(required=True)
-    stdout = columns.Text()
-    stderr = columns.Text()
-    author_name = columns.Text()
-    author_email = columns.Text(index=True)
-    commit = columns.Text()
-    commit_message = columns.Text()
-    code = columns.Integer()
-    status = columns.Text(default='ready')
-    date_created = columns.DateTime()
-    date_finished = columns.DateTime()
-    github_status_data = columns.Text()
-    github_webhook_data = columns.Text()
-    docker_status = columns.Text()
+class Build(CarpentryBaseActiveRecord):
+    id = attributes.AutoUUID()
+    builder = attributes.Pointer(Builder)
+    git_uri = attributes.Unicode()
+    branch = attributes.Unicode()
+    stdout = attributes.Unicode()
+    stderr = attributes.Unicode()
+    author_name = attributes.Unicode()
+    author_email = attributes.Unicode()
+    commit = attributes.Unicode()
+    commit_message = attributes.Unicode()
+    code = attributes.Integer()
+    status = attributes.Unicode()
+    date_created = attributes.DateTime()
+    date_finished = attributes.DateTime()
+    github_status_data = attributes.Unicode()
+    github_webhook_data = attributes.Unicode()
+    docker_status = attributes.Unicode()
 
     @property
     def author_gravatar_url(self):
@@ -350,8 +533,11 @@ class Build(CarpentryBaseModel):
 
     @property
     def url(self):
+        if not self.builder:
+            logger.error("Could not calculate build url because its parent builder is None: %s", self.to_dict(simple=True))
+            return None
         path = render_string(
-            '/#/builder/{builder_id}/build/{id}', model_to_dict(self))
+            '/#/builder/{builder[id]}/build/{id}', model_to_dictionary(self))
         return conf.get_full_url(path)
 
     @property
@@ -394,21 +580,11 @@ class Build(CarpentryBaseModel):
 
         return response.json()
 
-    @property
-    def builder(self):
-        self._cached_builder = getattr(self, '_cached_builder', None)
-        if not self._cached_builder:
-            self._cached_builder = Builder.get(id=self.builder_id)
-
-        return self._cached_builder
-
     def append_to_stdout(self, string):
         value = force_unicode(string)
+        self.append_to_bytestream('stdout', value)
         msg = '{0} {1}'.format(self.github_repo_info, value).strip()
         logger.info(msg)
-        self.stdout = self.stdout or u''
-        self.stdout += value
-        self.save()
 
     def set_status(self, status, description=None, github_access_token=None):
         self.status = status
@@ -432,8 +608,8 @@ class Build(CarpentryBaseModel):
         builder.save()
         return super(Build, self).save()
 
-    def to_dict(self):
-        result = model_to_dict(self, {
+    def to_dictionary(self):
+        result = model_to_dictionary(self, {
             'github_repo_info': self.github_repo_info,
             'css_status': STATUS_MAP.get(self.status, 'warning'),
             'author_gravatar_url': self.author_gravatar_url
@@ -456,176 +632,3 @@ class Build(CarpentryBaseModel):
             logger.info(msg)
         except ValueError:
             self.append_to_stdout(line)
-
-
-class User(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    github_access_token = columns.Text(index=True)
-    name = columns.Text()
-    email = columns.Text()
-    carpentry_token = columns.UUID(required=True, index=True)
-    github_metadata = columns.Text()
-
-    @property
-    def organization_names(self):
-        self._organization_names = getattr(self, '_organization_names', None)
-        if not self._organization_names:
-            self._organization_names = [o['login'] for o in self.organizations]
-
-        return self._organization_names
-
-    @property
-    def organizations(self):
-        return self.retrieve_github_organizations()
-
-    def to_dict(self):
-        return model_to_dict(self, extra={
-            'github': self.get_github_metadata(),
-        })
-
-    def get_github_metadata(self):
-        if self.github_metadata:
-            return json.loads(self.github_metadata)
-
-        headers = self.prepare_github_request_headers()
-        response = requests.get('https://api.github.com/user', headers=headers)
-        metadata = response.json()
-        self.github_metadata = response.text
-        self.save()
-        return metadata
-
-    def reset_token(self):
-        self.carpentry_token = uuid.uuid4()
-        self.save()
-
-    @classmethod
-    def from_carpentry_token(cls, carpentry_token):
-        if not carpentry_token:
-            return
-
-        users = cls.objects.filter(carpentry_token=carpentry_token)
-        if len(users) > 0:
-            return users[0]
-
-    def retrieve_organization_repos(self, name):
-        headers = self.prepare_github_request_headers()
-        url = 'https://api.github.com/orgs/{0}/repos'.format(name)
-        response = requests.get(url, headers=headers)
-        if not response_did_succeed(response):
-            logger.info('[{0} repos] failed to retrieve {1}'.format(name, url))
-            return []
-
-        metadata = response.json()
-        return metadata
-
-    def retrieve_user_repos(self):
-        headers = self.prepare_github_request_headers()
-        url = 'https://api.github.com/user/repos'
-        response = requests.get(url, headers=headers)
-        if not response_did_succeed(response):
-            logger.info('[user repos] failed to retrieve {0}'.format(url))
-            return []
-
-        metadata = response.json()
-        return metadata
-
-    def retrieve_and_cache_github_repositories(self):
-        personal_repos = self.retrieve_user_repos()
-        organization_repos = []
-        for organization_name in conf.allowed_github_organizations:
-            repos = self.retrieve_organization_repos(organization_name)
-            organization_repos.extend(repos)
-
-        all_repos = organization_repos + personal_repos
-        GithubRepository.store_many_from_list(all_repos)
-        return all_repos
-
-    def retrieve_github_organizations(self):
-        github = self.get_github_metadata()
-        organizations = github.get('organizations', None)
-        if organizations:
-            return organizations
-
-        headers = {
-            'Authorization': 'token {0}'.format(self.github_access_token)
-        }
-        url = render_string('https://api.github.com/user/orgs', github)
-        response = requests.get(url, headers=headers)
-        organizations = response.json()
-        github['organizations'] = organizations
-        self.github_metadata = json.dumps(github)
-        self.save()
-        return organizations
-
-
-class GithubRepository(CarpentryBaseModel):
-
-    """holds an individual repo coming as json from the github api
-    response, the `name`, `owner` and `git_uri` are stored as fields
-    of this model, and the full `response_data` is also available as a
-    raw json value
-    """
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    name = columns.Text(required=True)
-    owner = columns.Text(required=True)
-    git_uri = columns.Text(required=True, index=True)
-    response_data = columns.Text(required=True)
-
-    @classmethod
-    def store_many_from_list(cls, items):
-        results = []
-        for item in items:
-            r = cls.store_one_from_dict(item)
-            results.append(r)
-
-        return results
-
-    @classmethod
-    def store_one_from_dict(cls, item):
-        name = item['name']
-        git_uri = item['ssh_url']
-        owner_info = item['owner']
-        owner = owner_info['login']
-        GithubOrganization.store_one_from_dict(owner_info)
-        response_data = json.dumps(item)
-
-        model = cls(
-            id=uuid.uuid1(),
-            name=name,
-            git_uri=git_uri,
-            owner=owner,
-            response_data=response_data
-        )
-        model.save()
-        return model
-
-
-class GithubOrganization(CarpentryBaseModel):
-    id = columns.TimeUUID(primary_key=True, partition_key=True)
-    login = columns.Text(required=True)
-    github_id = columns.Integer()
-    avatar_url = columns.Text()
-    url = columns.Text()
-    html_url = columns.Text()
-    response_data = columns.Text()
-
-    @classmethod
-    def store_one_from_dict(cls, item):
-        login = item['login']
-        github_id = item['id']
-        avatar_url = item['avatar_url']
-        url = item['url']
-        html_url = item['html_url']
-        response_data = json.dumps(item)
-
-        model = cls(
-            id=uuid.uuid1(),
-            login=login,
-            github_id=github_id,
-            avatar_url=avatar_url,
-            url=url,
-            html_url=html_url,
-            response_data=response_data
-        )
-        model.save()
-        return model

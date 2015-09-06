@@ -13,7 +13,7 @@ def test_user_get_github_metadata_cached():
      'data when available')
 
     # Given a user with a valid json meta
-    u = User(github_metadata='{"foo": "bar"}')
+    u = User(github_metadata={"foo": "bar"})
 
     # When I call get_github_metadata
     result = u.get_github_metadata()
@@ -48,8 +48,8 @@ def test_user_get_github_metadata(requests, save):
 
 
 @patch('carpentry.models.User.get_github_metadata')
-def test_user_to_dict(get_github_metadata):
-    ('User.to_dict() should return the github metadata')
+def test_user_to_dictionary(get_github_metadata):
+    ('User.to_dictionary() should return the github metadata')
 
     get_github_metadata.return_value = {
         'login': 'Norris'
@@ -57,15 +57,15 @@ def test_user_to_dict(get_github_metadata):
 
     u = User(name='Chuck')
 
-    u.to_dict().should.equal({
-        'carpentry_token': None,
-        'email': None,
+    u.to_dictionary().should.equal({
+        'carpentry_token': '',
+        'email': '',
         'github': {
             'login': 'Norris'
         },
-        'github_access_token': None,
-        'github_metadata': None,
-        'id': None,
+        'github_access_token': '',
+        'github_metadata': '',
+        'id': '',
         'name': 'Chuck'
     })
 

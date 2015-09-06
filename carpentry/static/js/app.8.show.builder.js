@@ -8,6 +8,10 @@ angular.module('CarpentryApp.ShowBuilder', ['CarpentryApp.Common']).controller('
 
 
     function refresh() {
+        if ($rootScope.builder.id === undefined) {
+            $rootScope.go('/');
+            return
+        }
         var url = '/api/builder/' + $rootScope.builder.id + '/builds';
         $http
             .get(url)

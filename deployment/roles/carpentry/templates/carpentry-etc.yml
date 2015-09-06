@@ -8,9 +8,6 @@ workdir: /srv/carpentry/
 github_client_id: "{{ carpentry_github_client_id }}"
 github_client_secret: "{{ carpentry_github_client_secret }}"
 carpentry_secret_key: "{{ carpentry_secret_key }}"
-cassandra_hosts:
-  - 127.0.0.1
-  - 0.0.0.0
 
 allowed_github_organizations:
   - cnry

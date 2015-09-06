@@ -28,8 +28,7 @@ More information and documentation coming soon.
 ## Running it locally
 
 
-1. You will need a cassandra instance or cluster running
-2. Also a redis instance available for the workers :+1:
+2. All you will need is a redis instance available for the workers :+1:
 3. Have bower installed
 4. create a virtual env
 

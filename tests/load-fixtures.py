@@ -7,8 +7,7 @@ import os
 from plant import Node
 from uuid import uuid1
 from carpentry.models import Builder
-from carpentry import conf
-from cqlengine import connection
+
 
 ssh_folder = Node(os.path.expanduser('~/.ssh'))
 
@@ -31,7 +30,6 @@ make
 
 
 def main():
-    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
     for name in ['client-api', 'viks', 'cauldron', 'moorhen']:
         Builder.create(
             id=uuid1(),

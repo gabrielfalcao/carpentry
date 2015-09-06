@@ -9,9 +9,9 @@ from .helpers import safe_db
 
 @safe_db
 def test_create_builder(context):
-    ('Creating builders in cassandra should work')
+    ('Creating builders with repocket should work')
     # Given that I create a Builder
-    builder = Builder.create(
+    builder = Builder.objects.create(
         id=uuid.uuid1(),
         name=u'Device Management [unit tests]',
         git_uri='git@github.com:gabrielfalcao/lettuce.git',
@@ -19,7 +19,7 @@ def test_create_builder(context):
     )
 
     # When I get all results
-    results = list(Builder.all())
+    results = list(Builder.objects.all())
 
     # Then it should have one result
     results.should.have.length_of(1)

@@ -20,7 +20,6 @@
   when: not carpentry_docker_deployment
   tags:
     - carpentry
-    - cassandra
     - upstart
 
 - name: install the gunicorn-based carpentry-web upstart
@@ -43,8 +42,3 @@
     - carpentry
     - carpentry-workers
     - upstart
-
-
-- name: prepare cassandra keyspace for CARPENTRY
-  shell: /srv/carpentry/venv/bin/carpentry setup
-  when: carpentry_recreate_keyspace

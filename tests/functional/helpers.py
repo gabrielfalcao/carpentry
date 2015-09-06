@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import httpretty
-import logging
+
 import uuid
 import json
 from sure import scenario
 
 from tumbler.core import Web
-from cqlengine import connection
-from cqlengine.management import sync_table, drop_table, create_keyspace
-from carpentry.api.resources import get_models
-from carpentry.models import User, get_pipeline
-from carpentry import conf
+from repocket import configure
+from carpentry.api import resources
+from carpentry.models import User
 
 
 class GithubMocker(object):
+    resources  # dummy line
 
     def __init__(self, user):
         self.user = user
@@ -57,36 +56,79 @@ class GithubMocker(object):
         )
 
 
-def prepare_db(context):
-    # CREATE KEYSPACE carpentry
-    #        WITH REPLICATION =
-    #                { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
-    connection.setup(conf.cassandra_hosts, default_keyspace='carpentry')
-    create_keyspace('carpentry', strategy_class='SimpleStrategy',
-                    replication_factor=3, durable_writes=True)
-    httpretty.enable()
+def prepare_redis(context):
+    context.pool = configure.connection_pool(
+        hostname='localhost',
+        port=6379
+    )
+    context.connection = context.pool.get_connection()
+    sweep_redis(context)
 
-    for t in get_models():
-        try:
-            drop_table(t)
-            sync_table(t)
-        except Exception:
-            logging.exception('Failed to drop/sync %s', t)
+
+def sweep_redis(context):
+    context.connection.flushall()
 
 
 def prepare_http_client(context):
     context.web = Web()
     context.http = context.web.flask_app.test_client()
-    context.user = User(id=uuid.uuid1(), carpentry_token=uuid.uuid4(
-    ), github_access_token='Default:FAKE:Token')
+    context.user = User(
+        carpentry_token=uuid.uuid4(),
+        github_access_token='Default:FAKE:Token'
+    )
     context.user.save()
 
+    httpretty.enable()
     context.github = GithubMocker(context.user)
-    context.github.on_get('/user/orgs', body=json.dumps([
-        {
-            'login': 'cnry'
+    context.github.on_get('/user/orgs', body=json.dumps(
+        [
+            {'login': 'cnry'},
+        ]
+    ))
+
+    context.github.on_get('/user', body=json.dumps({
+        "login": "octocat",
+        "id": 1,
+        "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/octocat",
+        "html_url": "https://github.com/octocat",
+        "followers_url": "https://api.github.com/users/octocat/followers",
+        "following_url": "https://api.github.com/users/octocat/following{/other_user}",
+        "gists_url": "https://api.github.com/users/octocat/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/octocat/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/octocat/subscriptions",
+        "organizations_url": "https://api.github.com/users/octocat/orgs",
+        "repos_url": "https://api.github.com/users/octocat/repos",
+        "events_url": "https://api.github.com/users/octocat/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/octocat/received_events",
+        "type": "User",
+        "site_admin": False,
+        "name": "monalisa octocat",
+        "company": "GitHub",
+        "blog": "https://github.com/blog",
+        "location": "San Francisco",
+        "email": "octocat@github.com",
+        "hireable": False,
+        "bio": "There once was...",
+        "public_repos": 2,
+        "public_gists": 1,
+        "followers": 20,
+        "following": 0,
+        "created_at": "2008-01-14T04:33:35Z",
+        "updated_at": "2008-01-14T04:33:35Z",
+        "total_private_repos": 100,
+        "owned_private_repos": 100,
+        "private_gists": 81,
+        "disk_usage": 10000,
+        "collaborators": 8,
+        "plan": {
+            "name": "Medium",
+            "space": 400,
+            "private_repos": 20,
+            "collaborators": 0
         }
-    ]))
+    }))
 
     context.headers = {
         'Content-Type': 'application/json',
@@ -94,14 +136,8 @@ def prepare_http_client(context):
     }
 
 
-def clean_db(context):
-    redis = get_pipeline().get_backend().redis
-    redis.flushall()
+def disable_httpretty(context):
     httpretty.disable()
-    httpretty.reset()
 
-    for t in get_models():
-        sync_table(t)
-
-safe_db = scenario(prepare_db, clean_db)
-api = scenario([prepare_db, prepare_http_client], [clean_db])
+safe_db = scenario(prepare_redis, sweep_redis)
+api = scenario([prepare_redis, prepare_http_client], [sweep_redis, disable_httpretty])

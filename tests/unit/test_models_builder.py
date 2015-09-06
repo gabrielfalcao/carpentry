@@ -15,7 +15,7 @@ def test_builder_get_fallback_access_token(User):
     ('Builder.get_fallback_github_access_token returns the token from the user who created the builder')
     # Given that User is mocked to return an object with a valid string as
     # github_access_token
-    creator = User.get.return_value
+    creator = User.objects.get.return_value
     creator.github_access_token = 'free-pass-to-github-yay'
 
     # And a valid UUID
@@ -33,7 +33,7 @@ def test_builder_get_fallback_access_token(User):
     result.should.equal('free-pass-to-github-yay')
 
     # And User.get should have been called with the creator_user_id as id
-    User.get.assert_called_once_with(id=user_uuid)
+    User.objects.get.assert_called_once_with(id=user_uuid)
 
     # And the property github_access_token returns the same
     instance1.github_access_token.should.equal(
@@ -203,13 +203,13 @@ def test_buidler_cleanup_github_hooks(
 
 @patch('carpentry.models.Builder.get_last_build')
 @patch('carpentry.models.Builder.determine_github_repo_from_git_uri')
-def test_builder_to_dict(
+def test_builder_to_dictionary(
         determine_github_repo_from_git_uri,
         get_last_build):
-    ('Builder.to_dict returns a very chubby dictionary')
+    ('Builder.to_dictionary returns a very chubby dictionary')
 
     last_build = get_last_build.return_value
-    last_build.to_dict.return_value = {
+    last_build.to_dictionary.return_value = {
         'status': 'running'
     }
 
@@ -223,25 +223,25 @@ def test_builder_to_dict(
         status='success',
     )
 
-    result = builder1.to_dict()
+    result = builder1.to_dictionary()
     result.should.equal({
-        'id': None,
-        'shell_script': None,
-        'branch': None,
-        'build_timeout_in_seconds': None,
-        'creator_user_id': None,
+        'id': '',
+        'shell_script': '',
+        'branch': '',
+        'build_timeout_in_seconds': 0,
+        'creator_user_id': '',
         'css_status': 'success',
-        'git_clone_timeout_in_seconds': None,
-        'github_hook_data': None,
+        'git_clone_timeout_in_seconds': 0,
+        'github_hook_data': '',
         'git_uri': 'git@github.com:owner/project.git',
-        'github_hook_url': 'http://localhost:5000/api/hooks/None',
+        'github_hook_url': 'http://localhost:5000/api/hooks/''',
         'last_build': {
             'status': 'running'
         },
         'name': 'The Awesome Pr0JName',
         'slug': 'theawesomepr0jname',
         'status': 'success',
-        'json_instructions': None,
+        'json_instructions': '',
     })
 
 
@@ -253,8 +253,6 @@ def test_determine_github_repo_from_git_uri_failing():
         'git@gogs.io:owner/project.git'
     )
     result.should.equal({
-        'owner': None,
-        'name': None,
     })
 
 
@@ -305,12 +303,12 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
     pipeline = get_pipeline.return_value
 
     build1 = Build.create.return_value
-    build1.to_dict.return_value = {
+    build1.to_dictionary.return_value = {
         'foo': 'bar'
     }
 
     user = Mock(name='User(id=1)')
-    user.to_dict.return_value = {'user': 1}
+    user.to_dictionary.return_value = {'user': 1}
 
     builder1 = Builder(
         name='Awesome Project 1',
@@ -325,24 +323,24 @@ def test_builder_trigger(Build, get_pipeline, datetime_mock, uuid_mock):
         '{"hook": "data"}',
     )
     pipeline.input.put.assert_called_once_with({
-        'status': None,
+        'status': u'',
         'css_status': 'success',
         'name': 'Awesome Project 1',
-        'id_rsa_private': None,
-        'build_timeout_in_seconds': None,
-        'id_rsa_public': None,
-        'shell_script': None,
-        'git_clone_timeout_in_seconds': None,
+        'id_rsa_private': u'',
+        'json_instructions': u'',
+        'build_timeout_in_seconds': 0,
+        'id_rsa_public': u'',
+        'shell_script': u'',
+        'git_clone_timeout_in_seconds': 0,
         'slug': 'awesomeproject1',
         'git_uri': 'git@github.com:gabrielfalcao/go-horse.git',
-        'github_hook_url': 'http://localhost:5000/api/hooks/None',
+        'github_hook_url': 'http://localhost:5000/api/hooks/',
         'user': {'user': 1},
-        'branch': None,
-        'github_hook_data': None,
-        'creator_user_id': None,
+        'branch': u'',
+        'github_hook_data': u'',
+        'creator_user_id': '',
         'foo': 'bar',
-        'id': None,
-        'json_instructions': None,
+        'id': '',
     })
 
 
@@ -367,7 +365,7 @@ def test_clear_builds(Build):
 
     result.should.equal([build1, build2])
     Build.objects.filter.assert_called_once_with(
-        builder_id=uuid.UUID('4b1d90f0-96c2-40cd-9c21-35eee1f243d3'),
+        builder=builder
     )
 
 

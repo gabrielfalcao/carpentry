@@ -16,14 +16,22 @@ from carpentry.api.core import (
     authenticated,
     ensure_json_request
 )
-from carpentry.models import CarpentryBaseModel
+from carpentry.models import CarpentryBaseActiveRecord
 from carpentry.util import get_docker_client
 
 from carpentry import models
 
 from carpentry.api import web
 from ansi2html import Ansi2HTMLConverter
+from repocket import configure
 
+
+pool = configure.connection_pool(
+    hostname='localhost',
+    port=6379
+)
+
+connection = pool.get_connection()
 
 conv = Ansi2HTMLConverter()
 
@@ -33,8 +41,8 @@ TIMEOUT_BEFORE_SIGKILL = 5  # seconds
 def is_model(v):
     return (
         isinstance(v, type) and
-        issubclass(v, CarpentryBaseModel) and
-        v != CarpentryBaseModel
+        issubclass(v, CarpentryBaseActiveRecord) and
+        v != CarpentryBaseActiveRecord
     )
 
 
@@ -42,7 +50,7 @@ def get_models():
     return [v for (k, v) in inspect.getmembers(models) if is_model(v)]
 
 
-logger = logging.getLogger('carpentry')
+logger = logging.getLogger('carpentry.resources')
 
 
 def generate_ssh_key_pair(length=2048):
@@ -58,12 +66,12 @@ def generate_ssh_key_pair(length=2048):
 @authenticated
 def get_build(user, id):
     try:
-        b = models.Build.get(id=id)
+        b = models.Build.objects.get(id=id)
     except Exception as e:
         return json_response({'error': str(e)}, status=404)
 
-    data = b.builder.to_dict()
-    data.update(b.to_dict())
+    data = b.builder.to_dictionary()
+    data.update(b.to_dictionary())
 
     return json_response(data)
 
@@ -82,6 +90,7 @@ def create_builder(user):
     })
     data['id'] = uuid.uuid1()
     data['creator_user_id'] = user.id
+    data['status'] = 'ready'
     should_generate_ssh_keys = data.pop('generate_ssh_keys')
 
     if should_generate_ssh_keys:
@@ -97,7 +106,7 @@ def create_builder(user):
 
     logger.info('setting github hook: %s', hook)
 
-    payload = builder.to_dict()
+    payload = builder.to_dictionary()
     return json_response(payload, status=200)
 
 
@@ -106,13 +115,13 @@ def create_builder(user):
 def retrieve_builder(user, id):
     item = models.Builder.objects.get(id=id)
     logger.info('show builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/builder/<id>/builds')
 @authenticated
 def clear_builds(user, id):
-    builder = models.Builder.get(id=id)
+    builder = models.Builder.objects.get(id=id)
     deleted_builds = builder.clear_builds()
     if not deleted_builds:
         return json_response({'total': 0})
@@ -131,8 +140,9 @@ def clear_builds(user, id):
 @web.get('/api/builder/<id>/builds')
 @authenticated
 def builds_from_builder(user, id):
-    items = models.Build.objects.filter(builder_id=id)
-    return json_response([item.to_dict() for item in items])
+    builder = models.Builder.objects.get(id=id)
+    items = builder.get_all_builds()
+    return json_response([item.to_dictionary() for item in items])
 
 
 @web.put('/api/builder/<id>')
@@ -143,10 +153,13 @@ def edit_builder(user, id):
         'git_uri': any,
         'shell_script': any,
         'json_instructions': any,
+        'id_rsa_public': any,
+        'id_rsa_private': any,
     })
     item = models.Builder.objects.get(id=id)
     for attr, value in data.items():
-        setattr(item, attr, value)
+        if value:
+            item.set(attr, value)
 
     item.save()
 
@@ -154,7 +167,7 @@ def edit_builder(user, id):
     item.set_github_hook(user.github_access_token)
 
     logger.info('edit builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/builder/<id>')
@@ -166,7 +179,7 @@ def remove_builder(user, id):
 
     item.delete()
     logger.info('deleting builder: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.delete('/api/build/<id>')
@@ -175,13 +188,13 @@ def remove_build(user, id):
     item = models.Build.objects.get(id=id)
     item.delete()
     logger.info('deleting build: %s', item.name)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.get('/api/builders')
 @authenticated
 def list_builders(user):
-    items = [b.to_dict() for b in models.Builder.objects.all()]
+    items = [b.to_dictionary() for b in models.Builder.objects.all()]
     return json_response(items)
 
 
@@ -231,12 +244,11 @@ def create_build(user, id):
         {
             'author_name': user.name,
             'author_email': user.email,
-
         }
     )
     builder = models.Builder.objects.get(id=id)
     item = builder.trigger(user, branch=builder.branch, **data)
-    return json_response(item.to_dict())
+    return json_response(item.to_dictionary())
 
 
 @web.get('/api/user')
@@ -253,7 +265,7 @@ def trigger_builder_hook(id):
         logger.exception("Failed to retrieve builder of id: %s", id)
         return json_response({}, status=404)
 
-    user = models.User.get(id=item.creator_user_id)
+    user = models.User.objects.get(id=item.creator_user_id)
     logger.info('triggering build for: %s', item.git_uri)
     request_data = request.get_json(silent=True) or {}
     head_commit = request_data.get('head_commit', {})
@@ -273,7 +285,7 @@ def trigger_builder_hook(id):
         author_email=author_email,
         github_webhook_data=request.data
     )
-    return json_response(build.to_dict())
+    return json_response(build.to_dictionary())
 
 
 @web.get('/api/docker/images')

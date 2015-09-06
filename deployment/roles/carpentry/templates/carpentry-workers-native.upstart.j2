@@ -6,7 +6,6 @@ respawn
 respawn limit 5 60
 
 env CARPENTRY_HTTP_HOST=0.0.0.0
-env CARPENTRY_CASSANDRA_HOST=localhost
 env CARPENTRY_REDIS_HOST=localhost
 env CARPENTRY_SERVER_URL={{ full_server_url }}
 env CARPENTRY_GITHUB_CLIEND_ID={{ carpentry_github_client_id }}
@@ -17,10 +16,6 @@ env VIRTUAL_ENV=/srv/carpentry/venv
 
 
 script
-    until /bin/nc -z 127.0.0.1 9042; do
-            echo "Waiting for cassandra to listen on 127.0.0.1:9042"
-            exec /bin/sleep 5
-    done
     eval `ssh-agent -s`
     ssh-add -k
     exec /srv/carpentry/venv/bin/carpentry workers
