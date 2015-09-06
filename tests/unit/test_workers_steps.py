@@ -92,8 +92,6 @@ def test_stream_output_stops_on_timeout(time):
     # And that I have a mock of step, build and of process
     step = Mock(name='step')
     build = Mock(name='build')
-    build.stdout = ""
-    build.stderr = ""
     process = Mock(name='process')
 
     # And that process.stdout.readline returns a chunk of 512 bytes of
@@ -117,15 +115,11 @@ def test_stream_output_stops_on_timeout(time):
             420
         )
     )
-
-    # And the build should have had its stdout updated
-    build.stdout.should.equal(
-        ('aaaa' * 128) + ('bbbb' * 64) + '\nBuild timed out by 50 seconds')
-
-    # And the stderr should have been updated as well
-    build.stderr.should.equal('\nBuild timed out by 50 seconds')
-
-    # And the build should have been saved
+    build.append_to_stdout.assert_has_calls([
+        call(u'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+        call(u'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'),
+        call(u'\nBuild timed out by 50 seconds')
+    ])
     build.save.assert_has_calls([
         call(),
         call(),
@@ -173,7 +167,7 @@ def test_stream_output_stops_when_no_more_output_is_returned(time):
     result.should.equal(('the output', 0))
 
     # And the build should have had its stdout updated
-    build.stdout.should.equal('the output')
+    build.append_to_stdout.assert_called_once_with('the output')
 
     # And the build should have been saved
     build.save.assert_has_calls([

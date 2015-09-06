@@ -56,9 +56,6 @@ def run_command(command, chdir=None, environment={}):
 
 
 def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_seconds=None):
-    if not build.stdout:
-        build.stdout = ''
-
     stdout = []
     current_transfered_bytes = 0
     started_time = time.time()
@@ -75,7 +72,7 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
 
         out = force_unicode(raw)
         current_transfered_bytes += len(out)
-        build.stdout += out
+        build.append_to_stdout(out)
         stdout.append(out)
         if current_transfered_bytes >= stdout_chunk_size:
             build.save()
@@ -84,8 +81,7 @@ def stream_output(step, process, build, stdout_chunk_size=1024, timeout_in_secon
     timed_out = difference > timeout_in_seconds
     if timed_out:
         out = "\nBuild timed out by {0} seconds".format(difference)
-        build.stdout += out
-        build.stderr += out
+        build.append_to_stdout(out)
 
         process.terminate()
         exit_code = 420
