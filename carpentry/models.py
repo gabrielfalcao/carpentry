@@ -84,7 +84,9 @@ def prepare_value_for_serialization(value):
     return result
 
 
-def model_to_dictionary(instance, extra={}):
+def model_to_dictionary(instance, extra=None):
+    if extra is None:
+        extra = {}
     data = {}
     for key, value in instance.to_dict(simple=True).items():
         data[key] = prepare_value_for_serialization(value)

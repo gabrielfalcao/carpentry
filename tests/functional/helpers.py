@@ -18,7 +18,9 @@ class GithubMocker(object):
     def __init__(self, user):
         self.user = user
 
-    def on_post(self, path, body=None, status=200, headers={}):
+    def on_post(self, path, body=None, status=200, headers=None):
+        if headers is None:
+            headers = {}
         httpretty.register_uri(
             httpretty.POST,
             "/".join(["https://api.github.com", path.lstrip('/')]),
@@ -27,7 +29,9 @@ class GithubMocker(object):
             status=status
         )
 
-    def on_get(self, path, body=None, status=200, headers={}):
+    def on_get(self, path, body=None, status=200, headers=None):
+        if headers is None:
+            headers = {}
         url = "/".join(["https://api.github.com", path.lstrip('/')])
         httpretty.register_uri(
             httpretty.GET,
@@ -37,7 +41,9 @@ class GithubMocker(object):
             status=status
         )
 
-    def on_put(self, path, body=None, status=200, headers={}):
+    def on_put(self, path, body=None, status=200, headers=None):
+        if headers is None:
+            headers = {}
         httpretty.register_uri(
             httpretty.PUT,
             "/".join(["https://api.github.com", path.lstrip('/')]),
@@ -46,7 +52,9 @@ class GithubMocker(object):
             status=status
         )
 
-    def on_delete(self, path, body=None, status=200, headers={}):
+    def on_delete(self, path, body=None, status=200, headers=None):
+        if headers is None:
+            headers = {}
         httpretty.register_uri(
             httpretty.DELETE,
             r"/".join([r"https://api.github.com", path.lstrip('/')]),

@@ -48,7 +48,9 @@ def extract_container_name(docker, container):
     return container['Name'].lstrip('/')
 
 
-def run_command(command, chdir=None, environment={}):
+def run_command(command, chdir=None, environment=None):
+    if environment is None:
+        environment = {}
     try:
         return Popen(command, stdout=PIPE, stderr=STDOUT, shell=True, cwd=chdir, env=environment)
     except Exception:

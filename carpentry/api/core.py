@@ -70,7 +70,9 @@ def authenticated(resource):
     return decorator
 
 
-def ensure_json_request(spec, fallback={}):
+def ensure_json_request(spec, fallback=None):
+    if fallback is None:
+        fallback = {}
     data = request.get_json(silent=True) or fallback
     result = {}
     for key, validator in spec.items():
